@@ -1,0 +1,11 @@
+import { Routes, Route } from 'react-router-dom'
+
+const User = () => {
+  return (
+    <Routes>
+        <Route path='/dashboard' element={} />
+    </Routes>
+  )
+}
+
+export default User

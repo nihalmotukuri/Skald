@@ -1,0 +1,9 @@
+
+
+const Header = () => {
+  return (
+    <div className="h-[] fixed z-999 top-0 left-0 w-full bg-slate-300/30 backdrop-blur-sm mt-[100px]">Header</div>
+  )
+}
+
+export default Header

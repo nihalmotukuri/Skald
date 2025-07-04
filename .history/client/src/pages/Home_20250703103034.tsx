@@ -1,0 +1,17 @@
+// import Header from "@/components/Header"
+import { FlickeringGrid } from "@/components/magicui/flickering-grid";  
+
+const Home = () => {
+  return (
+    <>
+        {/* <Header /> */}
+
+        <main className="relative">
+            <FlickeringGrid className=""/>
+        </main>
+
+    </>
+  )
+}
+
+export default Home

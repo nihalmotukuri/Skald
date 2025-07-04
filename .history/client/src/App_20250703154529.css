@@ -1,0 +1,11 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&family=Stint+Ultra+Expanded&display=swap');
+
+* {
+  box-sizing: border-box;
+}
+
+main {
+  min-height: 100vh;
+  color: white;
+  background-color: 252a41;
+}
