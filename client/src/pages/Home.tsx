@@ -9,7 +9,7 @@ const Home = () => {
         <>
             <Header />
 
-            <main className="relative bg-[#0f111a] pt-[100px] pb-[54px]">
+            <main className=" bg-[#0f111a] pt-[100px] pb-[54px]">
                 <section>
                     <div className="m-auto w-[150px] flex justify-center items-center">
                         <img

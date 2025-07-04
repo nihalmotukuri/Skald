@@ -3,6 +3,7 @@ import Home from './pages/Home'
 import NotFound from './pages/NotFound'
 import User from './pages/User'
 import Dashboard from './pages/User/Dashboard'
+import Tasks from './pages/User/Tasks'
 import './App.css'
 
 function App() {
@@ -19,7 +20,7 @@ function App() {
         <Route path='/user' element={<User />}>
           <Route index element={<Navigate to="dashboard" replace />} />+
           <Route path='dashboard' element={<Dashboard />} />
-          <Route path='tasks' />
+          <Route path='tasks' element={<Tasks />} />
           <Route path='*' element={<NotFound />} />
         </Route>
 
