@@ -1,0 +1,42 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&family=Stint+Ultra+Expanded&display=swap');
+
+@font-face {
+  font-family: 'DS-Digital';
+  src: url('/fonts/DS-DIGI.TTF') format('truetype');
+}
+
+* {
+  box-sizing: border-box;
+}
+
+main {
+  min-height: 100vh;
+  color: white;
+  background-color: #0f111a;
+}
+
+@keyframes headerAnimation {
+  0% {
+    opacity: 0;
+    top: -18px;
+  } 100% {
+    opacity: 1;
+    top: 24px;
+  }
+}
+
+.header-animation {
+  animation: headerAnimation .3s ease-out;
+}
+
+/* @keyframes logoAnimation {
+  0% {
+    rotate: 0deg;
+  }  100% {
+    rotate: -90deg;
+  }
+}
+
+.logo-animation {
+  animation: logoAnimation .1s ease infinite;
+} */

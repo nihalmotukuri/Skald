@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "react-activity-calendar": "^2.7.13"
+  },
+  "devDependencies": {
+    "npm-force-resolutions": "^0.0.10"
+  }
+}
