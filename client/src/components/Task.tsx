@@ -5,7 +5,7 @@ import { ImStopwatch, ImBlocked } from "react-icons/im"
 import { SiTicktick } from "react-icons/si"
 import { MdOutlinePending } from "react-icons/md"
 import { MdOutlineArrowDownward, MdOutlineArrowForward, MdOutlineArrowUpward } from "react-icons/md"
-import TaskDropdown from './TaskDropdown'
+// import TaskDropdown from './TaskDropdown'
 import { format } from "date-fns"
 import { Calendar } from "lucide-react"
 
@@ -87,7 +87,7 @@ const Task = ({ task, toggleTask }: TaskProps) => {
                     checked={task.completed}
                     onCheckedChange={() => toggleTask(task.id)}
                 />
-                <div className="w-full grid grid-cols-[1fr_160px_140px_30px_30px] items-center">
+                <div className="w-full grid grid-cols-[1fr_160px_140px_30px] items-center">
                     <p className="text-[16px] font-medium text-white">{task.title}<span className="ml-[12px] text-[12px] py-[3px] px-[6px] rounded-sm text-gray-400 border border-white/20">{task.taskList}</span></p>
                     {taskStatus()}
                     {taskPriority()}
@@ -101,17 +101,23 @@ const Task = ({ task, toggleTask }: TaskProps) => {
                             onClick={() => setOpenTask(prev => !prev)}
                         />
                     }
-                    <TaskDropdown />
+                    {/* <TaskDropdown /> */}
                 </div>
             </div>
 
-            <div className={`w-full mt-[14px] mr-[300px] ${openTask ? "block" : "hidden"} `}>
-                <p className="text-slate-400 text-[14px] ml-[32px]">{task.description}</p>
+            <div className={`w-full mt-[14px] mr-[300px] ${openTask ? "flex" : "hidden"} justify-between`}>
+                <div>
+                    <p className="text-slate-400 text-[14px] ml-[32px]">{task.description}</p>
 
-                <p className="flex items-center gap-1 text-[12px] text-white/50 ml-8 mt-2">
-                    <Calendar className="size-4 text-slate-400" />
-                    <span>Due: {format(task.due, "dd MMM yyyy, h:mm a")}</span>
-                </p>
+                    <p className="flex items-center gap-1 text-[12px] text-white/50 ml-8 mt-2">
+                        <Calendar className="size-4 text-slate-400" />
+                        <span>Due: {format(task.due, "dd MMM yyyy, h:mm a")}</span>
+                    </p>
+                </div>
+                <div className="flex items-end px-[14px]">
+                    <button className="text-[14px] text-slate-500 hover:text-[#14161e] border border-slate-500 px-[18px] py-[1px] hover:bg-slate-500 rounded-xl cursor-pointer mr-[16px]">Edit</button>
+                    <button className="text-[14px] px-[16px] py-[2px] text-red-500 hover:bg-red-200 rounded-xl border border-red-900 cursor-pointer">Delete</button>
+                </div>
             </div>
         </li>
     )

@@ -31,7 +31,8 @@ const Sidebar = () => {
     <motion.div
       className="min-w-[260px] rounded-[18px] p-[8px] flex flex-col justify-between max-h-full bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl shadow-lg"
       initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
+      animate={{ opacity: 1 }}  
+      
       transition={{ duration: 0.6, ease: "easeOut" }}
     >
       <div>
