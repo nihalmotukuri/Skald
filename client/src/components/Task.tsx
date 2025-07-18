@@ -11,16 +11,16 @@ import { Calendar } from "lucide-react"
 
 type TaskProps = {
     task: {
-        id: number;
+        _id: string;
         title: string;
         description: string;
         status: string;
         priority: string;
         taskList: string;
-        due: Date;
+        dueDate: Date;
         completed: boolean;
     },
-    toggleTask: (id: number) => void
+    toggleTask: (id: string) => void
 }
 
 
@@ -29,25 +29,25 @@ const Task = ({ task, toggleTask }: TaskProps) => {
 
     const taskStatus = () => {
         switch (task.status) {
-            case "done":
+            case "Done":
                 return (
                     <p className="text-[14px] font-medium text-white flex items-center">
                         <SiTicktick className="mr-[8px] text-[18px]" /> Done
                     </p>
                 );
-            case "in-progress":
+            case "In-progress":
                 return (
                     <p className="text-[14px] font-medium text-white flex items-center">
                         <ImStopwatch className="mr-[6px] text-[18px]" /> In Progress
                     </p>
                 );
-            case "pending":
+            case "Pending":
                 return (
                     <p className="text-[14px] font-medium text-white flex items-center">
                         <MdOutlinePending className="mr-[6px] text-[18px]" /> To do
                     </p>
                 );
-            case "blocked":
+            case "Blocked":
                 return (
                     <p className="text-[14px] font-medium text-white flex items-center">
                         <ImBlocked className="mr-[6px] text-[16px]" /> Blocked
@@ -85,7 +85,7 @@ const Task = ({ task, toggleTask }: TaskProps) => {
                 <Checkbox
                     className="mt-[4px] cursor-pointer"
                     checked={task.completed}
-                    onCheckedChange={() => toggleTask(task.id)}
+                    onCheckedChange={() => toggleTask(task._id)}
                 />
                 <div className="w-full grid grid-cols-[1fr_160px_140px_30px] items-center">
                     <p className="text-[16px] font-medium text-white">{task.title}<span className="ml-[12px] text-[12px] py-[3px] px-[6px] rounded-sm text-gray-400 border border-white/20">{task.taskList}</span></p>
@@ -111,7 +111,7 @@ const Task = ({ task, toggleTask }: TaskProps) => {
 
                     <p className="flex items-center gap-1 text-[12px] text-white/50 ml-8 mt-2">
                         <Calendar className="size-4 text-slate-400" />
-                        <span>Due: {format(task.due, "dd MMM yyyy, h:mm a")}</span>
+                        <span>Due: {format(task.dueDate, "dd MMM yyyy, h:mm a")}</span>
                     </p>
                 </div>
                 <div className="flex items-end px-[14px]">

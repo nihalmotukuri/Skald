@@ -6,6 +6,9 @@ import Dashboard from './pages/Dashboard'
 import Tasks from './pages/Tasks'
 import Notes from './pages/Notes'
 import Assistant from './pages/Assistant'
+import Login from './pages/Login'
+import Signup from './pages/Signup'
+import About from './pages/About'
 import './App.css'
 
 function App() {
@@ -15,9 +18,9 @@ function App() {
       <Routes>
         <Route path='/' element={<Home />} />
 
-        <Route path='/about' />
-        <Route path='/login' />
-        <Route path='/signup' />
+        <Route path='/about' element={<About />} />
+        <Route path='/login' element={<Login />} />
+        <Route path='/signup' element={<Signup />} />
 
         <Route path='/app' element={<Layout />}>
           <Route index element={<Navigate to="dashboard" replace />} />+
