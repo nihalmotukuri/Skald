@@ -3,6 +3,7 @@ import { useDispatch } from "react-redux"
 import { setBreadcrumb } from "@/redux/breadcrumbSlice"
 import { GoHubot } from "react-icons/go"
 import { RiSendPlaneLine } from "react-icons/ri"
+import ReactMarkdown from 'react-markdown'
 
 type AiChat = {
   id: number,
@@ -12,7 +13,7 @@ type AiChat = {
 const aiChat: AiChat[] = [
   {
     id: 0,
-    message: "Hail, traveler. Mr. Groff is here to guide your thoughts."
+    message: "Hail, traveler. I'm here to guide your thoughts."
   },
 ]
 
@@ -56,14 +57,14 @@ const Assistant = () => {
     )
     const data = await res.json();
     const reply = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    setConvo(prev => [...prev, {id: prev.length, message: reply}])
+    setConvo(prev => [...prev, { id: prev.length, message: reply }])
     console.log(reply);
   }
 
   const handlePrompt = (e: React.KeyboardEvent | React.MouseEvent) => {
     e.preventDefault()
     const textarea = textareaRef.current
-    setConvo(prev => [...prev, {id: prev.length, message: prompt}])
+    setConvo(prev => [...prev, { id: prev.length, message: prompt }])
     aiResponse(prompt)
 
     if (textarea) {
@@ -83,23 +84,25 @@ const Assistant = () => {
           {convo.map(c => (
             c.id % 2 == 0
               ? (
-                <div 
-                  key={c.id} 
-                  className="w-full max-w-[720px] grid grid-cols-[52px_1fr] pl-[18px]"
+                <div
+                  key={c.id}
+                  className="w-full max-w-[720px] grid grid-cols-[52px_1fr] pl-[18px] ai-text"
                 >
                   <GoHubot className=" text-[20px] text-[#0f111a] bg-white size-auto p-[8px] rounded-3xl" />
 
-                  <p className="mt-[4px]">
-                    {c.message}
+                  <p className="w-full">
+                    <ReactMarkdown>
+                      {c.message}
+                    </ReactMarkdown>
                   </p>
                 </div>
               )
               : (
-                <div 
+                <div
                   key={c.id}
                   className="ml-auto flex justify-end w-full max-w-[720px] pr-[18px]"
                 >
-                  <div 
+                  <div
                     className="bg-white/5 p-3 max-w-full"
                     style={{
                       borderRadius: "16px",
@@ -118,7 +121,7 @@ const Assistant = () => {
 
       <div
         className="sticky bottom-0 m-auto grid grid-rows-[1fr_32px] gap-[12px] w-full max-w-[690px] bg-white/6 backdrop-blur-md border border-white/10 rounded-3xl shadow-lg p-3"
-        // onSubmit={handlePrompt}
+      // onSubmit={handlePrompt}
       >
         <textarea
           ref={textareaRef}

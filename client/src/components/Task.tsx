@@ -6,7 +6,7 @@ import { SiTicktick } from "react-icons/si"
 import { MdOutlinePending } from "react-icons/md"
 import { MdOutlineArrowDownward, MdOutlineArrowForward, MdOutlineArrowUpward } from "react-icons/md"
 // import TaskDropdown from './TaskDropdown'
-import { format } from "date-fns"
+// import { format } from "date-fns"
 import { Calendar } from "lucide-react"
 
 type TaskProps = {
@@ -17,14 +17,14 @@ type TaskProps = {
         status: string;
         priority: string;
         taskList: string;
-        dueDate: Date;
+        date: string;
+        time: string;
         completed: boolean;
     },
     toggleTask: (id: string) => void
 }
 
-
-const Task = ({ task, toggleTask }: TaskProps) => {
+const Task = ({ task, toggleTask, setDisplayEditTask, setEditTaskId, setTaskToEdit }: TaskProps) => {
     const [openTask, setOpenTask] = useState(false)
 
     const taskStatus = () => {
@@ -79,6 +79,32 @@ const Task = ({ task, toggleTask }: TaskProps) => {
         }
     }
 
+    const onEditTask = () => {
+        setDisplayEditTask(true)
+        setEditTaskId(task._id)
+    }
+
+    const onDeleteTask = (taskId: string) => {
+        const deleteTask = async () => {
+            const options = {
+                method: 'DELETE',
+                headers: {
+                    'content-type': 'application/json'
+                }
+            }
+
+            try {
+                const res = await fetch(`http://localhost:5000/api/tasks/${taskId}`, options)
+                const data = await res.json()
+                console.log(data)
+            } catch (err) {
+                console.error(err)
+            }
+        }
+
+        deleteTask()
+    }
+
     return (
         <li className="flex flex-col items-start justify-between bg-white/2 backdrop-blur-md border border-white/6 rounded-md shadow-lg p-4 overflow-hidden">
             <div className="w-full flex items-center gap-4">
@@ -88,7 +114,15 @@ const Task = ({ task, toggleTask }: TaskProps) => {
                     onCheckedChange={() => toggleTask(task._id)}
                 />
                 <div className="w-full grid grid-cols-[1fr_160px_140px_30px] items-center">
-                    <p className="text-[16px] font-medium text-white">{task.title}<span className="ml-[12px] text-[12px] py-[3px] px-[6px] rounded-sm text-gray-400 border border-white/20">{task.taskList}</span></p>
+                    <p className="text-[16px] font-medium text-white">
+                        {task.title}
+                        {task.taskList
+                            ? (
+                                <span className="ml-[12px] text-[12px] py-[3px] px-[6px] rounded-sm text-gray-400 border border-white/20">{task.taskList}</span>
+                            )
+                            : ""
+                        }
+                    </p>
                     {taskStatus()}
                     {taskPriority()}
                     {openTask
@@ -111,12 +145,18 @@ const Task = ({ task, toggleTask }: TaskProps) => {
 
                     <p className="flex items-center gap-1 text-[12px] text-white/50 ml-8 mt-2">
                         <Calendar className="size-4 text-slate-400" />
-                        <span>Due: {format(task.dueDate, "dd MMM yyyy, h:mm a")}</span>
+                        <span>Due: {task.date}, {task.time}</span>
                     </p>
                 </div>
                 <div className="flex items-end px-[14px]">
-                    <button className="text-[14px] text-slate-500 hover:text-[#14161e] border border-slate-500 px-[18px] py-[1px] hover:bg-slate-500 rounded-xl cursor-pointer mr-[16px]">Edit</button>
-                    <button className="text-[14px] px-[16px] py-[2px] text-red-500 hover:bg-red-200 rounded-xl border border-red-900 cursor-pointer">Delete</button>
+                    <button 
+                        onClick={onEditTask}
+                        className="text-[14px] text-slate-500 hover:text-[#14161e] border border-slate-500 px-[18px] py-[1px] hover:bg-slate-500 rounded-xl cursor-pointer mr-[16px]"
+                    >Edit</button>
+                    <button
+                        onClick={() => onDeleteTask(task._id)}
+                        className="text-[14px] px-[16px] py-[2px] text-red-500 hover:bg-red-200 rounded-xl border border-red-900 cursor-pointer"
+                    >Delete</button>
                 </div>
             </div>
         </li>

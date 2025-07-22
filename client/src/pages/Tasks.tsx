@@ -5,6 +5,8 @@ import { IoAddOutline } from "react-icons/io5"
 import Task from "@/components/Task";
 import { setBreadcrumb } from "@/redux/breadcrumbSlice";
 import AddTaskDialog from "@/components/AddTaskDialog";
+import TaskSkeleton from "../components/TaskSkeleton.tsx"
+import EditTaskDialog from "@/components/EditTaskDialog.tsx";
 // import { format } from "date-fns";
 
 type Task = {
@@ -14,13 +16,17 @@ type Task = {
   status: string;
   priority: string;
   taskList: string;
-  dueDate: Date;
+  date: string;
+  time: string;
   completed: boolean;
 };
 
 const Tasks = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [displayAddTask, setDisplayAddTask] = useState<boolean>(false)
+  const [displayTaskSkeleton, setDisplayTaskSkeleton] = useState<boolean>(false)
+  const [displayEditTask, setDisplayEditTask] = useState<boolean>(false)
+  const [editTaskId, setEditTaskId] = useState<string>('')
   const dispatch = useDispatch()
 
   useEffect(() => {
@@ -28,6 +34,8 @@ const Tasks = () => {
   }, [dispatch])
 
   useEffect(() => {
+    setDisplayTaskSkeleton(true)
+
     const fetchTasks = async () => {
       try {
         const res = await fetch("http://localhost:5000/api/tasks/nihal")
@@ -45,8 +53,11 @@ const Tasks = () => {
         //   }
         // ))
         setTasks(data)
+        console.log(data)
       } catch (err) {
         console.error(err)
+      } finally {
+        setDisplayTaskSkeleton(false)
       }
     }
 
@@ -63,7 +74,24 @@ const Tasks = () => {
 
   return (
     <div className="w-full col-span-1 row-span-1 grid grid-cols-1 grid-rows-[108px_1fr] overflow-y-auto relative">
-      <AddTaskDialog displayAddTask={displayAddTask} setDisplayAddTask={setDisplayAddTask} />
+      {displayAddTask
+        ? (
+          <AddTaskDialog
+            setTasks={setTasks}
+            setDisplayAddTask={setDisplayAddTask}
+          />
+        ) : null
+      }
+
+      {displayEditTask
+        ? (
+          <EditTaskDialog
+            setTasks={setTasks}
+            setDisplayEditTask={setDisplayEditTask}
+            taskToEdit={tasks.find(t => t._id === editTaskId)}
+          />
+        ) : null
+      }
 
       <div
         className="row-span-1 col-span-1"
@@ -107,9 +135,23 @@ const Tasks = () => {
 
       <div className="row-span-1 col-span-1 overflow-y-auto relative">
         <ul className="pt-[14px] pb-[54px] px-[16px] flex flex-col gap-2">
-          {tasks.map(task => (
-            <Task key={task._id} task={task} toggleTask={toggleTask} />
-          ))}
+          {displayTaskSkeleton
+            ? (
+              Array.from({ length: 6 }).map((_, index) => (
+                <TaskSkeleton key={index} />
+              ))
+            )
+            : (
+              tasks.map(task => (
+                <Task
+                  key={task._id}
+                  task={task}
+                  toggleTask={toggleTask}
+                  setDisplayEditTask={setDisplayEditTask}
+                  setEditTaskId={setEditTaskId}
+                />
+              )
+              ))}
         </ul>
       </div>
 

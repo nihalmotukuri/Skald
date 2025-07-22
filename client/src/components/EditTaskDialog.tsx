@@ -10,47 +10,32 @@ interface AddTaskDialogProps {
     setDisplayAddTask: (value: boolean) => void;
 }
 
-const AddTaskDialog = ({ setTasks, setDisplayAddTask }: AddTaskDialogProps) => {
-    const [addTaskData, setAddTaskData] = useState({
-        title: '',
-        description: '',
-        status: 'Pending',
-        date: '',
-        time: ''
-    })
-    const [priority, setPriority] = useState('')
-
+const EditTaskDialog = ({ setTasks, setDisplayEditTask, taskToEdit }: AddTaskDialogProps) => {
+    const [editedTask, setEditedTask] = useState(taskToEdit)
+    const [prevPriority] = useState(taskToEdit.priority)
+    const [priority, setPriority] = useState("")
     const selectPriority = (selectedPriority: string) => {
         setPriority(selectedPriority)
     }
 
-    const addTask = (e: React.FormEvent<HTMLFormElement>) => {
+    const editTask = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
-        console.log(addTaskData)
+        
         const options = {
-            method: 'POST',
+            method: 'PUT',
             headers: {
                 'content-type': 'application/json'
             },
-            body: JSON.stringify({ userId: 'nihal', ...addTaskData, priority })
+            body: JSON.stringify(editedTask)
         }
 
-        const postTask = async () => {
+        const putTask = async () => {
             try {
-                const res = await fetch("http://localhost:5000/api/tasks", options)
+                const res = await fetch(`http://localhost:5000/api/tasks/${editedTask._id}`, options)
                 const data = await res.json()
 
                 if (res.ok) {
-                    setAddTaskData({
-                        title: '',
-                        description: '',
-                        status: 'Pending',
-                        date: '',
-                        time: ''
-                    })
-                    setTasks(prev => [...prev, {...addTaskData, priority}])
-                    setPriority('')
-                    setDisplayAddTask(false)
+                    setDisplayEditTask(false)
                 }
                 console.log(data)
             } catch (err) {
@@ -58,13 +43,13 @@ const AddTaskDialog = ({ setTasks, setDisplayAddTask }: AddTaskDialogProps) => {
             }
         }
 
-        postTask()
+        putTask()
     }
 
     return (
         <section className={`fixed top-0 left-0 z-999 bg-black/40 h-full w-full flex justify-center items-center`}>
             <form
-                onSubmit={addTask}
+                onSubmit={editTask}
                 className="bg-white/6 backdrop-blur-xl border border-white/10 rounded-md shadow-lg p-[24px] w-[420px] flex flex-col gap-[18px] relative"
             >
                 <div
@@ -73,7 +58,7 @@ const AddTaskDialog = ({ setTasks, setDisplayAddTask }: AddTaskDialogProps) => {
                         borderBottomLeftRadius: "7px",
                         borderTopRightRadius: "7px"
                     }}
-                    onClick={() => setDisplayAddTask(false)}
+                    onClick={() => setDisplayEditTask(false)}
                 >
                     <RxCross2 />
                 </div>
@@ -84,8 +69,8 @@ const AddTaskDialog = ({ setTasks, setDisplayAddTask }: AddTaskDialogProps) => {
                         className='bg-white/5 backdrop-blur-md border border-white/10 rounded-md shadow-lg text-[14px] px-[12px] py-[6px]'
                         type="text"
                         name="title"
-                        onChange={e => setAddTaskData({ ...addTaskData, title: e.currentTarget.value })}
-                        value={addTaskData.title}
+                        onChange={e => setEditedTask({ ...editedTask, title: e.currentTarget.value })}
+                        value={editedTask.title}
                     />
                 </div>
 
@@ -95,8 +80,8 @@ const AddTaskDialog = ({ setTasks, setDisplayAddTask }: AddTaskDialogProps) => {
                         name="description"
                         className='bg-white/5 backdrop-blur-md border border-white/10 rounded-md shadow-lg text-[14px] px-[12px] py-[6px] resize-none'
                         rows={5}
-                        onChange={e => setAddTaskData({ ...addTaskData, description: e.currentTarget.value })}
-                        value={addTaskData.description}
+                        onChange={e => setEditedTask({ ...editedTask, description: e.currentTarget.value })}
+                        value={editedTask.description}
                     ></textarea>
                 </div>
 
@@ -107,8 +92,8 @@ const AddTaskDialog = ({ setTasks, setDisplayAddTask }: AddTaskDialogProps) => {
                             className='bg-white/5 backdrop-blur-md border border-white/10 rounded-md shadow-lg text-[14px] px-[12px] py-[6px]'
                             type="date"
                             name="date"
-                            onChange={e => setAddTaskData({ ...addTaskData, date: e.currentTarget.value })}
-                            value={addTaskData.date}
+                            onChange={e => setEditedTask({ ...editedTask, date: e.currentTarget.value })}
+                            value={editedTask.date}
                         />
                     </div>
 
@@ -117,25 +102,29 @@ const AddTaskDialog = ({ setTasks, setDisplayAddTask }: AddTaskDialogProps) => {
                         <input
                             className='bg-white/5 backdrop-blur-md border border-white/10 rounded-md shadow-lg text-[14px] px-[12px] py-[6px]'
                             type="time"
-                            onChange={e => setAddTaskData({ ...addTaskData, time: e.currentTarget.value })}
-                            value={addTaskData.time}
+                            onChange={e => setEditedTask({ ...editedTask, time: e.currentTarget.value })}
+                            value={editedTask.time}
                         />
                     </div>
 
                     <div className='flex flex-col gap-2'>
                         <label className='text-[15px]'>Priority</label>
-                        <PriorityDropdown selectPriority={selectPriority} />
+                        <PriorityDropdown 
+                            selectPriority={selectPriority}
+                            prevPriority={prevPriority}
+                        />
                     </div>
                 </div>
 
                 <button
                     className='bg-white/5 backdrop-blur-md border border-white/10 rounded-md shadow-lg text-[14px] px-[12px] py-[6px] cursor-pointer hover:bg-white/10'
-                    type='submit'>
-                    Add Task
+                    type='submit'
+                >
+                    Edit Task
                 </button>
             </form>
         </section>
     )
 }
 
-export default AddTaskDialog
+export default EditTaskDialog

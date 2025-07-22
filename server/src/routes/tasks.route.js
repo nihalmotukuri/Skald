@@ -21,4 +21,27 @@ router.post('/', async (req, res) => {
     }
 })
 
+router.put('/:taskId', async (req, res) => {
+    const taskId = req.params.taskId
+    const updatedTask = req.body 
+
+    try {
+        const result = await Tasks.findByIdAndUpdate( taskId , { $set: updatedTask }, { new: true })
+        res.json(result)
+    } catch (err) {
+        res.status(500).json({ message: err.message })
+    }
+})
+
+router.delete('/:taskId', async (req, res) => {
+    const taskId = req.params.taskId 
+
+    try {
+        await Tasks.findByIdAndDelete(taskId)
+        res.json({message: `Task of ID ${taskId} has been successfully deleted!`})
+    } catch (err) {
+        res.status(500).json({ message: err.message })
+    }
+})
+
 export default router

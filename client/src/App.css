@@ -31,7 +31,6 @@ main {
   color: white;
 }
 
-
 @keyframes headerAnimation {
   0% {
     opacity: 0;
@@ -87,4 +86,16 @@ main {
 
 .react-activity-calendar__footer {
   justify-self: flex-end;
+}
+
+@keyframes aiText {
+  0% {
+    opacity: 0;
+  } 100% {
+    opacity: 100%;
+  }
+}
+
+.ai-text {
+  animation: aiText .5s ease-out;
 }
