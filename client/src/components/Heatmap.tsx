@@ -5,10 +5,14 @@ import type { RootState } from "@/redux/store";
 import ActivityCalendar from "react-activity-calendar";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
-import type { Task } from "@/types/task";
+
+interface HeatmapData {
+  _id: string;
+  count: number;
+}
 
 const Heatmap = () => {
-  const [tasksDone, setTasksDone] = useState<Task[]>([]);
+  const [tasksDone, setTasksDone] = useState<HeatmapData[]>([])
 
   const today = new Date();
   const sixMonthsAgo = new Date();
@@ -30,19 +34,20 @@ const Heatmap = () => {
   const firebaseUid = useSelector((store: RootState) => store.userStore.user?.firebaseUid);
 
   const fetchTaskDone = async () => {
+    // Return early if there's no user ID to prevent a failed API call
+    if (!firebaseUid) return;
     const res = await fetch(`${import.meta.env.VITE_API_URL}/tasks/heatmap/${firebaseUid}`);
     const data = await res.json();
-    console.log(data);
     setTasksDone(data);
   };
 
   useEffect(() => {
     fetchTaskDone();
-  }, []);
+  }, [firebaseUid]); // Add firebaseUid as a dependency
 
   const mergedData = fullData.map((entry) => {
-    const task = tasksDone.find((t: Task) => t._id === entry.date);
-    const count = task ? task.count : 0;
+    const taskData = tasksDone.find((t: HeatmapData) => t._id === entry.date);
+    const count = taskData ? taskData.count : 0; // This will now work correctly
     return {
       date: entry.date,
       count,

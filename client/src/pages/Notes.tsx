@@ -9,26 +9,20 @@ import DisplayNote from "@/components/DisplayNote";
 import NoteItem from "@/components/NoteItem";
 import { SlNote } from "react-icons/sl";
 import { RxCross1 } from "react-icons/rx";
-
-type Note = {
-  _id: string;
-  title: string;
-  description: string;
-  createdAt: string;
-};
+import type { Note } from "@/types/note";
 
 const Notes = () => {
   const { notes, loading } = useSelector((store: RootState) => store.notesStore);
   const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
   const [filterQuery, setFilterQuery] = useState("");
   const [debouncedFilterQuery, setDebouncedFilterQuery] = useState("");
-  const [activeNoteId, setActiveNoteId] = useState<string | null>(null);
   const [displayAddNote, setDisplayAddNote] = useState(false);
   const [displayEditNote, setDisplayEditNote] = useState(false);
   const [editNoteId, setEditNoteId] = useState<string>("");
   const [fullscreen, setFullscreen] = useState(false);
 
   const dispatch = useDispatch();
+  const { activeNoteId } = useSelector((store: RootState) => store.notesStore)
 
   useEffect(() => {
     dispatch(setBreadcrumb("Notes"));
@@ -58,7 +52,6 @@ const Notes = () => {
       {displayEditNote && (
         <EditNoteDialog
           setDisplayEditNote={setDisplayEditNote}
-          setActiveNoteId={setActiveNoteId}
           editNoteId={editNoteId}
         />
       )}
@@ -95,30 +88,23 @@ const Notes = () => {
         </div>
       </div>
 
-      {/* Body: resizable note panel */}
       <div
-        className={`col-span-1 row-span-1 overflow-y-auto ${
-          activeNoteId ? "grid grid-cols-[400px_1fr]" : ""
-        }`}
+        className={`relative col-span-1 row-span-1 overflow-y-auto ${fullscreen ? "grid grid-cols-[0px_1fr]" : activeNoteId ? "grid grid-cols-[400px_1fr]" : ""}`}
       >
         {/* Left Note Panel */}
         <div
-          className={`overflow-y-auto py-[12px] px-[18px] ${
-            activeNoteId ? "border-r" : ""
-          } border-[#32343c] flex flex-col gap-2`}
+          className={`overflow-y-auto ${!fullscreen ? "py-[12px] px-[18px]" : null} ${activeNoteId ? "border-r" : null} border-[#32343c] flex flex-col gap-2`}
         >
           {loading
             ? Array.from({ length: 3 }).map((_, idx) => <NoteSkeleton key={idx} />)
             : filteredNotes.map((note) => (
-                <NoteItem
-                  key={note._id}
-                  note={note}
-                  activeNoteId={activeNoteId}
-                  setActiveNoteId={setActiveNoteId}
-                  setEditNoteId={setEditNoteId}
-                  setDisplayEditNote={setDisplayEditNote}
-                />
-              ))}
+              <NoteItem
+                key={note._id}
+                note={note}
+                setEditNoteId={setEditNoteId}
+                setDisplayEditNote={setDisplayEditNote}
+              />
+            ))}
 
           {notes.length === 0 && !loading && (
             <div className="flex justify-center">
@@ -139,8 +125,6 @@ const Notes = () => {
 
         {activeNoteId && (
           <DisplayNote
-            activeNoteId={activeNoteId}
-            setActiveNoteId={setActiveNoteId}
             fullscreen={fullscreen}
             setFullscreen={setFullscreen}
           />

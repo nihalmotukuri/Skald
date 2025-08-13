@@ -35,7 +35,7 @@ const Tasks = () => {
 
     if (debouncedFilterQuery) {
       tempTasks = tempTasks.filter(t =>
-        t.title.trim().toLowerCase().includes(
+        t.title?.trim().toLowerCase().includes(
           debouncedFilterQuery.trim().toLowerCase()
         )
       )

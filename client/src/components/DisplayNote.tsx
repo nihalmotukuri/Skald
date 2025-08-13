@@ -18,7 +18,7 @@ const DisplayNote = ({ fullscreen, setFullscreen }: DisplayNoteProps) => {
         dispatch(setActiveNoteId(''))
         setFullscreen(false)
     }
-    // console.log(activeNote)
+    
     return (
         <div className="overflow-y-auto bg-white/4 p-1">
             <div
@@ -44,7 +44,11 @@ const DisplayNote = ({ fullscreen, setFullscreen }: DisplayNoteProps) => {
                     ? (
                         <img
                             className="w-full mt-[28px] rounded-lg"
-                            src={activeNote.image}
+                            src={
+                                activeNote.image instanceof File
+                                    ? URL.createObjectURL(activeNote.image)
+                                    : activeNote.image
+                            }
                         />
                     ) : null
                 }

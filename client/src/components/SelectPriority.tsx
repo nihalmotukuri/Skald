@@ -1,26 +1,34 @@
-import { useState } from 'react'
+// src/components/SelectPriority.tsx
+
+import { useState } from 'react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { MdOutlineArrowDownward, MdOutlineArrowForward, MdOutlineArrowUpward } from "react-icons/md"
+} from "@/components/ui/dropdown-menu";
+import { MdOutlineArrowDownward, MdOutlineArrowForward, MdOutlineArrowUpward } from "react-icons/md";
 
-const SelectPriority = ({ selectPriority, currentPriority }) => {
-  const [selectedPriority, setSelectedPriority] = useState("")
+interface Props {
+  selectPriority: (priority: string) => void;
+  currentPriority: string | undefined;
+}
+
+const SelectPriority = ({ selectPriority, currentPriority }: Props) => {
+  const [selectedPriority, setSelectedPriority] = useState("");
 
   const onSelectPriority = (priority: string) => {
-    selectPriority(priority)
-    setSelectedPriority(priority)
-  }
+    selectPriority(priority);
+    setSelectedPriority(priority);
+  };
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button className="bg-white/6 hover:bg-white/10 backdrop-blur-md border border-white/10 rounded-md shadow-lg text-[12px] px-[12px] w-[84px] py-[6px] cursor-pointer">
-          { currentPriority || selectedPriority || 'Set Priority'}          
+          {/* This logic correctly displays the priority */}
+          {currentPriority || selectedPriority || 'Set Priority'}
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="bg-white/10 backdrop-blur-[8px] text-white border border-white/20 absolute right-[-66px] z-1000" align="center">
@@ -49,7 +57,7 @@ const SelectPriority = ({ selectPriority, currentPriority }) => {
         </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
-  )
-}
+  );
+};
 
-export default SelectPriority
+export default SelectPriority;

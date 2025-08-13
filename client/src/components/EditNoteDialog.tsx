@@ -14,7 +14,7 @@ interface AddTaskDialogProps {
 
 const EditNoteDialog = ({ setDisplayEditNote, editNoteId }: AddTaskDialogProps) => {
     const { notes } = useSelector((store: RootState) => store.notesStore)
-    const [editedNote, setEditedNote] = useState<Note>(() => notes.find((n: Note) => n._id === editNoteId))
+    const [editedNote, setEditedNote] = useState<Note | undefined>(() => notes.find((n: Note) => n._id === editNoteId))
     const imageRef = useRef<HTMLInputElement>(null)
     const dispatch = useDispatch<AppDispatch>()
 
@@ -27,8 +27,8 @@ const EditNoteDialog = ({ setDisplayEditNote, editNoteId }: AddTaskDialogProps) 
     }
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files && e.target.files[0] ? e.target.files[0] : null;
-        setEditedNote(prev => ({ ...prev, image: file }))
+        const file = e.target.files?.[0] || null;
+        setEditedNote(prev => prev ? { ...prev, image: file } : undefined)
     }
 
     return (
@@ -54,7 +54,7 @@ const EditNoteDialog = ({ setDisplayEditNote, editNoteId }: AddTaskDialogProps) 
                         className='bg-white/5 backdrop-blur-md border border-white/10 rounded-md shadow-lg text-[14px] px-[12px] py-[6px]'
                         type="text"
                         name="title"
-                        onChange={(e) => setEditedNote({ ...editedNote, title: e.currentTarget.value })}
+                        onChange={(e) => setEditedNote(prev => prev ? { ...prev, title: e.currentTarget.value } : undefined)}
                         value={editedNote?.title ?? ''}
                     />
                 </div>
@@ -65,7 +65,7 @@ const EditNoteDialog = ({ setDisplayEditNote, editNoteId }: AddTaskDialogProps) 
                         name="description"
                         className='bg-white/5 backdrop-blur-md border border-white/10 rounded-md shadow-lg text-[14px] px-[12px] py-[6px] resize-none'
                         rows={12}
-                        onChange={(e) => setEditedNote({ ...editedNote, description: e.currentTarget.value })}
+                        onChange={(e) => setEditedNote(prev => prev ? { ...prev, description: e.currentTarget.value } : undefined)}
                         value={editedNote?.description}
                     ></textarea>
                 </div>

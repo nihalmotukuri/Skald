@@ -49,7 +49,7 @@ const TaskItem = ({ task, toggleTask, setDisplayEditTask, setEditTaskId }: TaskP
 
     const onEditTask = () => {
         setDisplayEditTask(true);
-        setEditTaskId(task._id);
+        setEditTaskId(task._id!);
     };
 
     const onDeleteTask = (taskId: string) => {
@@ -68,13 +68,13 @@ const TaskItem = ({ task, toggleTask, setDisplayEditTask, setEditTaskId }: TaskP
     };
 
     return (
-        <li className={`flex flex-col items-start justify-between ${!task.completed ? "bg-white/2" : "bg-white/6"} backdrop-blur-md border rounded-md shadow-lg p-4 overflow-hidden ${task.status === "Cancelled" ? "opacity-50" : ""} ${formatDueDate(task.date, task.time, task.completed).includes('Overdue') ? "border-red-900/40 !bg-red-900/4" : "border-white/6"}`}>
+        <li className={`flex flex-col items-start justify-between ${!task.completed ? "bg-white/2" : "bg-white/6"} backdrop-blur-md border rounded-md shadow-lg p-4 overflow-hidden ${task.status === "Cancelled" ? "opacity-50" : ""} ${formatDueDate(task.date!, task.time!, task.completed!).includes('Overdue') ? "border-red-900/40 !bg-red-900/4" : "border-white/6"}`}>
             <div className="w-full flex items-center gap-4">
                 <Checkbox
                     disabled={task.status === "Cancelled"}
                     className={`mt-[4px] cursor-pointer !bg-transparent ${!task.completed ? "!border-white" : "!border-transparent"}`}
                     checked={task.completed}
-                    onCheckedChange={() => toggleTask(task._id)}
+                    onCheckedChange={() => toggleTask(task._id!)}
                 />
                 <div className="w-full grid grid-cols-[1fr_160px_140px_30px] items-center">
                     <p className={`text-[16px] font-medium text-white`}>
@@ -99,8 +99,8 @@ const TaskItem = ({ task, toggleTask, setDisplayEditTask, setEditTaskId }: TaskP
                     <p className={`text-slate-400 text-[14px] ml-[32px] ${task.status === "Cancelled" ? "line-through" : ""}`}>{task.description}</p>
                     <p className="flex items-center gap-1 text-[12px] text-white/50 ml-8 mt-2">
                         <Calendar className="size-4 text-slate-400" />
-                        <span className={`${task.status === "Cancelled" ? "line-through" : ""} pl-[4px] ${formatDueDate(task.date, task.time, task.completed).includes('Overdue') ? "text-red-900" : ""}`}>
-                            {formatDueDate(task.date, task.time, task.completed)}
+                        <span className={`${task.status === "Cancelled" ? "line-through" : ""} pl-[4px] ${formatDueDate(task.date!, task.time!, task.completed!).includes('Overdue') ? "text-red-900" : ""}`}>
+                            {formatDueDate(task.date!, task.time!, task.completed!)}
                         </span>
                     </p>
                 </div>
@@ -110,7 +110,7 @@ const TaskItem = ({ task, toggleTask, setDisplayEditTask, setEditTaskId }: TaskP
                         className="text-[14px] text-slate-500 hover:text-[#14161e] border border-slate-500 px-[18px] py-[1px] hover:bg-slate-500 rounded-xl cursor-pointer mr-[16px]"
                     >Edit</button>
                     <button
-                        onClick={() => onDeleteTask(task._id)}
+                        onClick={() => onDeleteTask(task._id!)}
                         className="text-[14px] px-[16px] py-[2px] text-red-500 hover:bg-red-200 rounded-xl border border-red-900 cursor-pointer"
                     >Delete</button>
                 </div>

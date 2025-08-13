@@ -3,5 +3,6 @@ export interface Note {
     firebaseUid: string;
     title: string;
     description: string;
-    image: File | null
+    image: File | null;
+    createdAt?: string;
 }

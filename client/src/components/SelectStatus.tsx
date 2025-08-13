@@ -1,24 +1,29 @@
-import { useState } from 'react'
+import { useState } from 'react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
 
-const SelectStatus = ({ selectStatus, currentStatus }) => {
-  const [selectedStatus, setSelectedStatus] = useState("")
+interface Props {
+  selectStatus: (status: string) => void;
+  currentStatus: string | undefined;
+}
+
+const SelectStatus = ({ selectStatus, currentStatus }: Props) => {
+  const [selectedStatus, setSelectedStatus] = useState("");
 
   const onSelectStatus = (status: string) => {
-    selectStatus(status)
-    setSelectedStatus(status)
-  }
+    selectStatus(status);
+    setSelectedStatus(status);
+  };
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="bg-white/6 hover:bg-white/10 backdrop-blur-md border border-white/10 rounded-md shadow-lg text-[12px] px-[12px] w-[84px] py-[6px] w-full cursor-pointer">
+        <button className="bg-white/6 hover:bg-white/10 backdrop-blur-md border border-white/10 rounded-md shadow-lg text-[12px] px-[12px] py-[6px] w-full cursor-pointer">
           {currentStatus || selectedStatus || 'Set Status'}
         </button>
       </DropdownMenuTrigger>
@@ -48,13 +53,12 @@ const SelectStatus = ({ selectStatus, currentStatus }) => {
                   <p className="text-[14px] font-medium flex items-center">Cancelled</p>
                 </DropdownMenuItem>
               </>
-
             ) : null
           }
         </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
-  )
-}
+  );
+};
 
-export default SelectStatus
+export default SelectStatus;

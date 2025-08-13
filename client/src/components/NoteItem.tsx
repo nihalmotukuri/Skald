@@ -1,33 +1,41 @@
 import { useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import { setActiveNoteId } from "@/redux/notesSlice"
-import type { AppDispatch } from "@/redux/store"
+import type { AppDispatch, RootState } from "@/redux/store";
+import type { Note } from "@/types/note";
+import type React from "react"
 import { deleteNote } from "@/redux/notesThunks"
 import { MdOutlineEdit, MdDeleteOutline } from "react-icons/md"
 import dayjs from "dayjs"
 
-const NoteItem = ({ note, setEditNoteId, setDisplayEditNote }) => {
+interface NoteItemProps {
+  note: Note;
+  setEditNoteId: React.Dispatch<React.SetStateAction<string>>;
+  setDisplayEditNote: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+const NoteItem = ({ note, setEditNoteId, setDisplayEditNote }: NoteItemProps) => {
     const [displayBtns, setDisplayBtns] = useState(false)
     const dispatch = useDispatch<AppDispatch>()
-    const { activeNoteId } = useSelector(store => store.notesStore)
+    const { activeNoteId } = useSelector((store: RootState) => store.notesStore)
 
-    const onNoteItem = (note) => {
+    const onNoteItem = (note: Note) => {
         dispatch(setActiveNoteId(note._id))
     }
 
-    const onEditNote = (e, noteId) => {
+    const onEditNote = (e: React.MouseEvent, noteId: string) => {
         e.stopPropagation()
         setEditNoteId(noteId)
         setDisplayEditNote(true)
     }
 
-    const onDeleteNote = (e, noteId) => {
+    const onDeleteNote = (e: React.MouseEvent, noteId: string) => {
         e.stopPropagation()
         dispatch(setActiveNoteId(''))
         dispatch(deleteNote(noteId))
     }
 
-    const formatTaskDate = (date) => {
+    const formatTaskDate = (date: string) => {
         const d = dayjs(date)
         const now = dayjs()
 
@@ -50,23 +58,23 @@ const NoteItem = ({ note, setEditNoteId, setDisplayEditNote }) => {
             {note.image && (
                 <img
                     className="h-[80px] w-[120px] mt-[16px] object-cover rounded-lg"
-                    src={note.image}
+                    src={note.image instanceof File ? URL.createObjectURL(note.image) : note.image}
                 />
             )}
             <div className="relative">
-                <p className="text-slate-600 text-[14px] mt-[12px]">{formatTaskDate(note.createdAt)}</p>
+                <p className="text-slate-600 text-[14px] mt-[12px]">{formatTaskDate(note.createdAt!)}</p>
 
                 <div className={`absolute z-1 top-[-4px] right-0 flex gap-3 ${displayBtns ? "block" : "hidden"}`}>
                     <div
                         className="p-2 bg-white/10 rounded-md hover:bg-transparent border border-transparent hover:border-white"
-                        onClick={(e) => onEditNote(e, note._id)}
+                        onClick={(e) => onEditNote(e, note._id!)}
                     >
                         <MdOutlineEdit />
                     </div>
 
                     <div
                         className="p-2 bg-white/10 rounded-md hover:bg-transparent border border-transparent hover:border-white"
-                        onClick={(e) => onDeleteNote(e, note._id)}
+                        onClick={(e) => onDeleteNote(e, note._id!)}
                     >
                         <MdDeleteOutline />
                     </div>

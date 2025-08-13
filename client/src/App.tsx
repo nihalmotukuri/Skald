@@ -4,7 +4,6 @@ import type { AppDispatch, RootState } from './redux/store';
 import { fetchNotes } from './redux/notesThunks';
 import { fetchTasks } from './redux/tasksThunks';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-
 import Home from './pages/Home';
 import NotFound from './pages/NotFound';
 import Layout from '@/components/Layout';
@@ -13,8 +12,6 @@ import Tasks from './pages/Tasks';
 import Notes from './pages/Notes';
 import Assistant from './pages/Assistant';
 import SignIn from './pages/SignIn';
-import About from './pages/About';
-// import Profile from './pages/Profile'
 
 import { useAutoLogin } from '@/hooks/useAutoLogin.ts';
 import './App.css';
@@ -44,7 +41,6 @@ function App() {
           <Route path="tasks" element={<Tasks />} />
           <Route path="notes" element={<Notes />} />
           <Route path="assistant" element={<Assistant />} />
-          {/* <Route path="profile" element={<Profile />} /> */}
         </Route>
 
         <Route path="*" element={<NotFound />} />

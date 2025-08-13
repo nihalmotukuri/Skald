@@ -13,23 +13,11 @@ import 'ldrs/react/LineWobble.css'
 const DashboardGrid = () => {
     const dispatch = useDispatch<AppDispatch>()
 
-    interface DarkThemeState {
-        themeStore: {
-            value: boolean;
-        };
-    }
-
-    interface BreadcrumbState {
-        breadcrumbStore: {
-            value: string;
-        };
-    }
-
     const { user, loading } = useSelector((store: RootState) => store.userStore)
 
-    const darkTheme = useSelector((store: DarkThemeState) => store.themeStore.value)
+    const darkTheme = useSelector((store: RootState) => store.themeStore.value)
 
-    const breadcrumb = useSelector((store: BreadcrumbState) => store.breadcrumbStore.value)
+    const breadcrumb = useSelector((store: RootState) => store.breadcrumbStore.value)
 
     return (
         <>
@@ -46,7 +34,7 @@ const DashboardGrid = () => {
                             />
                         </div>
                     )
-                    : (
+                    : user ? (
                         <>
                             <Sidebar user={user} />
 
@@ -81,41 +69,10 @@ const DashboardGrid = () => {
                                 <Outlet />
                             </div>
                         </>
-                    )
+                    ) : null
                 }
             </main>
         </>
-
-        // <div className="flex-1 my-[24px] mr-[24px] flex flex-col">
-        //     <div className="w-full flex justify-between items-center">
-        //         <div className='h-[60px] flex items-center'>
-        //             <BsLayoutSidebarInset
-        //                 className="text-[24px] cursor-pointer"
-        //                 onClick={() => dispatch(toggleSidebar())} />
-
-        //             <span className="mx-[22px] h-[24px] w-[1px] bg-[#45454d]"></span>
-
-        //             <p className="text-[20px] pb-[4px] text-gray-400 flex items-center">
-        //                 Sourish's Skald
-        //                 <MdArrowForwardIos className="mx-[12px] text-[18px] mt-[4px]" />
-        //                 <span className="text-white">Dashboard</span>
-        //             </p>
-        //         </div>
-
-        //         <div>
-        //             {darkTheme
-        //                 ? <CiLight
-        //                     className='text-[24px] cursor-pointer'
-        //                     onClick={() => dispatch(toggleTheme())} />
-        //                 : <CiDark
-        //                     className='text-[24px] cursor-pointer'
-        //                     onClick={() => dispatch(toggleTheme())} />
-        //             }
-        //         </div>
-        //     </div>
-
-        //     <Outlet />
-        // </div>
     )
 }
 

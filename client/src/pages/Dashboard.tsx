@@ -48,6 +48,8 @@ const Dashboard = () => {
     navigate('/app/notes/')
   }
 
+  const lastNote = notes.at(-1)
+
   const renderDashboard = () => (
     <>
       <div className='col-span-2'>
@@ -101,8 +103,8 @@ const Dashboard = () => {
               <p className='text-slate-500 line-clamp-2'>{notes.at(-1)?.description}</p>
               <img
                 className='h-[80px] w-[120px] object-cover mt-3 rounded-xl bg-white/20'
-                src={notes.at(-1)?.image}
-                alt="Note Image"
+                src={lastNote?.image instanceof File ? URL.createObjectURL(lastNote?.image) : lastNote?.image || undefined}
+              alt="Note Image"
               />
               <p className='absolute bottom-5 right-5 text-[14px] text-gray-300 px-[8px] py-1 rounded-2xl border border-white/20 bg-white/6'>✨ Latest note</p>
             </div>
