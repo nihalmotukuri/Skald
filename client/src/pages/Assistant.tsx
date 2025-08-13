@@ -21,7 +21,23 @@ const aiChat: AiChat[] = [
 ]
 
 const Assistant = () => {
-  const [convo, setConvo] = useState<AiChat[]>(JSON.parse(localStorage.getItem('skald_ai_chat') ?? '[]') || aiChat)
+  const [convo, setConvo] = useState<AiChat[]>(() => {
+    try {
+      const storedConvo = localStorage.getItem('skald_ai_chat')
+
+      if (storedConvo) {
+        const parsedConvo = JSON.parse(storedConvo);
+        if (Array.isArray(parsedConvo) && parsedConvo.length > 0) {
+          return parsedConvo;
+        }
+      }
+      return aiChat
+
+    } catch (err) {
+      console.error(err)
+      return aiChat;
+    }
+  })
   const [prompt, setPrompt] = useState("")
   const [responseLoading, setResponseLoading] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -49,8 +65,8 @@ const Assistant = () => {
   const handleInput = () => {
     const textarea = textareaRef.current;
     if (textarea) {
-      textarea.style.height = "auto"; // Reset height
-      textarea.style.height = `${textarea.scrollHeight}px`; // Set to scroll height
+      textarea.style.height = "auto";
+      textarea.style.height = `${textarea.scrollHeight}px`;
     }
   }
 
