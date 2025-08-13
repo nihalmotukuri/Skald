@@ -20,7 +20,7 @@ export const useAutoLogin = () => {
 
             try {
                 const idToken = await user.getIdToken();
-                const res = await axios.get('http://localhost:6969/api/user/get_user', {
+                const res = await axios.get(`${import.meta.env.VITE_API_URL}/user/get_user`, {
                     headers: { Authorization: `Bearer ${idToken}` }
                 });
 
