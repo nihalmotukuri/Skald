@@ -1,0 +1,103 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Noto+Sans:ital,wght@0,100..900;1,100..900&family=Stint+Ultra+Expanded&display=swap');
+
+@font-face {
+  font-family: 'DS-Digital';
+  src: url('/fonts/DS-DIGI.TTF') format('truetype');
+}
+
+* {
+  box-sizing: border-box;
+  /* scrollbar-width: none; */
+}
+
+/* width */
+::-webkit-scrollbar {
+  width: 3px;
+}
+
+/* track (background) */
+::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 10px;
+}
+
+/* handle */
+::-webkit-scrollbar-thumb {
+  background: rgb(135, 151, 161);
+  border-radius: 2px;
+}
+
+main {
+  min-height: 100vh;
+  color: white;
+  background-color: rgb(71, 71, 71);
+}
+
+@keyframes headerAnimation {
+  0% {
+    opacity: 0;
+    top: -18px;
+  } 100% {
+    opacity: 1;
+    top: 24px;
+  }
+}
+
+.header-animation {
+  animation: headerAnimation .3s ease-out;
+}
+
+/* @keyframes logoAnimation {
+  0% {
+    rotate: 0deg;
+  }  100% {
+    rotate: -90deg;
+  }
+}
+
+.logo-animation {
+  animation: logoAnimation .1s ease infinite;
+} */
+
+.react-calendar-heatmap text {
+  fill: #cbd5e1; /* Tailwind slate-300 */
+  font-size: 10px;
+}
+
+.color-empty {
+  fill: #1e293b26; /* slate-800/15 */
+}
+
+.color-github-1 {
+  fill: #475569; /* slate-600 */
+}
+.color-github-2 {
+  fill: #6366f1; /* indigo-500 */
+}
+.color-github-3 {
+  fill: #4f46e5; /* indigo-600 */
+}
+.color-github-4 {
+  fill: #4338ca; /* indigo-700 */
+}
+
+.react-activity-calendar {
+  justify-content: space-between;
+  height: 100%;
+}
+
+.react-activity-calendar__footer {
+  justify-self: flex-end;
+}
+
+@keyframes aiText {
+  0% {
+    opacity: 0;
+  } 100% {
+    opacity: 100%;
+  }
+}
+
+.ai-text {
+  animation: aiText .5s ease-out;
+}
