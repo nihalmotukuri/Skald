@@ -2,9 +2,12 @@ import { useState } from "react";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/redux/store";
 
-const WeeklyCalendar: React.FC = () => {
+const WeeklyCalendar = ({ setCurrentDate }: { setCurrentDate: (value: string) => void}) => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [highlighted, setHighlighted] = useState<Date | null>(null)
   const { isDark } = useSelector((store: RootState) => store.themeStore)
+
+  const today = new Date()
 
   const getWeekStartDate = (date: Date): Date => {
     const startDate = new Date(date);
@@ -25,6 +28,8 @@ const WeeklyCalendar: React.FC = () => {
 
   const handleDateClick = (date: Date) => {
     setSelectedDate(date);
+    setHighlighted(date)
+    setCurrentDate(date.toLocaleDateString());
   };
 
   const weekStartDate = getWeekStartDate(selectedDate);
@@ -52,7 +57,7 @@ const WeeklyCalendar: React.FC = () => {
           ))}
 
           {weekDays.map((day, index) => {
-            const isSelected = day.toDateString() === selectedDate.toDateString();
+            const isSelected = day.toDateString() === highlighted?.toDateString();
             return (
               <div
                 key={index}
@@ -61,7 +66,7 @@ const WeeklyCalendar: React.FC = () => {
               >
                 <div
                   className={`flex items-center justify-center h-10 w-10 rounded-lg text-md font-semibold transition-colors
-                    ${isSelected ? (isDark ? "bg-[#5a69ff]" : "bg-[#602bf8]") : (isDark ? "bg-black/10 " : "bg-[#eae5f7] text-black/40")} shadow-xs`}
+                    ${isSelected ? (isDark ? "bg-[#5a69ff]" : "bg-[#602bf8]") : (isDark ? "bg-black/10 " : "bg-[#eae5f7] text-black/40")} shadow-xs ${today.toLocaleDateString() === day.toLocaleDateString() ? (isDark ? "border-2 border-white/80" : "border-2 border-black/60") : ""}`}
                 >
                   {day.getDate()}
                 </div>

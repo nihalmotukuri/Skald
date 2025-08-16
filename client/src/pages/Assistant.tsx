@@ -171,7 +171,7 @@ const Assistant = () => {
                   <Pulsar
                     size="30"
                     speed="2.4"
-                    color={isDark ? "white" : "black"}
+                    color={isDark ? "white" : "#602bf8"}
                   />
                 </div>
               ) : null

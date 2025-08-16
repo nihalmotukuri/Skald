@@ -23,12 +23,12 @@ const Header = () => {
         <>
             {show && (
                 <header
-                    className="h-[56px] w-[760px] m-auto fixed z-999 top-[24px] left-1/2 transform -translate-x-1/2 bg-slate-300/24 backdrop-blur-sm rounded-[36px] flex justify-between items-center px-[18px] header-animation border border-white"
+                    className="h-[56px] w-[760px] m-auto fixed z-999 top-[24px] left-1/2 transform -translate-x-1/2 bg-slate-300/24 backdrop-blur-sm rounded-xl flex justify-between items-center px-[18px] header-animation border border-white"
                 >
                     <img className="size-[32px]" src="/images/logo.png" />
 
                     <ShinyButton
-                        className='rounded-[36px] border-transparent hover:border'
+                        className='rounded-md border-transparent hover:border'
                         onClick={() => navigate('/signin')}
                     >
                         SIGN IN

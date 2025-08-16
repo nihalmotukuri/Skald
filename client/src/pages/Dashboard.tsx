@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import type { RootState, AppDispatch } from '@/redux/store'
@@ -12,7 +12,11 @@ import TaskCompletionChart from '@/components/TaskCompletionChart'
 import Heatmap from '@/components/Heatmap'
 import WeeklyCalendar from '@/components/WeeklyCalendar'
 import DashboardSkeleton from '@/components/DashboardSkeleton'
-import dayjs from "dayjs";
+import type { Task } from '@/types/task'
+import dayjs from 'dayjs';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
+
+dayjs.extend(customParseFormat);
 
 const Dashboard = () => {
   const dispatch = useDispatch<AppDispatch>()
@@ -24,6 +28,30 @@ const Dashboard = () => {
   const notes = notesState.notes
   const tasks = tasksState.tasks
 
+  const [currentDate, setCurrentDate] = useState<string>('')
+  const [filteredTasks, setFilteredTasks] = useState<Task[]>([])
+  // there's issue with the logic mainly with the completed, pending, cancelled, ...
+  // const dueDate = new Date(currentDate)
+  const dayjsObject = dayjs(currentDate, 'D/M/YYYY')
+  const dueDate = dayjsObject.format('DD MMM')
+  console.log(currentDate)
+
+  useEffect(() => {
+    if (!currentDate) {
+      setFilteredTasks(tasks)
+    }
+
+    const newFilteredList = tasks.filter(t => {
+      const date = new Date(t.date!)
+      const dueDate = date.toLocaleDateString()
+      return dueDate === currentDate
+    })
+
+    console.log(newFilteredList)
+
+    setFilteredTasks(newFilteredList)
+  }, [tasks, currentDate])
+
   const totalTasks = tasks.filter(t => t.status !== "Cancelled").length
   const ongoing = tasks.filter(t => t.status === "In Progress").length
   const completed = tasks.filter(t => t.status === "Done").length
@@ -32,7 +60,7 @@ const Dashboard = () => {
 
   const now = new Date();
   const firstDayOfWeek = new Date(now);
-  firstDayOfWeek.setDate(now.getDate() - now.getDay()); // Sunday as start of week
+  firstDayOfWeek.setDate(now.getDate() - now.getDay());
   firstDayOfWeek.setHours(0, 0, 0, 0);
 
   const tasksThisWeek = tasks.filter(task => {
@@ -83,7 +111,7 @@ const Dashboard = () => {
             <div className={`col-2 row-start-5 row-end-10 ${isDark ? "bg-white/2 border-white/10" : "bg-white !text-[#2d3748]"} backdrop-blur-md border text-white rounded-xl p-[18px] flex flex-col justify-between shadow-md`}>
               <TbCancel className='text-[42px]' />
               <div>
-                <p className='font-bold text-[18px]'>Cancel</p>
+                <p className='font-bold text-[18px]'>Cancelled</p>
                 <p className='text-[14px] text-slate-500 font-semibold'>{cancelled} Tasks</p>
               </div>
             </div>
@@ -116,44 +144,61 @@ const Dashboard = () => {
       </div>
 
       <div className='col-span-1'>
-        <WeeklyCalendar />
+        <WeeklyCalendar
+          setCurrentDate={setCurrentDate}
+        />
 
         <div className={`${notes.length > 0 ? "h-[684px]" : "h-[456px]"} mt-5 ${isDark ? "text-white border-white/10 bg-white/2" : "!text-[#2d3748] bg-white"} backdrop-blur-md border rounded-2xl shadow-lg py-[20px] px-[26px] grid grid-rows-[44px_1fr] shadow-lg`}>
           <p className="font-bold text-[18px] mb-[16px]">
-            Completed This Week
+            {filteredTasks.length > 0 && currentDate ? `Due on ${dueDate}` : "Completed This Week"}
           </p>
 
           <div className='overflow-y-auto h-full'>
             <ul className='h-full flex flex-col gap-2 overflow-y-auto relative'>
-              {tasksThisWeek.length > 0
-                ? tasksThisWeek.map(ct => (
-                  <li className={`p-3 ${isDark ? "bg-white/6" : "bg-white border"} rounded-lg shadow-sm`} key={ct._id}>
-                    <p className='mb-2'>{ct.title}</p>
+              {filteredTasks.length > 0 && currentDate
+                ? filteredTasks.map(ct => (
+                  <li className={`p-3 ${isDark ? "bg-white/6" : "bg-white border"} rounded-lg shadow-sm ${ct.status === 'Cancelled' ? "opacity-50" : ""}`} key={ct._id}>
+                    <p className={`mb-2 ${ct.status === "Cancelled" ? "line-through" : ""}`}>{ct.title}</p>
                     <div className='flex justify-between'>
                       <span className={`text-[12px] py-[1px] px-[8px] rounded-lg border ${isDark ? "border-white/20 text-gray-400" : "bg-[#602bf8] text-white"}`}>
                         {ct.taskList}
                       </span>
                       <span className='text-[12px] text-slate-500'>
-                        {dayjs(ct.completedAt).format("DD MMM")}
+                        {ct.status === "In Progress" ? "Ongoing" : ct.status}
                       </span>
                     </div>
                   </li>
                 ))
-                : (totalTasks > 0
-                  ? (
-                    <p
-                      className={`text-[15px] text-gray-400 ${isDark ? "bg-white/6" : "bg-neutral-100"} p-3 rounded-lg inline-block m-auto absolute top-0`}
-                    >
-                      You haven’t completed any tasks yet. Get started by finishing your first one!
-                    </p>
-                  )
-                  : (
-                    <p
-                      className={`text-[15px] text-gray-400 ${isDark ? "bg-white/6" : "bg-neutral-100"} p-3 rounded-lg inline-block m-auto absolute top-0`}
-                    >
-                      You haven’t added any tasks yet. Start by creating your first one!
-                    </p>
-                  )
+                : (
+                  tasksThisWeek.length > 0
+                    ? tasksThisWeek.map(ct => (
+                      <li className={`p-3 ${isDark ? "bg-white/6" : "bg-white border"} rounded-lg shadow-sm`} key={ct._id}>
+                        <p className='mb-2'>{ct.title}</p>
+                        <div className='flex justify-between'>
+                          <span className={`text-[12px] py-[1px] px-[8px] rounded-lg border ${isDark ? "border-white/20 text-gray-400" : "bg-[#602bf8] text-white"}`}>
+                            {ct.taskList}
+                          </span>
+                          <span className='text-[12px] text-slate-500'>
+                            {dayjs(ct.completedAt).format("DD MMM")}
+                          </span>
+                        </div>
+                      </li>
+                    )) : (totalTasks > 0
+                      ? (
+                        <p
+                          className={`text-[15px] text-gray-400 ${isDark ? "bg-white/6" : "bg-neutral-100"} p-3 rounded-lg inline-block m-auto absolute top-0`}
+                        >
+                          You haven’t completed any tasks yet. Get started by finishing your first one!
+                        </p>
+                      )
+                      : (
+                        <p
+                          className={`text-[15px] text-gray-400 ${isDark ? "bg-white/6" : "bg-neutral-100"} p-3 rounded-lg inline-block m-auto absolute top-0`}
+                        >
+                          You haven’t added any tasks yet. Start by creating your first one!
+                        </p>
+                      )
+                    )
                 )
               }
             </ul>
