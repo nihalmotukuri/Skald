@@ -3,8 +3,8 @@ import { useSelector, useDispatch } from "react-redux";
 import { clearUser } from "@/redux/userSlice";
 import type { RootState, AppDispatch } from "@/redux/store";
 import { TbLayoutDashboard } from "react-icons/tb";
-import { VscTasklist } from "react-icons/vsc";
-import { SlNotebook } from "react-icons/sl";
+import { LuListTodo } from "react-icons/lu"
+import { PiNotebookLight } from "react-icons/pi"
 import { BsLightningChargeFill } from "react-icons/bs";
 import { motion } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -13,8 +13,8 @@ import { IoIosLogOut } from "react-icons/io"
 
 const features = [
   { name: "Dashboard", icon: <TbLayoutDashboard />, path: "/app/dashboard" },
-  { name: "To-do List", icon: <VscTasklist />, path: "/app/tasks" },
-  { name: "Notes", icon: <SlNotebook />, path: "/app/notes" },
+  { name: "To-do List", icon: <LuListTodo />, path: "/app/tasks" },
+  { name: "Notes", icon: <PiNotebookLight />, path: "/app/notes" },
   { name: "Assistant", icon: <BsLightningChargeFill />, path: "/app/assistant" },
 ];
 
