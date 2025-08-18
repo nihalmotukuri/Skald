@@ -117,7 +117,7 @@ const Home = () => {
                                                 <span className="text-[6px] px-1 text-white/60 border border-white/40 rounded-sm">Work</span>
                                             </li>
                                             <li className="h-[40px] w-full bg-white/6 border border-white/40 rounded-md flex items-center p-2 opacity-40">
-                                                <MdDone className="text-[12px] text-white/60" />
+                                                <div className="size-[10px] rounded-xs border border-white/40"></div>
                                                 <p className="text-[10px] px-1 mt-[-2px] text-white/80 line-through">Plan the week</p>
                                                 <span className="text-[6px] px-1 text-white/60 border border-white/40 rounded-sm">Planning</span>
                                             </li>
