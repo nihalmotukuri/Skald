@@ -30,7 +30,6 @@ const userSlice = createSlice({
       state.loading = action.payload
     },
     setPathname: (state, action) => {
-      console.log(action.payload)
       state.pathname = action.payload
     }
   },

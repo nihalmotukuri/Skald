@@ -42,7 +42,6 @@ const Assistant = () => {
   const [responseLoading, setResponseLoading] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-  console.log(convo)
 
   const { tasks } = useSelector((store: RootState) => store.tasksStore)
   const { notes } = useSelector((store: RootState) => store.notesStore)
@@ -137,11 +136,11 @@ const Assistant = () => {
                 >
                   <LuBot className={`text-[22px] ${isDark ? "bg-white/8" : "bg-[#602bf8]"} text-white size-auto p-[8px] rounded-3xl`} />
 
-                  <p className={`w-full pt-[6px] ${isDark ? "text-slate-200" : "text-blue-950"}`}>
+                  <div className={`w-full pt-[6px] ${isDark ? "text-slate-200" : "text-blue-950"}`}>
                     <ReactMarkdown>
                       {c.message}
                     </ReactMarkdown>
-                  </p>
+                  </div>
                 </div>
               )
               : (

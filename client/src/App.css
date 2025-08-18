@@ -7,21 +7,17 @@
 
 * {
   box-sizing: border-box;
-  /* scrollbar-width: none; */
 }
 
-/* width */
 ::-webkit-scrollbar {
   width: 3px;
 }
 
-/* track (background) */
 ::-webkit-scrollbar-track {
   background: transparent;
   border-radius: 10px;
 }
 
-/* handle */
 ::-webkit-scrollbar-thumb {
   background: rgb(135, 151, 161);
   border-radius: 2px;
@@ -46,38 +42,27 @@ main {
   animation: headerAnimation .3s ease-out;
 }
 
-/* @keyframes logoAnimation {
-  0% {
-    rotate: 0deg;
-  }  100% {
-    rotate: -90deg;
-  }
-}
-
-.logo-animation {
-  animation: logoAnimation .1s ease infinite;
-} */
-
 .react-calendar-heatmap text {
-  fill: #cbd5e1; /* Tailwind slate-300 */
+  fill: #cbd5e1;
   font-size: 10px;
 }
 
 .color-empty {
-  fill: #1e293b26; /* slate-800/15 */
+  fill: #1e293b26;
 }
 
 .color-github-1 {
-  fill: #475569; /* slate-600 */
+  fill: #475569;
 }
+
 .color-github-2 {
-  fill: #6366f1; /* indigo-500 */
+  fill: #6366f1; 
 }
 .color-github-3 {
-  fill: #4f46e5; /* indigo-600 */
+  fill: #4f46e5; 
 }
 .color-github-4 {
-  fill: #4338ca; /* indigo-700 */
+  fill: #4338ca; 
 }
 
 .react-activity-calendar {

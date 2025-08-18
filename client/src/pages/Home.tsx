@@ -1,9 +1,7 @@
 import { useNavigate } from "react-router-dom";
-// import Header from "@/components/Header"
 import Footer from "@/components/Footer";
 import { WordRotate } from "@/components/magicui/word-rotate";
 import { InteractiveHoverButton } from "@/components/magicui/interactive-hover-button"
-// import FeaturesBentoGrid from "@/components/FeaturesBentoGrid";
 import { CiLight } from "react-icons/ci"
 import { IoAddOutline } from "react-icons/io5"
 import { MdDone } from "react-icons/md"
@@ -15,8 +13,6 @@ const Home = () => {
 
     return (
         <>
-            {/* <Header /> */}
-
             <main className="bg-[#0f111a] pt-[64px] pb-[54px] relative overflow-hidden">
                 <div className="absolute top-[-1100px] inset-0 m-auto h-[360px] w-[820px] [border-radius:50%] bg-[radial-gradient(ellipse_at_center,_#1e2247_0%,_#0f111a_80%)]">
                     <div className="absolute z-1 top-[-60px] bottom-[-60px] left-[-60px] right-[-60px] backdrop-blur-[30px]"></div>
@@ -74,9 +70,6 @@ const Home = () => {
 
                 </section>
 
-                {/* <section className="mt-[42px] max-w-[992px] m-auto">
-                    <FeaturesBentoGrid />
-                </section> */}
                 <section className="h-[520px]">
                     <div className="w-[1200px] h-[740px] bg-[radial-gradient(ellipse_at_center,_#1e2247_90%,_rgba(255,255,255,0)_100%)] m-auto [border-radius:50%] black relative mt-[480px]">
                         <div className="absolute z-1 top-[-140px] bottom-[-140px] left-[-140px] right-[-140px] backdrop-blur-[80px]"></div>
@@ -132,10 +125,6 @@ const Home = () => {
                                     </div>
 
                                     <div className="col-span-2 row-span-2 bg-[#0f111a] rounded-2xl p-4 !pt-[14px]">
-                                        {/* <img className="w-full" src="/images/n-2.png" alt="" />
-
-                                        <img className="w-full" src="/images/n-1.png" alt="" />
-                                         */}
                                          <div className="bg-white/6 p-4 !pt-3 rounded-xl mb-2">
                                             <p className="font-bold">A Plan for Watching the Stars</p>
                                             <p className="line-clamp-2 text-[12px] mt-2 text-slate-500">

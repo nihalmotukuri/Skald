@@ -72,24 +72,26 @@ const AddNoteDialog = ({ setDisplayAddNote }: AddNoteDialogProps) => {
                 </div>
 
                 <div className='flex flex-col gap-2'>
-                    <label className='text-[15px]' htmlFor="title">Title</label>
+                    <label className='text-[15px]' htmlFor="title">Title *</label>
                     <input
                         className={`${isDark ? "bg-white/5 border-white/10" : "bg-neutral-100/20 !border-black/10"} shadow-md backdrop-blur-md border rounded-md text-[14px] px-[12px] py-[6px]`}
                         type="text"
                         name="title"
                         onChange={handleNoteChange}
                         value={noteForm.title}
+                        required
                     />
                 </div>
 
                 <div className='flex flex-col gap-2'>
-                    <label className='text-[15px]' htmlFor="description">Description</label>
+                    <label className='text-[15px]' htmlFor="description">Description *</label>
                     <textarea
                         name="description"
                         className={`${isDark ? "bg-white/5 border-white/10" : "bg-neutral-100/20 !border-black/10"} shadow-md  backdrop-blur-md border rounded-md text-[14px] px-[12px] py-[6px] resize-none`}
                         rows={12}
                         onChange={handleNoteChange}
                         value={noteForm.description}
+                        required
                     ></textarea>
                 </div>
 

@@ -3,7 +3,6 @@ import { createAsyncThunk } from '@reduxjs/toolkit'
 import axios from 'axios'
 import type { Note } from '@/types/note'
 
-// Fetch all notes for the current user
 export const fetchNotes = createAsyncThunk<Note[], void, { state: RootState }>(
   'notesSlice/fetchNotes',
   async (_, thunkAPI) => {
@@ -14,7 +13,6 @@ export const fetchNotes = createAsyncThunk<Note[], void, { state: RootState }>(
   }
 )
 
-// Add a new note
 export const addNote = createAsyncThunk<Note, Note>(
   'notesSlice/addNote',
   async (newNote: Note) => {
@@ -25,7 +23,6 @@ export const addNote = createAsyncThunk<Note, Note>(
   }
 )
 
-// Edit an existing note
 export const editNote = createAsyncThunk<Note, Note>(
   'notesSlice/editNote',
   async (editedNote: Note) => {
@@ -36,7 +33,6 @@ export const editNote = createAsyncThunk<Note, Note>(
   }
 )
 
-// Delete a note
 export const deleteNote = createAsyncThunk<{ noteId: string }, string>(
   'notesSlice/deleteNote',
   async (noteId: string) => {

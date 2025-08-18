@@ -1,38 +1,13 @@
 import { Router } from "express"
 import { verifyFirebaseToken } from "../middleware/verifyFirebaseToken.js"
-import User from '../models/user.model.js'
+import { getUser, addTaskList, removeTaskList } from "../controllers/user.controller.js"
 
 const router = Router()
 
-router.get('/get_user', verifyFirebaseToken, async (req, res) => {
-  const { firebaseUid } = req
+router.get('/get_user', verifyFirebaseToken, getUser)
 
-  const user = await User.findOne({ firebaseUid })
-  res.json(user)
-})
+router.put('/add_tasklist', addTaskList)
 
-router.put('/add_tasklist', async (req, res) => {
-  const { firebaseUid, newTaskList } = req.body
-
-  try {
-    const updatedUser = await User.findOneAndUpdate({ firebaseUid }, { $addToSet: { taskList: newTaskList } })
-    console.log(updatedUser)
-    res.status(201).json({ message: "Task list successfully added", newTaskList })
-  } catch (err) {
-    res.status(500).json({ message: err.message })
-  }
-})
-
-router.put('/remove_tasklist', async (req, res) => {
-  const { firebaseUid, taskListToRemove } = req.body 
-  console.log(taskListToRemove)
-  try {
-    const updatedUser = await User.findOneAndUpdate({ firebaseUid }, { $pull: {taskList: taskListToRemove} }, { new: true })
-    console.log(updatedUser)
-    res.status(201).json({ message: "Task list successfully removed", taskListToRemove })
-  } catch (err) {
-    res.status(500).json({ message: err.message })
-  }
-})
+router.put('/remove_tasklist', removeTaskList)
 
 export default router

@@ -30,11 +30,8 @@ const Dashboard = () => {
 
   const [currentDate, setCurrentDate] = useState<string>('')
   const [filteredTasks, setFilteredTasks] = useState<Task[]>([])
-  // there's issue with the logic mainly with the completed, pending, cancelled, ...
-  // const dueDate = new Date(currentDate)
   const dayjsObject = dayjs(currentDate, 'D/M/YYYY')
   const dueDate = dayjsObject.format('DD MMM')
-  console.log(currentDate)
 
   useEffect(() => {
     if (!currentDate) {
@@ -47,7 +44,6 @@ const Dashboard = () => {
       return dueDate === currentDate
     })
 
-    console.log(newFilteredList)
 
     setFilteredTasks(newFilteredList)
   }, [tasks, currentDate])
@@ -150,25 +146,35 @@ const Dashboard = () => {
 
         <div className={`${notes.length > 0 ? "h-[684px]" : "h-[456px]"} mt-5 ${isDark ? "text-white border-white/10 bg-white/2" : "!text-[#2d3748] bg-white"} backdrop-blur-md border rounded-2xl shadow-lg py-[20px] px-[26px] grid grid-rows-[44px_1fr] shadow-lg`}>
           <p className="font-bold text-[18px] mb-[16px]">
-            {filteredTasks.length > 0 && currentDate ? `Due on ${dueDate}` : "Completed This Week"}
+            {currentDate ? `Due on ${dueDate}` : "Completed This Week"}
           </p>
 
           <div className='overflow-y-auto h-full'>
             <ul className='h-full flex flex-col gap-2 overflow-y-auto relative'>
-              {filteredTasks.length > 0 && currentDate
-                ? filteredTasks.map(ct => (
-                  <li className={`p-3 ${isDark ? "bg-white/6" : "bg-white border"} rounded-lg shadow-sm ${ct.status === 'Cancelled' ? "opacity-50" : ""}`} key={ct._id}>
-                    <p className={`mb-2 ${ct.status === "Cancelled" ? "line-through" : ""}`}>{ct.title}</p>
-                    <div className='flex justify-between'>
-                      <span className={`text-[12px] py-[1px] px-[8px] rounded-lg border ${isDark ? "border-white/20 text-gray-400" : "bg-[#602bf8] text-white"}`}>
-                        {ct.taskList}
-                      </span>
-                      <span className='text-[12px] text-slate-500'>
-                        {ct.status === "In Progress" ? "Ongoing" : ct.status}
-                      </span>
-                    </div>
-                  </li>
-                ))
+              {currentDate
+                ? (
+                  filteredTasks.length > 0
+                    ? (filteredTasks.map(ct => (
+                      <li className={`p-3 ${isDark ? "bg-white/6" : "bg-white border"} rounded-lg shadow-sm ${ct.status === 'Cancelled' ? "opacity-50" : ""}`} key={ct._id}>
+                        <p className={`mb-2 ${ct.status === "Cancelled" ? "line-through" : ""}`}>{ct.title}</p>
+                        <div className='flex justify-between'>
+                          <span className={`text-[12px] py-[1px] px-[8px] rounded-lg border ${isDark ? "border-white/20 text-gray-400" : "bg-[#602bf8] text-white"}`}>
+                            {ct.taskList}
+                          </span>
+                          <span className='text-[12px] text-slate-500'>
+                            {ct.status === "In Progress" ? "Ongoing" : ct.status}
+                          </span>
+                        </div>
+                      </li>
+                    )))
+                    : (
+                      <p
+                        className={`text-[15px] text-gray-400 w-full ${isDark ? "bg-white/6" : "bg-neutral-100"} p-3 rounded-lg inline-block m-auto absolute top-0`}
+                      >
+                        No tasks due. Add a new task for this day.
+                      </p>
+                    )
+                )
                 : (
                   tasksThisWeek.length > 0
                     ? tasksThisWeek.map(ct => (
@@ -186,14 +192,14 @@ const Dashboard = () => {
                     )) : (totalTasks > 0
                       ? (
                         <p
-                          className={`text-[15px] text-gray-400 ${isDark ? "bg-white/6" : "bg-neutral-100"} p-3 rounded-lg inline-block m-auto absolute top-0`}
+                          className={`text-[15px] text-gray-400 w-full ${isDark ? "bg-white/6" : "bg-neutral-100"} p-3 rounded-lg inline-block m-auto absolute top-0`}
                         >
                           You haven’t completed any tasks yet. Get started by finishing your first one!
                         </p>
                       )
                       : (
                         <p
-                          className={`text-[15px] text-gray-400 ${isDark ? "bg-white/6" : "bg-neutral-100"} p-3 rounded-lg inline-block m-auto absolute top-0`}
+                          className={`text-[15px] text-gray-400 w-full ${isDark ? "bg-white/6" : "bg-neutral-100"} p-3 rounded-lg inline-block m-auto absolute top-0`}
                         >
                           You haven’t added any tasks yet. Start by creating your first one!
                         </p>

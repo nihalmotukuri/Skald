@@ -15,10 +15,11 @@ const AddTaskList = () => {
     const dispatch = useDispatch<AppDispatch>()
 
     const { isDark } = useSelector((store: RootState) => store.themeStore)
+    const { user } = useSelector((store: RootState) => store.userStore)
 
     const onAddTaskList = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
-        if (!newTaskList.trim()) return
+        if (!newTaskList.trim() && user?.taskList.includes(newTaskList)) return
         dispatch(addTaskList(newTaskList))
         setNewTaskList('')
         setOpen(false)
@@ -38,24 +39,19 @@ const AddTaskList = () => {
 
             <DropdownMenuContent className={`${isDark ? "bg-white/5 border-white/10 text-white" : "bg-neutral-100/10 !border-black/20 !text-gray-600"} backdrop-blur-xl border rounded-md absolute z-[1] w-[240px] right-[-180px] text-white p-[12px]`} align="start">
                 <form className='flex flex-col' onSubmit={onAddTaskList}>
-                    <label className='text-[15px]' htmlFor="title">Task List</label>
-                    {/* <input
-                        className='bg-white/5 backdrop-blur-md border border-white/10 rounded-md shadow-lg text-[14px] px-[12px] py-[6px] mt-[4px]'
-                        type="text"
-                        name="title"
-                        value={newTaskList}
-                        onChange={e => setNewTaskList(e.target.value)}
-                    /> */}
+                    <label className='text-[15px]' htmlFor="title">Task List </label>
                     <input
                         className={`${isDark ? "bg-white/5 border-white/10" : "bg-neutral-100/20 !border-black/10"} shadow-sm backdrop-blur-md border rounded-md text-[14px] px-[12px] py-[6px] mt-[4px]`}
                         type="text"
                         name="title"
                         value={newTaskList}
                         onChange={e => setNewTaskList(e.target.value)}
+                        required
                     />
                     <button
                         className={`cursor-pointer ${isDark ? "hover:bg-white/10 border-white/10" : "hover:bg-black/10 !border-black/20"} backdrop-blur-md border rounded-md shadow-sm text-[14px] px-[12px] py-[6px] mt-[14px]`}
                         type="submit"
+                        disabled={user?.taskList.includes(newTaskList)}
                     >
                         Add New List
                     </button>
