@@ -16,7 +16,7 @@ interface Props {
 }
 
 const SelectPriority = ({ selectPriority, currentPriority }: Props) => {
-  const [selectedPriority, setSelectedPriority] = useState("Low");
+  const [selectedPriority, setSelectedPriority] = useState("");
   const { isDark } = useSelector((store: RootState) => store.themeStore)
 
   const onSelectPriority = (priority: string) => {

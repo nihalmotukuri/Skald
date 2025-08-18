@@ -157,10 +157,15 @@ const Dashboard = () => {
                     ? (filteredTasks.map(ct => (
                       <li className={`p-3 ${isDark ? "bg-white/6" : "bg-white border"} rounded-lg shadow-sm ${ct.status === 'Cancelled' ? "opacity-50" : ""}`} key={ct._id}>
                         <p className={`mb-2 ${ct.status === "Cancelled" ? "line-through" : ""}`}>{ct.title}</p>
-                        <div className='flex justify-between'>
-                          <span className={`text-[12px] py-[1px] px-[8px] rounded-lg border ${isDark ? "border-white/20 text-gray-400" : "bg-[#602bf8] text-white"}`}>
-                            {ct.taskList}
-                          </span>
+                        <div className={`flex ${ct.taskList ? "justify-between" : "justify-end"}`}>
+                          {ct.taskList
+                            ? (
+                              <span className={`text-[12px] py-[1px] px-[8px] rounded-lg border ${isDark ? "border-white/20 text-gray-400" : "bg-[#602bf8] text-white"}`}>
+                                {ct.taskList}
+                              </span>
+                            )
+                            : null
+                          }
                           <span className='text-[12px] text-slate-500'>
                             {ct.status === "In Progress" ? "Ongoing" : ct.status}
                           </span>
@@ -180,10 +185,15 @@ const Dashboard = () => {
                     ? tasksThisWeek.map(ct => (
                       <li className={`p-3 ${isDark ? "bg-white/6" : "bg-white border"} rounded-lg shadow-sm`} key={ct._id}>
                         <p className='mb-2'>{ct.title}</p>
-                        <div className='flex justify-between'>
-                          <span className={`text-[12px] py-[1px] px-[8px] rounded-lg border ${isDark ? "border-white/20 text-gray-400" : "bg-[#602bf8] text-white"}`}>
-                            {ct.taskList}
-                          </span>
+                        <div className={`flex ${ct.taskList ? "justify-between" : "justify-end"}`}>
+                          {ct.taskList
+                            ? (
+                              <span className={`text-[12px] py-[1px] px-[8px] rounded-lg border ${isDark ? "border-white/20 text-gray-400" : "bg-[#602bf8] text-white"}`}>
+                                {ct.taskList}
+                              </span>
+                            )
+                            : null
+                          }
                           <span className='text-[12px] text-slate-500'>
                             {dayjs(ct.completedAt).format("DD MMM")}
                           </span>
