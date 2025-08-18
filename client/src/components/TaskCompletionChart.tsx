@@ -17,18 +17,18 @@ const TaskCompletionChart = ({ total, completed }: TaskCompletionChartProps) => 
   const endAngle = 90 + (percentage / 100) * 360; 
 
   const renderCenterLabel = () => (
-    <foreignObject x="30" y="60" width="140" height="80">
-      <div className="flex flex-col items-center justify-center w-full h-full text-white font-mono ml-[10px]">
+      <div className="absolute z-1 flex flex-col items-center justify-center m-auto w-full h-full text-white font-mono">
         <span className={`text-4xl font-bold mt-[18px] ${isDark ? "" : "text-black/80"}`}>{percentage}%</span>
         <span className="text-slate-500">{completed}/{total} tasks done</span>
       </div>
-    </foreignObject>
   );
 
   return (
     <motion.div className="h-full w-full">
       <Card className={`${ isDark ? "bg-white/2 border-white/10" : "bg-white !text-[#2d3748]" } backdrop-blur-md text-white rounded-2xl shadow-md h-full w-full`}>
         <CardContent className="flex items-center justify-center flex-col gap-3 pt-[36px] relative">
+          {renderCenterLabel()}
+
           {!percentage && (
             <span className="text-md leading-[18px] mt-[14px] absolute text-slate-500 text-center">
               No tasks <br />completed so far
@@ -64,7 +64,6 @@ const TaskCompletionChart = ({ total, completed }: TaskCompletionChartProps) => 
                 isAnimationActive={true}
                 cornerRadius={8}
                 labelLine={false}
-                label={renderCenterLabel}
               >
                 <Cell fill={isDark ? "#5a69ff" : "#602bf8"} />
               </Pie>
