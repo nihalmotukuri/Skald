@@ -27,7 +27,7 @@ const TaskCompletionChart = ({ total, completed }: TaskCompletionChartProps) => 
     <motion.div className="h-full w-full">
       <Card className={`${ isDark ? "bg-white/2 border-white/10" : "bg-white !text-[#2d3748]" } backdrop-blur-md text-white rounded-2xl shadow-md h-full w-full`}>
         <CardContent className="flex items-center justify-center flex-col gap-3 pt-[36px] relative">
-          {renderCenterLabel()}
+          {total > 0 ? renderCenterLabel() : null}
 
           {!percentage && (
             <span className="text-md leading-[18px] mt-[14px] absolute text-slate-500 text-center">
