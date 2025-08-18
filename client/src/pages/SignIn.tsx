@@ -21,12 +21,13 @@ const SignIn = () => {
         const { idToken } = await signInWithGoogle()
         Cookies.set('skald_token', idToken)
         const res = await dispatch(createUser(idToken))
+        
         if (res.payload.ok && !pathname) {
             setLoading(false)
-            navigate('/app/dashboard')
+            navigate('/app/dashboard', {replace: true})
         } else if (res.payload.ok && pathname) {
             setLoading(false)
-            navigate(pathname)
+            navigate(pathname,  {replace: true})
         }
     }
 

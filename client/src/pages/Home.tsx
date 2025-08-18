@@ -62,7 +62,7 @@ const Home = () => {
                     <div className="w-[150px] m-auto py-4">
                         <InteractiveHoverButton
                             className="text-[#0f111a]"
-                            onClick={() => navigate('/signin')}
+                            onClick={() => navigate('/signin', { replace: true })}
                         >
                             Get Started
                         </InteractiveHoverButton>
