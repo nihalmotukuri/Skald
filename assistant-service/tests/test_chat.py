@@ -1,4 +1,5 @@
 from collections.abc import Iterator
+import json
 from uuid import UUID
 
 import pytest
@@ -73,6 +74,77 @@ def test_chat_uses_authenticated_user_context(
     assert calls["access_token"] == "signed-user-token"
 
 
+def test_stream_endpoint_emits_deltas_and_final_proposals(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    async def fake_context(user_id: UUID, access_token: str, settings: object) -> dict[str, list[dict[str, str]]]:
+        return {"tasks": [], "notes": [], "task_lists": []}
+
+    async def fake_stream(messages: list[ChatMessage], context: object, settings: object):
+        yield "A streamed "
+        yield "reply."
+        yield ChatResult(
+            reply="A streamed reply.",
+            proposals=[ProposalEnvelope(action=CreateTaskProposal(
+                action="create_task",
+                summary="Create a task",
+                title="Stream test",
+            ))],
+        )
+
+    monkeypatch.setattr(main, "load_user_context", fake_context)
+    monkeypatch.setattr(main, "stream_reply", fake_stream)
+
+    response = client.post(
+        "/api/chat/stream",
+        json={"messages": [{"role": "user", "content": "Help me."}]},
+    )
+
+    events = [
+        json.loads(line[6:])
+        for line in response.text.splitlines()
+        if line.startswith("data: ")
+    ]
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/event-stream")
+    assert [event["text"] for event in events if event["type"] == "delta"] == ["A streamed ", "reply."]
+    assert events[-1]["type"] == "complete"
+    assert events[-1]["reply"] == "A streamed reply."
+    assert events[-1]["proposals"][0]["action"]["title"] == "Stream test"
+
+
+def test_stream_endpoint_reports_unexpected_errors_safely(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    async def fake_context(user_id: UUID, access_token: str, settings: object) -> dict[str, list[dict[str, str]]]:
+        return {"tasks": [], "notes": [], "task_lists": []}
+
+    async def fake_stream(messages: list[ChatMessage], context: object, settings: object):
+        raise RuntimeError("internal provider details")
+        yield "unreachable"
+
+    monkeypatch.setattr(main, "load_user_context", fake_context)
+    monkeypatch.setattr(main, "stream_reply", fake_stream)
+
+    with caplog.at_level("ERROR"):
+        response = client.post(
+            "/api/chat/stream",
+            json={"messages": [{"role": "user", "content": "Help me."}]},
+        )
+
+    event = next(
+        json.loads(line[6:])
+        for line in response.text.splitlines()
+        if line.startswith("data: ")
+    )
+    assert event == {"type": "error", "detail": "Mr Groff could not complete that response."}
+    assert "Unexpected error while streaming Mr Groff response" in caplog.text
+    assert "internal provider details" in caplog.text
+
+
 def test_health_check_does_not_require_provider_configuration() -> None:
     with TestClient(main.app) as client:
         response = client.get("/health")
@@ -85,6 +157,16 @@ def test_chat_requires_authentication() -> None:
     with TestClient(main.app) as client:
         response = client.post(
             "/api/chat",
+            json={"messages": [{"role": "user", "content": "Hello"}]},
+        )
+
+    assert response.status_code == 401
+
+
+def test_stream_chat_requires_authentication() -> None:
+    with TestClient(main.app) as client:
+        response = client.post(
+            "/api/chat/stream",
             json={"messages": [{"role": "user", "content": "Hello"}]},
         )
 

@@ -186,6 +186,7 @@ const Assistant = () => {
   const [requestError, setRequestError] = useState<string | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const applyingProposals = useRef(new Set<string>())
+  const requestController = useRef<AbortController | null>(null)
 
   const user = useAppStore((state) => state.user)
   const isDark = useAppStore((state) => state.isDark)
@@ -206,9 +207,11 @@ const Assistant = () => {
 
   useEffect(() => {
     if (!user?.id) return
+    requestController.current?.abort()
     setConversation({ userId: user.id, messages: loadConversation(user.id) })
     setRequestError(null)
     setResponseLoading(false)
+    return () => requestController.current?.abort()
   }, [user?.id])
 
   useEffect(() => {
@@ -233,7 +236,12 @@ const Assistant = () => {
     }
   }
 
-  const aiResponse = async (userMessage: string, previousMessages: AiChat[], userId: string) => {
+  const aiResponse = async (
+    userMessage: string,
+    previousMessages: AiChat[],
+    userId: string,
+    assistantMessageId: string
+  ) => {
     setResponseLoading(true)
     setRequestError(null)
     try {
@@ -256,45 +264,93 @@ const Assistant = () => {
           })),
         { role: 'user' as const, content: userMessage }
       ]
-      const res = await fetch(`${apiUrl}/api/chat`, {
+      const controller = new AbortController()
+      requestController.current = controller
+      const res = await fetch(`${apiUrl}/api/chat/stream`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${session.access_token}`
         },
-        body: JSON.stringify({ messages })
+        body: JSON.stringify({ messages }),
+        signal: controller.signal
       })
-      const data: { detail?: unknown; reply?: unknown; proposals?: unknown } = await res.json()
       if (!res.ok) {
+        const data: { detail?: unknown } = await res.json()
         throw new Error(typeof data.detail === 'string' ? data.detail : 'Mr Groff could not respond. Please try again.')
       }
-      if (typeof data.reply !== 'string' || !data.reply.trim()) {
-        throw new Error('Mr Groff returned an empty response. Please try again.')
-      }
-      const reply = data.reply.trim()
-      const proposals = parseProposals(data.proposals)
-      if (useAppStore.getState().user?.id === userId) {
-        const assistantMessage: AiChat = {
-          id: crypto.randomUUID(),
-          role: 'assistant',
-          message: reply,
-          ...(proposals.length ? { proposals } : {})
+      if (!res.body) throw new Error('Mr Groff returned an empty stream. Please try again.')
+
+      const reader = res.body.getReader()
+      const decoder = new TextDecoder()
+      let buffer = ''
+      let completed = false
+      const handleEvent = (event: string) => {
+        const data = event
+          .split(/\r?\n/)
+          .filter((line) => line.startsWith('data:'))
+          .map((line) => line.slice(5).trim())
+          .join('\n')
+        if (!data) return
+        let payload: { type?: unknown; text?: unknown; reply?: unknown; proposals?: unknown; detail?: unknown }
+        try {
+          payload = JSON.parse(data)
+        } catch {
+          throw new Error('Mr Groff sent an invalid stream event.')
         }
-        setConversation((current) => ({
-          userId,
-          messages: [
-            ...(current.userId === userId ? current.messages : loadConversation(userId)),
-            assistantMessage
-          ].slice(-100)
-        }))
+
+        if (payload.type === 'delta' && typeof payload.text === 'string') {
+          if (useAppStore.getState().user?.id === userId) {
+            setConversation((current) => ({
+              userId,
+              messages: current.messages.map((message) => message.id === assistantMessageId
+                ? { ...message, message: message.message + payload.text }
+                : message)
+            }))
+          }
+        } else if (payload.type === 'complete' && typeof payload.reply === 'string') {
+          const proposals = parseProposals(payload.proposals)
+          if (useAppStore.getState().user?.id === userId) {
+            setConversation((current) => ({
+              userId,
+              messages: current.messages.map((message) => message.id === assistantMessageId
+                ? {
+                  ...message,
+                  message: payload.reply as string,
+                  ...(proposals.length ? { proposals } : {})
+                }
+                : message)
+            }))
+          }
+          completed = true
+        } else if (payload.type === 'error') {
+          throw new Error(typeof payload.detail === 'string' ? payload.detail : 'Mr Groff could not complete that response.')
+        }
       }
+
+      while (true) {
+        const { done, value } = await reader.read()
+        buffer += decoder.decode(value, { stream: !done })
+        const events = buffer.split(/\r?\n\r?\n/)
+        buffer = events.pop() ?? ''
+        for (const event of events) handleEvent(event)
+        if (done) break
+      }
+      if (buffer.trim()) handleEvent(buffer)
+      if (!completed) throw new Error('Mr Groff ended the response unexpectedly. Please try again.')
     } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') return
       console.error('Mr Groff request failed:', error)
       if (useAppStore.getState().user?.id === userId) {
         setRequestError(error instanceof Error ? error.message : 'Mr Groff could not respond. Please try again.')
+        setConversation((current) => ({
+          ...current,
+          messages: current.messages.filter((message) => message.id !== assistantMessageId || message.message)
+        }))
       }
     } finally {
-      if (useAppStore.getState().user?.id === userId) setResponseLoading(false)
+      if (requestController.current?.signal.aborted !== true
+        && useAppStore.getState().user?.id === userId) setResponseLoading(false)
     }
   }
 
@@ -401,14 +457,16 @@ const Assistant = () => {
     if (!message || responseLoading || !user?.id) return
     const previousMessages = convo
     const userMessage: AiChat = { id: crypto.randomUUID(), role: 'user', message }
+    const assistantMessage: AiChat = { id: crypto.randomUUID(), role: 'assistant', message: '' }
     setConversation((current) => ({
       userId: user.id,
       messages: [
         ...(current.userId === user.id ? current.messages : previousMessages),
-        userMessage
+        userMessage,
+        assistantMessage
       ].slice(-100)
     }))
-    void aiResponse(message, previousMessages, user.id)
+    void aiResponse(message, previousMessages, user.id, assistantMessage.id)
     setPrompt('')
     if (textareaRef.current) textareaRef.current.style.height = "21px"
   }

@@ -39,7 +39,7 @@ Do not edit the hosted schema independently of the checked-in migrations; keepin
 
 ## Mr Groff assistant service
 
-The assistant API is in `assistant-service/`. It validates Supabase access tokens against the project's JWKS endpoint and issuer, then uses the verified user's own bearer token and the publishable key to fetch RLS-scoped tasks, notes, and task lists. Gemini credentials remain in the service environment. Mr Groff can return typed create/update/delete proposals, validated against records in that user's context. The API never executes writes: the UI shows the exact proposed changes, refreshes the relevant data, and only calls the existing user-scoped Supabase mutations after the user confirms each proposal.
+The assistant API is in `assistant-service/`. It validates Supabase access tokens against the project's JWKS endpoint and issuer, then uses the verified user's own bearer token and the publishable key to fetch RLS-scoped tasks, notes, and task lists. Gemini credentials remain in the service environment. Chat replies stream to the client as they are generated. Mr Groff can return typed create/update/delete proposals, validated against records in that user's context. The API never executes writes: the UI shows the exact proposed changes, refreshes the relevant data, and only calls the existing user-scoped Supabase mutations after the user confirms each proposal.
 
 For local development, create the service environment from its template, add the Supabase project values and server-side Gemini API key, then start the service:
 

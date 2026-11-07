@@ -50,6 +50,41 @@ class FakeAsyncClient:
         return FakeResponse()
 
 
+class FakeStreamResponse:
+    status_code = 200
+
+    def __init__(self, chunks: list[str]) -> None:
+        self.chunks = chunks
+
+    async def __aenter__(self) -> "FakeStreamResponse":
+        return self
+
+    async def __aexit__(self, *args: object) -> None:
+        return None
+
+    async def aiter_lines(self):
+        for chunk in self.chunks:
+            yield f"data: {json.dumps({'candidates': [{'content': {'parts': [{'text': chunk}]}}]})}"
+
+
+class FakeStreamingAsyncClient:
+    request: dict[str, Any] = {}
+    chunks: list[str] = []
+
+    def __init__(self, timeout: httpx.Timeout) -> None:
+        self.timeout = timeout
+
+    async def __aenter__(self) -> "FakeStreamingAsyncClient":
+        return self
+
+    async def __aexit__(self, *args: object) -> None:
+        return None
+
+    def stream(self, method: str, url: str, **kwargs: Any) -> FakeStreamResponse:
+        FakeStreamingAsyncClient.request = {"method": method, "url": url, **kwargs}
+        return FakeStreamResponse(self.chunks)
+
+
 def test_provider_keeps_key_server_side_and_encodes_chat_history(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -120,3 +155,48 @@ def test_provider_rejects_proposals_for_records_outside_user_context(
         ))
 
     assert error.value.status_code == 502
+
+
+def test_provider_streams_only_decoded_reply_then_returns_validated_proposals(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(httpx, "AsyncClient", FakeStreamingAsyncClient)
+    FakeStreamingAsyncClient.chunks = [
+        '{"reply":"Hello \\"',
+        'there\\" \\ud83d',
+        '\\ude80","proposals":[]}',
+    ]
+    settings = Settings(
+        supabase_url="https://example.supabase.co",
+        supabase_publishable_key="publishable-key",
+        supabase_jwks_url="https://example.supabase.co/auth/v1/.well-known/jwks.json",
+        gemini_api_key="server-only-key",
+        gemini_model="gemini-test",
+        cors_origins=("http://localhost:5173",),
+    )
+
+    items = asyncio.run(_collect_stream(settings))
+
+    assert "".join(item for item in items if isinstance(item, str)) == 'Hello "there" 🚀'
+    assert items[-1].reply == 'Hello "there" 🚀'
+    assert FakeStreamingAsyncClient.request["method"] == "POST"
+    assert FakeStreamingAsyncClient.request["url"].endswith(":streamGenerateContent")
+    assert FakeStreamingAsyncClient.request["params"] == {"alt": "sse"}
+    assert FakeStreamingAsyncClient.request["headers"] == {"x-goog-api-key": "server-only-key"}
+    assert FakeStreamingAsyncClient.request["json"]["generationConfig"]["responseMimeType"] == "application/json"
+
+
+async def _collect_stream(settings: Settings) -> list[str | Any]:
+    return [
+        item async for item in provider.stream_reply(
+            [ChatMessage(role="user", content="Say hello.")],
+            {"tasks": [], "notes": [], "task_lists": []},
+            settings,
+        )
+    ]
+
+
+def test_reply_prefix_handles_partial_escaped_values() -> None:
+    assert provider._decode_reply_prefix(r'{"reply":"line\nwith \"') == 'line\nwith "'
+    assert provider._decode_reply_prefix('{"reply":"rocket \\ud83d') == 'rocket '
+    assert provider._decode_reply_prefix('{"reply":"rocket \\ud83d\\ude80"}') == "rocket 🚀"
