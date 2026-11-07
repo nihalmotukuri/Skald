@@ -35,7 +35,7 @@ supabase db push
 
 The initial migration creates profiles, task lists, tasks, notes, a private note-image bucket, and user-scoped RLS policies. It does not migrate or modify the legacy MongoDB database.
 
-Do not edit the hosted schema independently of the checked-in migrations; keeping schema changes versioned prevents drift between environments. The frontend now uses Supabase Auth and Supabase tables/storage for profiles, task lists, tasks, and notes. Zustand holds authentication and UI state, while TanStack Query owns task, note, task-list, and activity data. The legacy Express/Firebase Admin API is still present but no longer used for those client data flows.
+Do not edit the hosted schema independently of the checked-in migrations; keeping schema changes versioned prevents drift between environments. The frontend uses Supabase Auth and Supabase tables/storage for profiles, task lists, tasks, and notes. Zustand holds authentication and UI state, while TanStack Query owns task, note, task-list, and activity data.
 
 ### Authentication configuration
 
@@ -63,6 +63,8 @@ uvicorn app.main:app --reload
 
 Set `VITE_ASSISTANT_API_URL` in `client/.env` to the service URL (the example uses `http://localhost:8000`). Remove any old `VITE_GEMINI_KEY` from the client environment; configure `GEMINI_API_KEY` only in the assistant service. If a Gemini key was previously shipped in a browser build, rotate it in Google AI Studio. Set `CORS_ORIGINS` to the exact deployed frontend origin(s) in production. Run service tests with `pip install -r requirements-dev.txt && pytest`.
 
-## Existing application
+## Deployment and legacy data
 
-The current frontend is in `client/` (React, TypeScript, Vite), and the legacy API is in `server/` (Express, MongoDB, Firebase Admin). The live legacy app is available at [skald-zeta.vercel.app](https://skald-zeta.vercel.app).
+The frontend is in `client/` (React, TypeScript, Vite), and Mr Groff is served by `assistant-service/` (FastAPI). The unused Express, MongoDB, and Firebase Admin API source has been removed because the client no longer calls it. This repository change does not decommission any separately hosted legacy services or delete legacy Firebase/MongoDB data; verify and disable those resources independently after confirming no other consumers remain. No legacy data migration is planned.
+
+The previous app deployment remains available at [skald-zeta.vercel.app](https://skald-zeta.vercel.app) until its hosting configuration is changed.
