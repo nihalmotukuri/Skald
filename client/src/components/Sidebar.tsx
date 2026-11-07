@@ -22,7 +22,7 @@ const Sidebar = ({ open }: { open: boolean }) => {
       <aside className={`skald-sidebar ${open ? '' : 'skald-sidebar--collapsed'}`} aria-label="Workspace navigation">
         <div>
           <NavLink to="/app/today" className="skald-sidebar-brand" aria-label="Skald Today">
-            <BrandMark />
+            {open ? <BrandMark /> : <span className="skald-sidebar-brand__initial">S</span>}
           </NavLink>
 
           <p className={`skald-sidebar-label ${open ? '' : 'sr-only'}`}>WORKSPACE</p>

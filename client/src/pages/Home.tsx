@@ -40,7 +40,7 @@ const Home = () => {
             {isDark ? <Sun size={17} /> : <Moon size={17} />}
           </button>
           <Link to="/signin" className="skald-nav__login">Log in</Link>
-          <Link to="/signin" className="skald-button skald-button--small">
+          <Link to="/signup" className="skald-button skald-button--small">
             Get started <ArrowRight size={15} />
           </Link>
         </div>
@@ -60,7 +60,7 @@ const Home = () => {
             Your tasks, notes, and next good idea—together in a space that helps you find your way back to focus.
           </p>
           <div className="skald-hero__actions">
-            <Link to="/signin" className="skald-button">
+            <Link to="/signup" className="skald-button">
               Find your focus <ArrowRight size={17} />
             </Link>
             <a href="#why-skald" className="skald-text-link">
@@ -164,7 +164,7 @@ const Home = () => {
         <p>Start where you are.</p>
         <h2>Your day doesn’t need<br />another dashboard.</h2>
         <span>It needs a little space to become yours.</span>
-        <Link to="/signin" className="skald-button">
+        <Link to="/signup" className="skald-button">
           Step inside <ArrowRight size={17} />
         </Link>
       </section>

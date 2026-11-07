@@ -69,7 +69,15 @@ const NoteItem = ({ note, deleteNote, setEditNoteId, setDisplayEditNote, deletin
           ? <img src={note.imageAttachments?.[0]?.url ?? imageUrl} alt="" className="skald-note-row__image" />
           : <span className="skald-note-row__image skald-note-row__image--empty"><FileImage size={17} aria-hidden="true" /></span>}
         <span className="skald-note-row__copy">
-          <span className="skald-note-row__title"><NoteTitle title={note.title} /></span>
+          <span className="skald-note-row__title">
+            <NoteTitle title={note.title} />
+            {note.pinned && (
+              <span className="skald-note-row__pinned-indicator" title="Pinned note">
+                <Pin size={11} aria-hidden="true" />
+                <span className="sr-only">Pinned</span>
+              </span>
+            )}
+          </span>
           <span className="skald-note-row__preview">{getNotePreview(stripInlineNoteImages(note.description)) || 'A thought worth keeping.'}</span>
           <span className="skald-note-row__date">{formatNoteDate(note.updatedAt ?? note.createdAt) || 'Just now'}</span>
           {note.reminderAt && (
@@ -101,16 +109,16 @@ const NoteItem = ({ note, deleteNote, setEditNoteId, setDisplayEditNote, deletin
               }}
               aria-label={note.pinned ? `Unpin ${note.title || 'note'}` : `Pin ${note.title || 'note'}`}
               aria-pressed={Boolean(note.pinned)}
-              className={note.pinned ? 'is-pinned' : ''}
+              className={`skald-note-row__pin${note.pinned ? ' is-pinned' : ''}`}
               disabled={!noteId}
             >
               <Pin size={14} aria-hidden="true" />
             </button>
           )}
-          <button type="button" onClick={edit} disabled={!noteId} aria-label={`Edit ${note.title || 'note'}`}>
+          <button className="skald-note-row__edit" type="button" onClick={edit} disabled={!noteId} aria-label={`Edit ${note.title || 'note'}`}>
             <Pencil size={14} aria-hidden="true" />
           </button>
-          <button type="button" onClick={remove} disabled={!noteId} aria-label={`Delete ${note.title || 'note'}`}>
+          <button className="skald-note-row__delete" type="button" onClick={remove} disabled={!noteId} aria-label={`Delete ${note.title || 'note'}`}>
             <Trash2 size={14} aria-hidden="true" />
           </button>
         </div>

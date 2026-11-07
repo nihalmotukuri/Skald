@@ -37,9 +37,10 @@ const DashboardGrid = () => {
     <main className={`skald-app ${isDark ? 'skald-app--dark' : 'skald-app--light'}`}>
       {loading ? (
         <div className="skald-app-loading" role="status" aria-label="Loading your workspace">
+          <BrandMark className="skald-app-loading__brand" />
           <LineWobble
-            size="80"
-            stroke="5"
+            size="56"
+            stroke="4"
             bgOpacity="0.1"
             speed="1.75"
             color={isDark ? '#a095ff' : '#6654e8'}
@@ -52,23 +53,37 @@ const DashboardGrid = () => {
 
           <section className="skald-app-content" aria-label="Workspace">
             <header className={`skald-app-header${isTodayPage ? ' skald-app-header--dashboard' : ''}`}>
-              {!isTodayPage && <div className="skald-app-header__leading">
-                <button
-                  type="button"
-                  className="skald-app-icon-button skald-app-sidebar-toggle"
-                  onClick={toggleSidebar}
-                  aria-label={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
-                  title={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
-                >
-                  {sidebarOpen ? <PanelLeftClose size={19} /> : <PanelLeftOpen size={19} />}
-                </button>
-                <Link to="/app/today" className="skald-app-mobile-brand" aria-label="Skald workspace home">
-                  <BrandMark />
-                </Link>
-                <div className="skald-app-heading">
-                  <h1>{pageTitle}</h1>
+              {isTodayPage ? (
+                <div className="skald-app-header__leading">
+                  <button
+                    type="button"
+                    className="skald-app-icon-button skald-app-sidebar-toggle"
+                    onClick={toggleSidebar}
+                    aria-label={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
+                    title={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
+                  >
+                    {sidebarOpen ? <PanelLeftClose size={19} /> : <PanelLeftOpen size={19} />}
+                  </button>
                 </div>
-              </div>}
+              ) : (
+                <div className="skald-app-header__leading">
+                  <button
+                    type="button"
+                    className="skald-app-icon-button skald-app-sidebar-toggle"
+                    onClick={toggleSidebar}
+                    aria-label={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
+                    title={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
+                  >
+                    {sidebarOpen ? <PanelLeftClose size={19} /> : <PanelLeftOpen size={19} />}
+                  </button>
+                  <Link to="/app/today" className="skald-app-mobile-brand" aria-label="Skald workspace home">
+                    <BrandMark />
+                  </Link>
+                  <div className="skald-app-heading">
+                    <h1>{pageTitle}</h1>
+                  </div>
+                </div>
+              )}
 
               <div className="skald-app-header__actions">
                 {!isTodayPage && <span className="skald-app-header__date">

@@ -21,7 +21,8 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/signin" element={<SignIn />} />
+        <Route path="/signin" element={<SignIn key="signin" />} />
+        <Route path="/signup" element={<SignIn key="signup" />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/auth/update-password" element={<UpdatePassword />} />
 

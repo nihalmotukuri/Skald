@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { FcGoogle } from 'react-icons/fc'
-import { Moon, Sun } from 'lucide-react'
+import { Moon, Sparkles, Sun } from 'lucide-react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { getAuthCallbackUrl, getSafeAuthDestination } from '@/lib/authRedirect'
@@ -17,7 +17,7 @@ type AuthLocationState = {
 }
 
 const SignIn = () => {
-  const [mode, setMode] = useState<AuthMode>('signin')
+  const [isRecovery, setIsRecovery] = useState(false)
   const [email, setEmail] = useState('')
   const [displayName, setDisplayName] = useState('')
   const [password, setPassword] = useState('')
@@ -31,6 +31,8 @@ const SignIn = () => {
   const authLoading = useAppStore((state) => state.authLoading)
   const isDark = useAppStore((state) => state.isDark)
   const setTheme = useAppStore((state) => state.setTheme)
+  const isSignup = location.pathname === '/signup'
+  const mode: AuthMode = isSignup ? 'signup' : isRecovery ? 'recovery' : 'signin'
 
   const routeState = location.state as AuthLocationState | null
   const routeDestination = routeState?.from
@@ -43,11 +45,19 @@ const SignIn = () => {
   }, [authLoading, destination, navigate, user])
 
   const changeMode = (nextMode: AuthMode) => {
-    setMode(nextMode)
     setError(null)
     setMessage(null)
     setPassword('')
     setConfirmPassword('')
+    if (nextMode === 'signup' || nextMode === 'signin') {
+      setIsRecovery(false)
+      navigate(
+        { pathname: nextMode === 'signup' ? '/signup' : '/signin', search: location.search },
+        { state: location.state },
+      )
+    } else {
+      setIsRecovery(true)
+    }
   }
 
   const showError = (reason: unknown, fallback: string) => {
@@ -133,9 +143,6 @@ const SignIn = () => {
     <main className={`skald-auth relative flex min-h-screen items-center justify-center px-5 py-10 ${
       isDark ? 'skald-auth--dark bg-[#101017]' : 'skald-auth--light bg-[#f5f3ee]'
     }`}>
-      <Link to="/" className="skald-auth__brand fixed" aria-label="Skald home">
-        <BrandMark />
-      </Link>
       <button
         type="button"
         className="skald-auth__theme-toggle fixed right-6 top-4 grid size-10 place-items-center rounded-full transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400"
@@ -144,21 +151,36 @@ const SignIn = () => {
       >
         {isDark ? <Sun size={17} /> : <Moon size={17} />}
       </button>
-      <section className={`skald-auth__card rounded-3xl border shadow-2xl ${
-        isDark ? 'border-white/15 bg-white/[0.04] shadow-black/30' : 'border-black/10 bg-white/75 shadow-slate-900/10'
-      }`}>
-      <header className="skald-auth__header text-center">
-        <h1 className="skald-auth__title font-semibold">
-            {mode === 'signup' ? 'Create your account' : mode === 'recovery' ? 'Reset your password' : 'Welcome back'}
-          </h1>
-          <p className={`mt-2 text-sm ${isDark ? 'text-white/65' : 'text-slate-600'}`}>
-            {mode === 'signup'
-              ? 'A clear space for your next chapter.'
-              : mode === 'recovery'
-                ? 'We’ll email you a secure password reset link.'
-                : 'Sign in to pick up where you left off.'}
-          </p>
-        </header>
+      <div className="skald-auth__shell">
+        <aside className="skald-auth__story">
+          <Link to="/" className="skald-auth__brand" aria-label="Skald home">
+            <BrandMark />
+          </Link>
+          <div className="skald-auth__story-copy">
+            <span className="skald-auth__story-mark"><Sparkles size={18} aria-hidden="true" /></span>
+            <p className="skald-auth__eyebrow">A quieter way to get things done</p>
+            <h2>Make room for <em>what matters.</em></h2>
+            <p className="skald-auth__story-description">
+              Your tasks, notes, and next good idea—together in a space that helps you find your way back to focus.
+            </p>
+          </div>
+          <p className="skald-auth__story-footer">Start where you are. The rest can wait.</p>
+        </aside>
+
+        <section className="skald-auth__card">
+          <header className="skald-auth__header">
+            <p className="skald-auth__kicker">{mode === 'signup' ? 'A fresh start' : 'Your space is here'}</p>
+            <h1 className="skald-auth__title font-semibold">
+              {mode === 'signup' ? 'Create your account' : mode === 'recovery' ? 'Reset your password' : 'Welcome back'}
+            </h1>
+            <p className={`mt-2 text-sm ${isDark ? 'text-white/65' : 'text-slate-600'}`}>
+              {mode === 'signup'
+                ? 'A clear space for your next chapter.'
+                : mode === 'recovery'
+                  ? 'We’ll email you a secure password reset link.'
+                  : 'Sign in to pick up where you left off.'}
+            </p>
+          </header>
 
         {mode !== 'recovery' && (
           <>
@@ -166,14 +188,14 @@ const SignIn = () => {
               type="button"
               onClick={handleGoogleSignIn}
               disabled={loading}
-              className={`flex min-h-12 w-full items-center justify-center gap-3 rounded-xl border px-4 font-medium transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-300 disabled:cursor-wait disabled:opacity-60 ${
+              className={`skald-auth__google flex min-h-12 w-full items-center justify-center gap-3 rounded-xl border px-4 font-medium transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-300 disabled:cursor-wait disabled:opacity-60 ${
                 isDark ? 'border-white/20 bg-white/5 hover:bg-white/10' : 'border-slate-300 bg-white/75 hover:bg-white'
               }`}
             >
               <FcGoogle aria-hidden="true" className="text-xl" />
               Continue with Google
             </button>
-            <div className={`my-5 flex items-center gap-3 text-xs uppercase tracking-wider ${isDark ? 'text-white/45' : 'text-slate-400'}`}>
+            <div className={`skald-auth__divider my-5 flex items-center gap-3 text-xs uppercase tracking-wider ${isDark ? 'text-white/45' : 'text-slate-400'}`}>
               <span className={`h-px flex-1 ${isDark ? 'bg-white/15' : 'bg-slate-200'}`} />
               or use email
               <span className={`h-px flex-1 ${isDark ? 'bg-white/15' : 'bg-slate-200'}`} />
@@ -267,7 +289,12 @@ const SignIn = () => {
           {mode === 'signin' ? (
             <>
               <button type="button" className={`hover:underline disabled:opacity-50 ${isDark ? 'hover:text-white' : 'hover:text-indigo-700'}`} disabled={loading} onClick={() => changeMode('recovery')}>Forgot password?</button>
-              <button type="button" className={`hover:underline disabled:opacity-50 ${isDark ? 'hover:text-white' : 'hover:text-indigo-700'}`} disabled={loading} onClick={() => changeMode('signup')}>Create account</button>
+              <Link className={`hover:underline ${isDark ? 'hover:text-white' : 'hover:text-indigo-700'}`} to={{ pathname: '/signup', search: location.search }} state={location.state}>Create account</Link>
+            </>
+          ) : mode === 'signup' ? (
+            <>
+              <span>Already have an account?</span>
+              <Link className={`hover:underline ${isDark ? 'hover:text-white' : 'hover:text-indigo-700'}`} to={{ pathname: '/signin', search: location.search }} state={location.state}>Sign in</Link>
             </>
           ) : (
             <>
@@ -276,7 +303,8 @@ const SignIn = () => {
             </>
           )}
         </div>
-      </section>
+        </section>
+      </div>
     </main>
   )
 }
