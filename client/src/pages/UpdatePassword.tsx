@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
+import BrandMark from '@/components/BrandMark'
 
 const UpdatePassword = () => {
   const [checkingSession, setCheckingSession] = useState(true)
@@ -51,7 +52,7 @@ const UpdatePassword = () => {
       setComplete(true)
       setPassword('')
       setConfirmPassword('')
-      window.setTimeout(() => navigate('/app/dashboard', { replace: true }), 1200)
+      window.setTimeout(() => navigate('/app/today', { replace: true }), 1200)
     } catch (reason) {
       console.error('Unable to update password:', reason)
       setError(reason instanceof Error ? reason.message : 'Unable to update your password. Request a new reset link and try again.')
@@ -63,7 +64,7 @@ const UpdatePassword = () => {
   return (
     <main className="min-h-screen bg-[#0f111a] px-5 py-10 text-white flex items-center justify-center">
       <section className="w-full max-w-md rounded-3xl border border-white/15 bg-white/[0.04] p-7 shadow-2xl shadow-black/30 sm:p-9">
-        <img src="/images/logo.png" className="mx-auto mb-4 size-11" alt="" />
+        <BrandMark className="mx-auto mb-4 size-11" />
         <h1 className="text-center text-2xl font-semibold">Choose a new password</h1>
         {checkingSession ? (
           <p className="mt-5 text-center text-sm text-white/65">Verifying your secure reset link…</p>

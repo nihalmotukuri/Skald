@@ -11,6 +11,7 @@ lerna-debug.log*
 client/node_modules
 server/node_modules
 assistant-service/.venv
+assistant-service/venv
 assistant-service/__pycache__
 assistant-service/**/__pycache__
 assistant-service/.pytest_cache

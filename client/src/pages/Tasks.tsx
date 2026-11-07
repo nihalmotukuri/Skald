@@ -1,5 +1,6 @@
-import { useEffect, useState, type FormEvent } from "react";
-import { CalendarDays, Check, ListTodo, Plus, Search, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Plus, Search, X } from "lucide-react";
+import { useSearchParams } from 'react-router-dom'
 import { useAppStore } from '@/store/appStore'
 import { useTasks, useTaskMutations } from '@/queries/tasks'
 import type { Task } from '@/types/task'
@@ -9,6 +10,9 @@ import TaskSkeleton from "../components/TaskSkeleton.tsx"
 import EditTaskDialog from "@/components/EditTaskDialog.tsx";
 import TaskListDropdown from '@/components/TaskListDropdown.tsx'
 import AddTaskList from '@/components/AddTaskList.tsx'
+import TaskDropdown from '@/components/TaskDropdown'
+import TaskDetailDialog from '@/components/TaskDetailDialog'
+import { getWorkspacePreferences } from '@/lib/workspacePreferences'
 
 type TaskView = 'all' | 'active' | 'today' | 'upcoming' | 'overdue' | 'completed'
 
@@ -21,6 +25,9 @@ const views: { id: TaskView; label: string }[] = [
   { id: 'completed', label: 'Completed' },
 ]
 
+const getTaskView = (value: string | null): TaskView =>
+  views.find((view) => view.id === value)?.id ?? 'all'
+
 const dueDateFor = (task: Task): Date | null => {
   if (!task.date) return null
   const date = new Date(`${task.date}T${task.time || '23:59'}`)
@@ -32,20 +39,27 @@ const isSameDay = (first: Date, second: Date) =>
   && first.getMonth() === second.getMonth()
   && first.getDate() === second.getDate()
 
+const dateInputValue = (date: Date) =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+
 const Tasks = () => {
+  const [searchParams, setSearchParams] = useSearchParams()
   const [displayAddTask, setDisplayAddTask] = useState(false)
   const [displayEditTask, setDisplayEditTask] = useState(false)
   const [editTaskId, setEditTaskId] = useState('')
-  const [selectedTaskList, setSelectedTaskList] = useState('All Tasks')
+  const [taskDetailId, setTaskDetailId] = useState('')
+  const [selectedTaskList, setSelectedTaskList] = useState('')
   const [filterQuery, setFilterQuery] = useState('')
-  const [activeView, setActiveView] = useState<TaskView>('all')
-  const [quickTaskTitle, setQuickTaskTitle] = useState('')
+  const [activeView, setActiveView] = useState<TaskView>(() =>
+    getTaskView(searchParams.get('view') ?? getWorkspacePreferences().defaultTaskView)
+  )
 
   const userId = useAppStore((state) => state.user?.id)
   const isDark = useAppStore((state) => state.isDark)
   const setBreadcrumb = useAppStore((state) => state.setBreadcrumb)
   const { data: tasks = [], isLoading: loading, error } = useTasks(userId)
-  const { addTask, editTask, deleteTask } = useTaskMutations(userId)
+  const { editTask, deleteTask } = useTaskMutations(userId)
+  const taskDetail = tasks.find((task) => task._id === taskDetailId)
   const now = new Date()
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
   const tomorrow = new Date(today)
@@ -72,7 +86,7 @@ const Tasks = () => {
 
   const normalizedQuery = filterQuery.trim().toLowerCase()
   const filteredTasks = tasks
-    .filter((task) => selectedTaskList === 'All Tasks' || task.taskList === selectedTaskList)
+    .filter((task) => !selectedTaskList || task.taskList === selectedTaskList)
     .filter((task) => !normalizedQuery
       || task.title?.toLowerCase().includes(normalizedQuery)
       || task.description?.toLowerCase().includes(normalizedQuery))
@@ -102,8 +116,29 @@ const Tasks = () => {
     })
 
   useEffect(() => {
-    setBreadcrumb("To-do List")
-  }, [setBreadcrumb])
+    const requestedView = getTaskView(searchParams.get('view') ?? getWorkspacePreferences().defaultTaskView)
+    setActiveView(requestedView)
+    if (searchParams.has('create')) {
+      setDisplayAddTask(true)
+      const nextParams = new URLSearchParams(searchParams)
+      nextParams.delete('create')
+      setSearchParams(nextParams, { replace: true })
+    }
+  }, [searchParams, setSearchParams])
+
+  const currentViewLabel = views.find((view) => view.id === activeView)?.label ?? 'All tasks'
+
+  useEffect(() => {
+    setBreadcrumb(activeView === 'all' ? 'Inbox' : currentViewLabel)
+  }, [activeView, currentViewLabel, setBreadcrumb])
+
+  const changeView = (view: TaskView) => {
+    setActiveView(view)
+    const nextParams = new URLSearchParams(searchParams)
+    nextParams.set('view', view)
+    nextParams.delete('create')
+    setSearchParams(nextParams)
+  }
 
   const toggleTask = (taskId: string) => {
     const task = tasks.find((item) => item._id === taskId)
@@ -117,86 +152,82 @@ const Tasks = () => {
     })
   }
 
-  const createQuickTask = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    const title = quickTaskTitle.trim()
-    if (!title) return
-    addTask.mutate({
-      title,
-      description: '',
-      status: 'Pending',
-      priority: 'Medium',
-      taskList: selectedTaskList === 'All Tasks' ? '' : selectedTaskList,
-    }, {
-      onSuccess: () => setQuickTaskTitle(''),
-    })
-  }
-
   const pageText = isDark ? 'text-white' : 'text-slate-900'
   const mutedText = isDark ? 'text-white/55' : 'text-slate-500'
-  const surface = isDark ? 'border-white/10 bg-white/[0.035]' : 'border-slate-200 bg-white'
 
   return (
-    <div className={`col-span-1 row-span-1 min-h-0 overflow-y-auto ${pageText}`}>
-      {displayAddTask && <AddTaskDialog setDisplayAddTask={setDisplayAddTask} />}
+    <div className={`skald-page skald-tasks-page col-span-1 row-span-1 min-h-0 overflow-y-auto ${pageText}`}>
+      {displayAddTask && (
+        <AddTaskDialog
+          setDisplayAddTask={setDisplayAddTask}
+          initialDate={activeView === 'today' ? dateInputValue(today) : activeView === 'upcoming' ? dateInputValue(tomorrow) : ''}
+          initialTaskList={selectedTaskList}
+        />
+      )}
       {displayEditTask && (
         <EditTaskDialog
           setDisplayEditTask={setDisplayEditTask}
           editTaskId={editTaskId}
         />
       )}
+      {taskDetail && (
+        <TaskDetailDialog
+          task={taskDetail}
+          onClose={() => setTaskDetailId('')}
+          onEdit={() => {
+            setEditTaskId(taskDetailId)
+            setTaskDetailId('')
+            setDisplayEditTask(true)
+          }}
+          onToggle={() => taskDetailId && toggleTask(taskDetailId)}
+        />
+      )}
 
-      <header className="flex flex-col gap-5 border-b border-white/10 pb-5 pt-4 sm:flex-row sm:items-end sm:justify-between">
+      <header className="skald-page-header skald-task-page-header flex flex-col gap-5 border-b border-white/10 pb-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className={`mb-1 text-xs font-medium uppercase tracking-[0.2em] ${mutedText}`}>Your workspace</p>
-          <h1 className="text-2xl font-semibold sm:text-3xl">Tasks</h1>
-          <p className={`mt-1 text-sm ${mutedText}`}>
-            {taskCounts.active} active {taskCounts.active === 1 ? 'task' : 'tasks'}
+          <p className="skald-workspace-kicker">A little structure for the day</p>
+          <h1 className="skald-page-title text-2xl font-semibold sm:text-3xl">
+            {activeView === 'all' ? 'Inbox' : currentViewLabel}
+          </h1>
+          <p className={`skald-page-description mt-1 text-sm ${mutedText}`}>
+            {activeView === 'today'
+              ? new Intl.DateTimeFormat(undefined, { weekday: 'long', month: 'long', day: 'numeric' }).format(today)
+              : activeView === 'completed'
+                ? `${taskCounts.completed} ${taskCounts.completed === 1 ? 'task' : 'tasks'} finished`
+                : `${taskCounts.active} active ${taskCounts.active === 1 ? 'task' : 'tasks'}`}
             {taskCounts.overdue > 0 && <span className="ml-2 text-rose-400">· {taskCounts.overdue} overdue</span>}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <TaskListDropdown
-            selectedTaskList={selectedTaskList}
-            setSelectedTaskList={setSelectedTaskList}
-          />
-          <AddTaskList />
+          <div className="skald-task-list-controls">
+            <TaskListDropdown
+              selectedTaskList={selectedTaskList}
+              setSelectedTaskList={setSelectedTaskList}
+            />
+            <AddTaskList selectedTaskList={selectedTaskList} setSelectedTaskList={setSelectedTaskList} />
+          </div>
           <button
             type="button"
             onClick={() => setDisplayAddTask(true)}
-            className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-indigo-500 px-3 text-sm font-medium text-white transition hover:bg-indigo-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-300"
+            className="skald-add-action inline-flex items-center gap-2 text-sm font-semibold transition"
           >
-            <Plus aria-hidden="true" size={17} />
+            <span className="skald-add-action__icon"><Plus aria-hidden="true" size={17} /></span>
             New task
           </button>
         </div>
       </header>
 
-      <section className="py-5" aria-label="Task filters">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex gap-1 overflow-x-auto pb-1" role="tablist" aria-label="Task views">
-            {views.map((view) => (
-              <button
-                key={view.id}
-                type="button"
-                role="tab"
-                aria-selected={activeView === view.id}
-                onClick={() => setActiveView(view.id)}
-                className={`inline-flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-sm transition focus-visible:outline-2 focus-visible:outline-indigo-300 ${
-                  activeView === view.id
-                    ? 'bg-indigo-500/15 text-indigo-200'
-                    : `${mutedText} hover:bg-white/5 hover:text-current`
-                }`}
-              >
-                {view.label}
-                <span className={`text-xs ${activeView === view.id ? 'text-indigo-200/70' : mutedText}`}>
-                  {taskCounts[view.id]}
-                </span>
-              </button>
-            ))}
-          </div>
+      <section className="skald-task-filters" aria-label="Task filters">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <TaskDropdown
+            ariaLabel="Task view"
+            className="skald-task-view-select"
+            value={activeView}
+            options={views.map((view) => ({ value: view.id, label: view.label, count: taskCounts[view.id] }))}
+            onChange={(view) => changeView(getTaskView(view))}
+          />
 
-          <label className={`flex min-h-10 w-full items-center gap-2 rounded-lg border px-3 sm:max-w-xs ${surface}`}>
+          <label className="skald-page-search skald-task-search flex min-h-10 w-full items-center gap-2 border px-3 sm:max-w-xs">
             <Search aria-hidden="true" size={16} className={mutedText} />
             <input
               type="search"
@@ -215,41 +246,11 @@ const Tasks = () => {
         </div>
       </section>
 
-      <form onSubmit={createQuickTask} className={`mb-5 flex items-center gap-3 rounded-xl border p-3 ${surface}`}>
-        <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-indigo-500/15 text-indigo-300">
-          {addTask.isPending ? <Check size={17} aria-label="Saving task" /> : <Plus size={18} aria-hidden="true" />}
-        </div>
-        <input
-          type="text"
-          maxLength={300}
-          value={quickTaskTitle}
-          onChange={(event) => setQuickTaskTitle(event.target.value)}
-          placeholder={`Add a task${selectedTaskList === 'All Tasks' ? '' : ` to ${selectedTaskList}`}…`}
-          aria-label="New task title"
-          className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-white/40"
-        />
-        <button
-          type="submit"
-          disabled={!quickTaskTitle.trim() || addTask.isPending}
-          className="rounded-lg px-3 py-2 text-sm font-medium text-indigo-200 transition hover:bg-indigo-500/15 disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          Add
-        </button>
-      </form>
-
       {error && (
-        <p role="alert" className="mb-4 rounded-lg border border-rose-400/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+        <p role="alert" className={`mb-4 rounded-lg border border-rose-400/20 bg-rose-500/10 px-4 py-3 text-sm ${isDark ? 'text-rose-200' : 'text-rose-700'}`}>
           Unable to load tasks: {error.message}
         </p>
       )}
-
-      <div className="mb-3 flex items-center gap-2">
-        {activeView === 'today' ? <CalendarDays size={16} className={mutedText} /> : <ListTodo size={16} className={mutedText} />}
-        <h2 className={`text-sm font-medium ${mutedText}`}>
-          {views.find((view) => view.id === activeView)?.label}
-          <span className="ml-2 opacity-70">({filteredTasks.length})</span>
-        </h2>
-      </div>
 
       <ul className="flex flex-col gap-2 pb-10" aria-label="Tasks">
         {loading
@@ -262,36 +263,49 @@ const Tasks = () => {
               deleteTask={(taskId) => deleteTask.mutate(taskId)}
               setDisplayEditTask={setDisplayEditTask}
               setEditTaskId={setEditTaskId}
+              openTaskDetails={setTaskDetailId}
+              deleting={deleteTask.isPending}
             />
           ))}
       </ul>
 
       {!loading && !error && filteredTasks.length === 0 && (
-        <div className={`rounded-2xl border px-5 py-12 text-center ${surface}`}>
-          <div className="mx-auto mb-3 flex size-11 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-300">
-            {activeView === 'completed' ? <Check size={21} /> : <ListTodo size={21} />}
-          </div>
+        <div className="skald-page-empty skald-task-empty border px-5 py-10 text-center">
           <h3 className="font-medium">
-            {tasks.length === 0 ? 'Start with one small task' : 'Nothing to show here'}
+            {tasks.length === 0
+              ? 'No tasks yet'
+              : activeView === 'overdue' && !filterQuery && !selectedTaskList
+                ? 'You’re all caught up'
+                : 'No tasks here'}
           </h3>
           <p className={`mx-auto mt-1 max-w-sm text-sm ${mutedText}`}>
             {tasks.length === 0
-              ? 'Capture a task above, or add details like a due date and priority.'
-              : filterQuery || selectedTaskList !== 'All Tasks'
+              ? 'Add a task to get started.'
+              : filterQuery || selectedTaskList
                 ? 'Try another search or task list.'
                 : activeView === 'overdue'
-                  ? 'You’re all caught up—no overdue tasks.'
-                  : 'Tasks that match this view will appear here.'}
+                  ? 'There are no overdue tasks.'
+                  : 'Tasks matching this view will appear here.'}
           </p>
-          {(filterQuery || selectedTaskList !== 'All Tasks' || activeView !== 'all') && (
+          {tasks.length === 0 && (
+            <button
+              type="button"
+              onClick={() => setDisplayAddTask(true)}
+              className="skald-add-action skald-task-primary mt-5 inline-flex items-center gap-2 text-sm font-semibold transition"
+            >
+              <span className="skald-add-action__icon"><Plus size={16} aria-hidden="true" /></span>
+              Create a task
+            </button>
+          )}
+          {(filterQuery || selectedTaskList || activeView !== 'all') && (
             <button
               type="button"
               onClick={() => {
                 setFilterQuery('')
-                setSelectedTaskList('All Tasks')
-                setActiveView('all')
+                setSelectedTaskList('')
+                changeView('all')
               }}
-              className="mt-4 text-sm text-indigo-200 hover:text-white"
+              className="skald-task-clear-filters mt-4 text-sm"
             >
               Clear filters
             </button>

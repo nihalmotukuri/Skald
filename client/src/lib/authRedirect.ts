@@ -1,4 +1,4 @@
-const APP_HOME = '/app/dashboard'
+const APP_HOME = '/app/today'
 const LOCAL_ORIGIN = 'https://skald.local'
 
 export const getSafeAuthDestination = (value: unknown): string => {

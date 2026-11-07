@@ -1,65 +1,35 @@
-import { useState } from 'react'
 import { useAppStore } from '@/store/appStore'
 import { useTaskLists } from '@/queries/tasks'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+import TaskDropdown from './TaskDropdown'
 
 interface SelectTaskListProps {
-  selectTaskList: (value: string) => void;
-  currentTaskList: string;
+  selectTaskList: (value: string) => void
+  currentTaskList: string
+  id?: string
 }
 
-const SelectTaskList = ({ selectTaskList, currentTaskList }: SelectTaskListProps) => {
-  const [selectedTaskList, setSelectedTaskList] = useState('')
+const SelectTaskList = ({ selectTaskList, currentTaskList, id = 'skald-task-list' }: SelectTaskListProps) => {
   const userId = useAppStore((state) => state.user?.id)
-  const isDark = useAppStore((state) => state.isDark)
-  const { data: taskLists = [], error } = useTaskLists(userId)
-
-  const onSelectTaskList = (taskList: string) => {
-    setSelectedTaskList(taskList)
-    selectTaskList(taskList)
-  }
+  const { data: taskLists = [], error, isLoading } = useTaskLists(userId)
+  const options = [
+    { value: '__none__', label: 'No list' },
+    ...taskLists.map((taskList) => ({ value: `list:${taskList.id}`, label: taskList.name })),
+  ]
+  const selectedList = taskLists.find((taskList) => taskList.name === currentTaskList)
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button className={`${isDark ? "bg-white/5 border-white/10 hover:bg-white/10" : "!border-black/10 shadow-md hover:bg-neutral-200"} backdrop-blur-md border rounded-md text-[12px] px-[12px] py-[6px] w-full cursor-pointer`}>
-          {currentTaskList || selectedTaskList || "Set Task List"}
-        </button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className={`${isDark ? "bg-white/5 border-white/10 text-white" : "bg-neutral-100/10 !border-black/20 text-gray-600"} backdrop-blur-[8px] border border-white/20 absolute z-1000 right-[-64px]`}>
-        <DropdownMenuGroup>
-          {error
-            ? <DropdownMenuItem disabled><p className="text-sm text-red-400">Unable to load task lists.</p></DropdownMenuItem>
-            : taskLists.length > 0
-            ? (
-              taskLists.map((taskList) => (
-                <DropdownMenuItem
-                  key={taskList.id}
-                  onClick={() => onSelectTaskList(taskList.name)}
-            className={`${isDark ? "hover:bg-white hover:text-black" : "hover:bg-black/10"} cursor-pointer`}
-                  >
-                  <p className="text-[14px] font-medium flex items-center">
-                    {taskList.name}
-                  </p>
-                </DropdownMenuItem>
-              )))
-            : (
-              <DropdownMenuItem>
-                <p className="text-[14px] font-medium flex items-center">
-                  No tasklists available
-                </p>
-              </DropdownMenuItem>
-            )
-          }
-        </DropdownMenuGroup>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <div className="skald-task-dialog__select-wrap">
+      <TaskDropdown
+        id={id}
+        className="skald-task-dialog__input skald-task-dialog__select skald-task-dropdown--form"
+        value={selectedList ? `list:${selectedList.id}` : '__none__'}
+        options={options}
+        onChange={(value) => selectTaskList(taskLists.find((taskList) => `list:${taskList.id}` === value)?.name ?? '')}
+        ariaLabel="Task list"
+        disabled={isLoading || taskLists.length === 0 || Boolean(error)}
+      />
+      {error && <span className="skald-task-dialog__error" role="alert">Unable to load lists: {error.message}</span>}
+    </div>
   )
 }
 

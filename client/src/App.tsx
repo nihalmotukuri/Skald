@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard';
 import Tasks from './pages/Tasks';
 import Notes from './pages/Notes';
 import Assistant from './pages/Assistant';
+import Settings from './pages/Settings';
 import SignIn from './pages/SignIn';
 import AuthCallback from './pages/AuthCallback';
 import UpdatePassword from './pages/UpdatePassword';
@@ -25,11 +26,13 @@ function App() {
         <Route path="/auth/update-password" element={<UpdatePassword />} />
 
         <Route path="/app" element={<Layout />}>
-          <Route index element={<Navigate to="dashboard" replace />} />
-          <Route path="dashboard" element={<Dashboard />} />
+          <Route index element={<Navigate to="today" replace />} />
+          <Route path="today" element={<Dashboard />} />
+          <Route path="dashboard" element={<Navigate to="/app/today" replace />} />
           <Route path="tasks" element={<Tasks />} />
           <Route path="notes" element={<Notes />} />
           <Route path="assistant" element={<Assistant />} />
+          <Route path="settings" element={<Settings />} />
         </Route>
 
         <Route path="*" element={<NotFound />} />

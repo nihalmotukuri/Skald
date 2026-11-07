@@ -1,71 +1,119 @@
-import { ArrowLeft, Maximize2, Minimize2 } from "lucide-react"
+import { useEffect, useState } from 'react'
+import { ArrowLeft, Bell, Check, Maximize2, Minimize2, Pencil, Pin, Trash2, X } from 'lucide-react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { useAppStore } from '@/store/appStore'
 import { useNotes } from '@/queries/notes'
+import NoteTitle from './NoteTitle'
+import { stripInlineNoteImages } from './noteRichText'
 
 interface DisplayNoteProps {
-  fullscreen: boolean;
-  setFullscreen: (value: boolean) => void;
-  onBack: () => void;
+  fullscreen: boolean
+  setFullscreen: (value: boolean) => void
+  onBack: () => void
+  onEdit: () => void
+  onDelete: () => void
+  deleting: boolean
 }
 
-const DisplayNote = ({ fullscreen, setFullscreen, onBack }: DisplayNoteProps) => {
+const DisplayNote = ({ fullscreen, setFullscreen, onBack, onEdit, onDelete, deleting }: DisplayNoteProps) => {
   const userId = useAppStore((state) => state.user?.id)
   const activeNoteId = useAppStore((state) => state.activeNoteId)
   const { data: notes = [] } = useNotes(userId)
   const activeNote = notes.find((note) => note._id === activeNoteId)
   const isDark = useAppStore((state) => state.isDark)
-  const text = isDark ? 'text-white' : 'text-slate-900'
-  const mutedText = isDark ? 'text-white/50' : 'text-slate-500'
+  const [imageUrl, setImageUrl] = useState('')
+  const [confirmDelete, setConfirmDelete] = useState(false)
+
+  useEffect(() => {
+    if (!(activeNote?.image instanceof File)) {
+      setImageUrl(typeof activeNote?.image === 'string' ? activeNote.image : '')
+      return
+    }
+
+    const url = URL.createObjectURL(activeNote.image)
+    setImageUrl(url)
+    return () => URL.revokeObjectURL(url)
+  }, [activeNote?.image])
 
   if (!activeNote) return null
 
+  const createdDate = activeNote.createdAt ? new Date(activeNote.createdAt) : null
+  const dateIsValid = createdDate && !Number.isNaN(createdDate.getTime())
+
   return (
-    <article className={`flex h-full min-h-0 flex-col ${text}`}>
-      <header className={`sticky top-0 z-10 flex min-h-12 items-center justify-between border-b px-3 ${
-        isDark ? 'border-white/10 bg-[#151722]/95' : 'border-slate-200 bg-white/95'
-      } backdrop-blur`}>
-        <button
-          type="button"
-          onClick={onBack}
-          className={`inline-flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm focus-visible:outline-2 focus-visible:outline-indigo-300 ${mutedText}`}
-        >
-          <ArrowLeft size={16} aria-hidden="true" />
+    <article className={`skald-note-reader__article skald-note-color--${activeNote.color ?? 'default'}${isDark ? ' is-dark' : ''}`}>
+      <header className="skald-note-reader__toolbar">
+        <button type="button" onClick={onBack} className="skald-note-reader__back">
+          <ArrowLeft size={15} aria-hidden="true" />
           All notes
         </button>
-        <button
-          type="button"
-          aria-label={fullscreen ? 'Exit fullscreen' : 'View fullscreen'}
-          onClick={() => setFullscreen(!fullscreen)}
-          className={`ml-auto rounded-lg p-2 transition focus-visible:outline-2 focus-visible:outline-indigo-300 ${isDark ? 'hover:bg-white/10' : 'hover:bg-slate-100'}`}
-        >
-          {fullscreen
-            ? <Minimize2 size={16} aria-hidden="true" />
-            : <Maximize2 size={16} aria-hidden="true" />}
-        </button>
+        <div className="skald-note-reader__tools">
+          {confirmDelete ? (
+            <div className="skald-note-reader__delete-confirm" role="group" aria-label="Confirm note deletion">
+              <span>Delete this note?</span>
+              <button type="button" onClick={onDelete} disabled={deleting} aria-label="Confirm delete note">
+                <Check size={15} aria-hidden="true" />
+              </button>
+              <button type="button" onClick={() => setConfirmDelete(false)} aria-label="Cancel delete">
+                <X size={15} aria-hidden="true" />
+              </button>
+            </div>
+          ) : (
+            <>
+              {activeNote.pinned && <span className="skald-note-reader__pinned"><Pin size={13} aria-hidden="true" /> Pinned</span>}
+              <button type="button" onClick={onEdit} aria-label="Edit note">
+                <Pencil size={15} aria-hidden="true" />
+              </button>
+              <button type="button" onClick={() => setConfirmDelete(true)} aria-label="Delete note">
+                <Trash2 size={15} aria-hidden="true" />
+              </button>
+            </>
+          )}
+          <span className="skald-note-reader__tool-divider" />
+          <button
+            type="button"
+            aria-label={fullscreen ? 'Exit fullscreen' : 'View fullscreen'}
+            onClick={() => setFullscreen(!fullscreen)}
+          >
+            {fullscreen ? <Minimize2 size={15} aria-hidden="true" /> : <Maximize2 size={15} aria-hidden="true" />}
+          </button>
+        </div>
       </header>
 
-      <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="mx-auto w-full max-w-3xl px-5 py-7 sm:px-8 sm:py-10">
-          <time dateTime={activeNote.createdAt} className={`text-xs ${mutedText}`}>
-            {activeNote.createdAt
-              ? new Intl.DateTimeFormat(undefined, { dateStyle: 'long' }).format(new Date(activeNote.createdAt))
-              : ''}
-          </time>
-          <h2 className="mt-3 break-words text-2xl font-semibold leading-tight sm:text-4xl">
-            {activeNote.title}
-          </h2>
-          {activeNote.image && (
+      <div className="skald-note-reader__scroll">
+        <div className="skald-note-reader__content">
+          <p className="skald-workspace-kicker">Saved thought</p>
+          {dateIsValid && (
+            <time dateTime={activeNote.createdAt}>
+              {new Intl.DateTimeFormat(undefined, { dateStyle: 'long' }).format(createdDate)}
+            </time>
+          )}
+          {activeNote.reminderAt && (
+            <p className="skald-note-reader__reminder">
+              <Bell size={13} aria-hidden="true" />
+              Remind me {new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(activeNote.reminderAt))}
+            </p>
+          )}
+          <h2><NoteTitle title={activeNote.title} /></h2>
+          {(activeNote.imageAttachments?.[0]?.url ?? imageUrl) && (
             <img
-              className="mt-7 max-h-[60vh] w-full rounded-xl border border-white/10 object-contain"
-              src={activeNote.image instanceof File
-                ? URL.createObjectURL(activeNote.image)
-                : activeNote.image}
-              alt={`Image attached to ${activeNote.title}`}
+              className="skald-note-reader__image"
+              src={activeNote.imageAttachments?.[0]?.url ?? imageUrl}
+              alt={`Image attached to ${activeNote.title || 'note'}`}
             />
           )}
-          <p className="mt-7 whitespace-pre-wrap break-words text-sm leading-7 sm:text-base">
-            {activeNote.description || <span className={mutedText}>This note has no additional text.</span>}
-          </p>
+          <div className={`skald-note-reader__body skald-note-font--${activeNote.fontFamily ?? 'sans'}`}>
+            {activeNote.description
+              ? (
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                >
+                  {stripInlineNoteImages(activeNote.description)}
+                </ReactMarkdown>
+              )
+              : <span className="skald-note-reader__placeholder">Let this note grow when you have more to add.</span>}
+          </div>
         </div>
       </div>
     </article>

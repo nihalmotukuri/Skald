@@ -1,70 +1,26 @@
-import { useState } from 'react';
-import { useAppStore } from '@/store/appStore'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import TaskDropdown from './TaskDropdown'
 
-interface Props {
-  selectStatus: (status: string) => void;
-  currentStatus: string | undefined;
+interface SelectStatusProps {
+  selectStatus: (status: string) => void
+  currentStatus: string | undefined
 }
 
-const SelectStatus = ({ selectStatus, currentStatus }: Props) => {
-  const [selectedStatus, setSelectedStatus] = useState("");
-  const isDark = useAppStore((state) => state.isDark)
+const statuses = [
+  { value: 'Pending', label: 'Pending' },
+  { value: 'In Progress', label: 'In progress' },
+  { value: 'Done', label: 'Done' },
+  { value: 'Cancelled', label: 'Cancelled' },
+]
 
-  const onSelectStatus = (status: string) => {
-    selectStatus(status);
-    setSelectedStatus(status);
-  };
+const SelectStatus = ({ selectStatus, currentStatus }: SelectStatusProps) => (
+  <TaskDropdown
+    id="skald-edit-task-status"
+    className="skald-task-dialog__input skald-task-dialog__select skald-task-dropdown--form"
+    value={currentStatus ?? 'Pending'}
+    options={statuses}
+    onChange={selectStatus}
+    ariaLabel="Status"
+  />
+)
 
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button className={`${isDark ? "bg-white/5 border-white/10 hover:bg-white/10" : "!border-black/10 shadow-md hover:bg-neutral-200"} backdrop-blur-md border rounded-md text-[12px] px-[12px] py-[6px] w-full cursor-pointer`}>
-          {currentStatus || selectedStatus || 'Set Status'}
-        </button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className={`${isDark ? "bg-white/5 border-white/10 text-white" : "bg-neutral-100/10 !border-black/20 text-gray-600"} backdrop-blur-[8px] border border-white/20 absolute z-1000 right-[-66px]`} align="center">
-        <DropdownMenuGroup>
-          <DropdownMenuItem
-            onClick={() => onSelectStatus('Pending')}
-            className={`${isDark ? "hover:bg-white hover:text-black" : "hover:bg-black/10"} cursor-pointer`}
-            >
-            <p className="text-[14px] font-medium flex items-center">Pending</p>
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() => onSelectStatus('In Progress')}
-            className={`${isDark ? "hover:bg-white hover:text-black" : "hover:bg-black/10"} cursor-pointer`}
-            >
-            <p className="text-[14px] font-medium flex items-center">In Progress</p>
-          </DropdownMenuItem>
-          {currentStatus
-            ? (
-              <>
-                <DropdownMenuItem
-                  onClick={() => onSelectStatus('Done')}
-            className={`${isDark ? "hover:bg-white hover:text-black" : "hover:bg-black/10"} cursor-pointer`}
-                  >
-                  <p className="text-[14px] font-medium flex items-center">Done</p>
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => onSelectStatus('Cancelled')}
-            className={`${isDark ? "hover:bg-white hover:text-black" : "hover:bg-black/10"} cursor-pointer`}
-                  >
-                  <p className="text-[14px] font-medium flex items-center">Cancelled</p>
-                </DropdownMenuItem>
-              </>
-            ) : null
-          }
-        </DropdownMenuGroup>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-};
-
-export default SelectStatus;
+export default SelectStatus

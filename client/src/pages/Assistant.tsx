@@ -526,25 +526,21 @@ const Assistant = () => {
   }, [setBreadcrumb])
 
   return (
-    <section className={`col-span-1 row-span-1 mt-4 flex min-h-0 flex-col overflow-hidden rounded-xl border shadow-xl ${
-      isDark ? "border-white/10 bg-white/[0.025] text-white" : "border-slate-200 bg-white text-slate-900"
-    }`}>
-      <header className={`flex shrink-0 items-center justify-between border-b px-4 py-3 sm:px-6 ${
-        isDark ? 'border-white/10' : 'border-slate-200'
-      }`}>
+    <section className="skald-assistant-page">
+      <header className="skald-assistant-header">
         <div className="flex min-w-0 items-center gap-3">
-          <span className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${isDark ? 'bg-indigo-400/15 text-indigo-200' : 'bg-indigo-50 text-indigo-600'}`}>
+          <span className="skald-assistant-avatar">
             <Bot size={21} aria-hidden="true" />
           </span>
           <div className="min-w-0">
-            <h1 className="truncate text-base font-semibold">Mr Groff</h1>
-            <p className={`flex items-center gap-1.5 text-xs ${isDark ? 'text-white/50' : 'text-slate-500'}`}>
+            <h1>Mr Groff</h1>
+            <p>
               <span className={`size-1.5 rounded-full ${contextError ? 'bg-rose-400' : contextLoading ? 'bg-amber-300' : 'bg-emerald-400'}`} />
               {contextError ? 'Some workspace context unavailable' : contextLoading ? 'Loading your workspace context…' : 'Ready with your tasks and notes'}
             </p>
           </div>
         </div>
-        <Sparkles size={17} className={isDark ? 'text-indigo-200/70' : 'text-indigo-500'} aria-hidden="true" />
+        <Sparkles size={17} aria-hidden="true" />
       </header>
 
       {contextError && (
@@ -555,31 +551,31 @@ const Assistant = () => {
         </div>
       )}
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-3 sm:px-6">
-        <div className="mx-auto w-full max-w-3xl py-5">
+      <div className="skald-assistant-conversation">
+        <div className="skald-assistant-messages">
           {convo.map(c => (
             c.role === 'assistant'
               ? (
                 <div
                   key={c.id}
-                  className="mb-6 grid w-full grid-cols-[36px_minmax(0,1fr)] gap-3 ai-text sm:grid-cols-[40px_minmax(0,1fr)]"
+                  className="skald-assistant-message mb-6 grid w-full grid-cols-[36px_minmax(0,1fr)] gap-3 ai-text sm:grid-cols-[40px_minmax(0,1fr)]"
                 >
-                  <LuBot className={`size-9 rounded-xl p-2 text-xl text-white ${isDark ? "bg-indigo-400/20" : "bg-indigo-500"}`} aria-label="Mr Groff" />
+                  <LuBot className="skald-assistant-message-avatar size-9 rounded-xl p-2 text-xl" aria-label="Mr Groff" />
 
-                  <div className={`min-w-0 pt-1 text-sm leading-7 ${isDark ? "text-slate-200" : "text-slate-800"} [&_a]:text-indigo-400 [&_li]:ml-5 [&_li]:list-disc [&_ol]:my-2 [&_p]:my-2 [&_ul]:my-2`}>
+                  <div className="skald-assistant-message-copy min-w-0 pt-1 text-sm leading-7 [&_a]:text-indigo-400 [&_li]:ml-5 [&_li]:list-disc [&_ol]:my-2 [&_p]:my-2 [&_ul]:my-2">
                     <ReactMarkdown>
                       {c.message}
                     </ReactMarkdown>
                     {c.proposals?.map((proposal) => (
                       <section
                         key={proposal.id}
-                        className={`mt-4 rounded-xl border p-4 ${isDark ? 'border-white/15 bg-white/5' : 'border-black/15 bg-black/5'}`}
+                        className="skald-assistant-proposal mt-4 rounded-xl border p-4"
                       >
                         <p className="font-medium">{proposal.action.summary}</p>
-                        <p className={`mt-1 text-xs ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+                        <p className="skald-assistant-proposal__kind mt-1 text-xs">
                           {proposal.action.action.replaceAll('_', ' ')}
                         </p>
-                        <pre className={`mt-3 max-h-40 overflow-auto whitespace-pre-wrap break-words rounded-md p-2 text-sm ${isDark ? 'bg-black/20 text-slate-300' : 'bg-white/70 text-slate-700'}`}>
+                        <pre className="skald-assistant-proposal__details mt-3 max-h-40 overflow-auto whitespace-pre-wrap break-words rounded-md p-2 text-sm">
                           {getProposalDetails(proposal.action, tasks, notes, taskLists)}
                         </pre>
                         {contextError && (
@@ -592,7 +588,7 @@ const Assistant = () => {
                             <button
                               type="button"
                               disabled={proposal.status !== 'pending'}
-                              className={`rounded-md px-3 py-1 text-sm ${isDark ? 'bg-white/15 hover:bg-white/25' : 'bg-black/10 hover:bg-black/15'}`}
+                              className="skald-assistant-confirm rounded-md px-3 py-1 text-sm"
                               onClick={() => void applyProposal(c.id, proposal)}
                             >
                               {proposal.action.action.startsWith('delete_') ? 'Confirm delete' : 'Confirm'}
@@ -619,10 +615,10 @@ const Assistant = () => {
               : (
                 <div
                   key={c.id}
-                  className="my-4 flex w-full justify-end"
+                  className="skald-assistant-message skald-assistant-message--user my-4 flex w-full justify-end"
                 >
                   <div
-                    className="max-w-[85%] whitespace-pre-wrap break-words rounded-2xl rounded-br-sm bg-indigo-500 px-4 py-2.5 text-sm leading-6 text-white sm:max-w-[75%]"
+                    className="skald-assistant-user-bubble max-w-[85%] whitespace-pre-wrap break-words rounded-2xl rounded-br-sm px-4 py-2.5 text-sm leading-6 sm:max-w-[75%]"
                   >
                     {c.message}
                   </div>
@@ -664,9 +660,7 @@ const Assistant = () => {
 
       <form
         onSubmit={handlePrompt}
-        className={`mx-3 mb-3 mt-2 shrink-0 rounded-2xl border p-3 shadow-lg sm:mx-auto sm:mb-5 sm:w-[calc(100%-3rem)] sm:max-w-3xl ${
-          isDark ? 'border-white/10 bg-[#151722]' : 'border-slate-200 bg-white'
-        }`}
+        className="skald-assistant-composer"
       >
         {requestError && (
           <div role="alert" className={`mb-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border px-3 py-2 text-sm ${
@@ -712,7 +706,7 @@ const Assistant = () => {
             value={prompt}
           />
           <button
-            className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-indigo-500 text-white transition hover:bg-indigo-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-300 disabled:cursor-not-allowed disabled:opacity-40"
+            className="skald-assistant-send inline-flex size-10 shrink-0 items-center justify-center rounded-xl transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-300 disabled:cursor-not-allowed disabled:opacity-40"
             type="submit"
             disabled={responseLoading || !prompt.trim()}
             aria-label="Send message"

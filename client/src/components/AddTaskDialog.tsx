@@ -1,146 +1,148 @@
 import React, { useState } from 'react'
 import { useAppStore } from '@/store/appStore'
 import { useTaskMutations } from '@/queries/tasks'
-import { RxCross2 } from "react-icons/rx"
+import { X } from 'lucide-react'
 import type { Task } from '@/types/task'
+import { getWorkspacePreferences } from '@/lib/workspacePreferences'
 import SelectPriority from './SelectPriority'
 import SelectTaskList from './SelectTaskList'
-import SelectStatus from './SelectStatus'
+import WorkspaceDialog from './WorkspaceDialog'
 
 interface AddTaskDialogProps {
-    setDisplayAddTask: (value: boolean) => void;
+  setDisplayAddTask: (value: boolean) => void
+  initialDate?: string
+  initialTaskList?: string
 }
 
-const AddTaskDialog = ({ setDisplayAddTask }: AddTaskDialogProps) => {
-    const userId = useAppStore((state) => state.user?.id)
-    const isDark = useAppStore((state) => state.isDark)
-    const { addTask } = useTaskMutations(userId)
+const AddTaskDialog = ({ setDisplayAddTask, initialDate = '', initialTaskList = '' }: AddTaskDialogProps) => {
+  const userId = useAppStore((state) => state.user?.id)
+  const isDark = useAppStore((state) => state.isDark)
+  const { addTask } = useTaskMutations(userId)
+  const [addTaskData, setAddTaskData] = useState({
+    title: '',
+    description: '',
+    status: 'Pending',
+    date: initialDate,
+    time: '',
+    taskList: initialTaskList,
+  })
+  const [priority, setPriority] = useState(() => getWorkspacePreferences().defaultTaskPriority)
 
-    const [addTaskData, setAddTaskData] = useState({
-        title: '',
-        description: '',
-        status: 'Pending',
-        date: '',
-        time: '',
-        taskList: '',
-    })
-    const [priority, setPriority] = useState('Medium')
+  const onAddTask = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
 
-    const selectPriority = (selectedPriority: string) => setPriority(selectedPriority)
-    const selectTaskList = (selectedTaskList: string) => setAddTaskData({ ...addTaskData, taskList: selectedTaskList })
-    const selectStatus = (selectedStatus: string) => setAddTaskData({ ...addTaskData, status: selectedStatus })
-
-    const onAddTask = (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault()
-
-        const newTask: Task = {
-            ...addTaskData,
-            priority
-        }
-
-        addTask.mutate(newTask, {
-            onSuccess: () => {
-                setAddTaskData({
-                    title: '',
-                    description: '',
-                    status: 'Pending',
-                    date: '',
-                    time: '',
-                    taskList: '',
-                })
-                setPriority('')
-                setDisplayAddTask(false)
-            }
-        })
+    const newTask: Task = {
+      ...addTaskData,
+      priority,
     }
 
-    return (
-        <section className={`fixed top-0 left-0 z-999 ${isDark ? "bg-black/40" : "bg-gray-300/30"} h-full w-full flex justify-center items-center`}>
-            <form
-                onSubmit={onAddTask}
-                className={`${isDark ? "bg-white/6 border-white/10" : "bg-black/4 border-black/20"} shadow-lg backdrop-blur-xl border rounded-md p-[24px] w-[420px] flex flex-col gap-[18px] relative`}
-            >
-                <div
-                    className={`absolute top-0 right-0 p-[6px] ${isDark ? "hover:bg-white/10" : "hover:bg-gray-400/40"} text-red-5 cursor-pointer`}
-                    style={{ borderBottomLeftRadius: "7px", borderTopRightRadius: "7px" }}
-                    onClick={() => setDisplayAddTask(false)}
-                >
-                    <RxCross2 />
-                </div>
+    addTask.mutate(newTask, {
+      onSuccess: () => {
+        setAddTaskData({ title: '', description: '', status: 'Pending', date: initialDate, time: '', taskList: initialTaskList })
+        setPriority(getWorkspacePreferences().defaultTaskPriority)
+        setDisplayAddTask(false)
+      },
+    })
+  }
 
-                <div className='flex flex-col gap-2'>
-                    <label className='text-[15px]' htmlFor="title">Title *</label>
-                    <input
-                        className={`${isDark ? "bg-white/5 border-white/10" : "bg-neutral-100/20 !border-black/10"} shadow-md backdrop-blur-md border rounded-md text-[14px] px-[12px] py-[6px]`}
-                        type="text"
-                        name="title"
-                        value={addTaskData.title}
-                        onChange={e => setAddTaskData({ ...addTaskData, title: e.currentTarget.value })}
-                        required
-                    />
-                </div>
+  return (
+    <WorkspaceDialog labelledBy="skald-task-dialog-title" onClose={() => setDisplayAddTask(false)} dark={isDark}>
+      <form onSubmit={onAddTask} className="skald-task-dialog__form">
+        <header className="skald-task-dialog__header">
+          <div>
+            <h2 id="skald-task-dialog-title">Create a task</h2>
+          </div>
+          <button
+            type="button"
+            className="skald-task-dialog__close"
+            aria-label="Close new task dialog"
+            onClick={() => setDisplayAddTask(false)}
+          >
+            <X aria-hidden="true" size={17} />
+          </button>
+        </header>
 
-                <div className='flex flex-col gap-2'>
-                    <label className='text-[15px]' htmlFor="description">Description</label>
-                    <textarea
-                        name="description"
-                        className={`${isDark ? "bg-white/5 border-white/10" : "bg-neutral-100/20 !border-black/10"} shadow-md  backdrop-blur-md border rounded-md text-[14px] px-[12px] py-[6px] resize-none`}
-                        rows={5}
-                        value={addTaskData.description}
-                        onChange={e => setAddTaskData({ ...addTaskData, description: e.currentTarget.value })}
-                    ></textarea>
-                </div>
+        <div className="skald-task-dialog__field">
+          <label htmlFor="skald-task-title">Title <span aria-hidden="true">*</span></label>
+          <input
+            id="skald-task-title"
+            className="skald-task-dialog__input"
+            type="text"
+            name="title"
+            maxLength={300}
+            autoFocus
+            autoComplete="off"
+            value={addTaskData.title}
+            onChange={(event) => setAddTaskData({ ...addTaskData, title: event.currentTarget.value })}
+            required
+          />
+        </div>
 
-                <div className='flex justify-between'>
-                    <div className='flex flex-col gap-2'>
-                        <label className='text-[15px]' htmlFor="date">Due date</label>
-                        <input
-                            className={`${isDark ? "bg-white/5 border-white/10" : "bg-neutral-100/20 !border-black/10"} shadow-md  backdrop-blur-md border rounded-md text-[14px] px-[12px] py-[6px]`}
-                            type="date"
-                            name="date"
-                            value={addTaskData.date}
-                            onChange={e => setAddTaskData({ ...addTaskData, date: e.currentTarget.value })}
-                        />
-                    </div>
+        <div className="skald-task-dialog__field">
+          <label htmlFor="skald-task-description">Description</label>
+          <textarea
+            id="skald-task-description"
+            className="skald-task-dialog__input skald-task-dialog__description"
+            name="description"
+            rows={4}
+            value={addTaskData.description}
+            onChange={(event) => setAddTaskData({ ...addTaskData, description: event.currentTarget.value })}
+          />
+        </div>
 
-                    <div className='flex flex-col gap-2'>
-                        <label className='text-[15px]' htmlFor="time">Time</label>
-                        <input
-                            className={`${isDark ? "bg-white/5 border-white/10" : "bg-neutral-100/20 !border-black/10"} shadow-md  backdrop-blur-md border rounded-md text-[14px] px-[12px] py-[6px]`}
-                            type="time"
-                            value={addTaskData.time}
-                            onChange={e => setAddTaskData({ ...addTaskData, time: e.currentTarget.value })}
-                        />
-                    </div>
+        <div className="skald-task-dialog__grid">
+          <div className="skald-task-dialog__field">
+            <label htmlFor="skald-task-date">Due date</label>
+            <input
+              id="skald-task-date"
+              className="skald-task-dialog__input"
+              type="date"
+              name="date"
+              value={addTaskData.date}
+              onChange={(event) => setAddTaskData({ ...addTaskData, date: event.currentTarget.value })}
+            />
+          </div>
 
-                    <div className='flex flex-col gap-2'>
-                        <label className='text-[15px]'>Priority</label>
-                        <SelectPriority selectPriority={selectPriority} currentPriority={priority} />
-                    </div>
-                </div>
+          <div className="skald-task-dialog__field">
+            <label htmlFor="skald-task-time">Time</label>
+            <input
+              id="skald-task-time"
+              className="skald-task-dialog__input"
+              type="time"
+              name="time"
+              value={addTaskData.time}
+              onChange={(event) => setAddTaskData({ ...addTaskData, time: event.currentTarget.value })}
+            />
+          </div>
 
-                <div className='flex justify-between gap-6'>
-                    <div className='flex flex-col gap-2 w-full'>
-                        <label className='text-[15px]'>Task List</label>
-                        <SelectTaskList selectTaskList={selectTaskList} currentTaskList="" />
-                    </div>
+          <div className="skald-task-dialog__field">
+            <label htmlFor="skald-task-priority">Priority</label>
+            <SelectPriority
+              selectPriority={(value) => {
+                if (value === 'Low' || value === 'Medium' || value === 'High') setPriority(value)
+              }}
+              currentPriority={priority}
+            />
+          </div>
+          <div className="skald-task-dialog__field">
+            <label htmlFor="skald-task-list">List</label>
+            <SelectTaskList
+              selectTaskList={(taskList) => setAddTaskData({ ...addTaskData, taskList })}
+              currentTaskList={addTaskData.taskList}
+            />
+          </div>
+        </div>
 
-                    <div className='flex flex-col gap-2 w-full'>
-                        <label className='text-[15px]'>Status</label>
-                        <SelectStatus selectStatus={selectStatus} currentStatus="" />
-                    </div>
-                </div>
-
-                <button
-                    type='submit'
-                    className={`${isDark ? "bg-white/5 border-white/10 hover:bg-white/10" : "bg-neutral-100/20 !border-black/10 shadow-md hover:bg-neutral-200"} backdrop-blur-md border rounded-md text-[12px] px-[12px] py-[6px] w-full cursor-pointer`}
-                    disabled={addTask.isPending || !addTaskData.title.trim()}
-                >
-                    Add Task
-                </button>
-            </form>
-        </section>
-    )
+        <button
+          type="submit"
+          className="skald-task-dialog__submit"
+          disabled={addTask.isPending || !addTaskData.title.trim()}
+        >
+          {addTask.isPending ? 'Adding task…' : 'Add task'}
+        </button>
+      </form>
+    </WorkspaceDialog>
+  )
 }
 
 export default AddTaskDialog

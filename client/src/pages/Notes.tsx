@@ -1,29 +1,31 @@
-import { useEffect, useMemo, useState } from "react";
-import { FileText, Plus, Search, X } from "lucide-react";
+import { useEffect, useMemo, useState } from 'react'
+import { Archive, ArrowRight, FileText, Plus, Search, StickyNote, X } from 'lucide-react'
 import { useAppStore } from '@/store/appStore'
 import { useNotes, useNoteMutations } from '@/queries/notes'
-import AddNoteDialog from "@/components/AddNoteDialog";
-import EditNoteDialog from "@/components/EditNoteDialog";
-import NoteSkeleton from "@/components/NoteSkeleton";
-import DisplayNote from "@/components/DisplayNote";
-import NoteItem from "@/components/NoteItem";
+import type { Note } from '@/types/note'
+import AddNoteDialog from '@/components/AddNoteDialog'
+import EditNoteDialog from '@/components/EditNoteDialog'
+import NoteSkeleton from '@/components/NoteSkeleton'
+import DisplayNote from '@/components/DisplayNote'
+import NoteItem from '@/components/NoteItem'
 
 const Notes = () => {
   const userId = useAppStore((state) => state.user?.id)
   const { data: notes = [], isLoading: loading, error } = useNotes(userId)
-  const { deleteNote } = useNoteMutations(userId)
+  const { deleteNote, editNote } = useNoteMutations(userId)
   const activeNoteId = useAppStore((state) => state.activeNoteId)
   const setActiveNoteId = useAppStore((state) => state.setActiveNoteId)
   const isDark = useAppStore((state) => state.isDark)
   const setBreadcrumb = useAppStore((state) => state.setBreadcrumb)
-  const [filterQuery, setFilterQuery] = useState("")
+  const [filterQuery, setFilterQuery] = useState('')
   const [displayAddNote, setDisplayAddNote] = useState(false)
   const [displayEditNote, setDisplayEditNote] = useState(false)
-  const [editNoteId, setEditNoteId] = useState("")
+  const [editNoteId, setEditNoteId] = useState('')
   const [fullscreen, setFullscreen] = useState(false)
+  const [showArchived, setShowArchived] = useState(false)
 
   useEffect(() => {
-    setBreadcrumb("Notes")
+    setBreadcrumb('Notes')
   }, [setBreadcrumb])
 
   useEffect(() => {
@@ -35,50 +37,65 @@ const Notes = () => {
 
   const normalizedQuery = filterQuery.trim().toLowerCase()
   const filteredNotes = useMemo(() => [...notes]
+    .filter((note) => showArchived ? Boolean(note.archivedAt) : !note.archivedAt)
     .filter((note) => !normalizedQuery
       || note.title.toLowerCase().includes(normalizedQuery)
       || note.description.toLowerCase().includes(normalizedQuery))
-    .sort((first, second) => (second.createdAt ?? '').localeCompare(first.createdAt ?? '')),
-  [notes, normalizedQuery])
+    .sort((first, second) => Number(Boolean(second.pinned)) - Number(Boolean(first.pinned))
+      || (second.updatedAt ?? second.createdAt ?? '').localeCompare(first.updatedAt ?? first.createdAt ?? '')),
+  [notes, normalizedQuery, showArchived])
   const activeNote = notes.find((note) => note._id === activeNoteId)
   const pageText = isDark ? 'text-white' : 'text-slate-900'
   const mutedText = isDark ? 'text-white/55' : 'text-slate-500'
-  const surface = isDark ? 'border-white/10 bg-white/[0.035]' : 'border-slate-200 bg-white'
 
   const handleDelete = (noteId: string) => {
     deleteNote.mutate(noteId, {
       onSuccess: () => {
-        if (activeNoteId === noteId) setActiveNoteId(null)
-      }
+        if (activeNoteId === noteId) {
+          setActiveNoteId(null)
+          setFullscreen(false)
+        }
+      },
     })
   }
 
-  return (
-    <div className={`col-span-1 row-span-1 flex min-h-0 flex-col overflow-y-auto ${pageText}`}>
-      {displayAddNote && <AddNoteDialog setDisplayAddNote={setDisplayAddNote} />}
-      {displayEditNote && (
-        <EditNoteDialog
-          setDisplayEditNote={setDisplayEditNote}
-          editNoteId={editNoteId}
-        />
-      )}
+  const editSelectedNote = (noteId: string) => {
+    setEditNoteId(noteId)
+    setDisplayEditNote(true)
+  }
 
-      <header className="flex flex-col gap-4 border-b border-white/10 pb-5 pt-4 sm:flex-row sm:items-end sm:justify-between">
+  const togglePinned = (note: Note) => {
+    if (!note._id) return
+    editNote.mutate({ ...note, pinned: !note.pinned })
+  }
+
+  const visibleNotes = notes.filter((note) => showArchived ? Boolean(note.archivedAt) : !note.archivedAt)
+  const pinnedCount = visibleNotes.filter((note) => note.pinned).length
+  const archivedCount = notes.filter((note) => note.archivedAt).length
+
+  return (
+    <div className={`skald-page skald-notes-page col-span-1 row-span-1 flex min-h-0 flex-col overflow-y-auto ${pageText}`}>
+      {displayAddNote && <AddNoteDialog setDisplayAddNote={setDisplayAddNote} />}
+      {displayEditNote && <EditNoteDialog setDisplayEditNote={setDisplayEditNote} editNoteId={editNoteId} />}
+
+      <header className="skald-page-header skald-notes-header flex flex-col gap-5 border-b sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className={`mb-1 text-xs font-medium uppercase tracking-[0.2em] ${mutedText}`}>Your workspace</p>
-          <h1 className="text-2xl font-semibold sm:text-3xl">Notes</h1>
-          <p className={`mt-1 text-sm ${mutedText}`}>{notes.length} {notes.length === 1 ? 'note' : 'notes'}</p>
+          <p className="skald-workspace-kicker">A home for your thoughts</p>
+          <h1 className="skald-page-title">Notes</h1>
+          <p className="skald-page-description">
+            {visibleNotes.length} {visibleNotes.length === 1 ? 'note' : 'notes'} {showArchived ? 'in your archive' : 'to come back to'}
+          </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <label className={`flex min-h-10 w-full items-center gap-2 rounded-lg border px-3 sm:w-64 ${surface}`}>
+        <div className="skald-page-actions flex flex-wrap items-center gap-2">
+          <label className="skald-page-search flex min-h-10 w-full items-center gap-2 border px-3 sm:w-64">
             <Search aria-hidden="true" size={16} className={mutedText} />
             <input
               type="search"
-              placeholder="Search title or content"
+              placeholder="Find a thought"
               aria-label="Search notes"
               value={filterQuery}
               onChange={(event) => setFilterQuery(event.target.value)}
-              className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-white/35"
+              className="min-w-0 flex-1 bg-transparent text-sm outline-none"
             />
             {filterQuery && (
               <button type="button" aria-label="Clear search" onClick={() => setFilterQuery('')}>
@@ -89,26 +106,52 @@ const Notes = () => {
           <button
             type="button"
             onClick={() => setDisplayAddNote(true)}
-            className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-lg bg-indigo-500 px-3 text-sm font-medium text-white transition hover:bg-indigo-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-300"
+            className="skald-add-action inline-flex min-h-10 shrink-0 items-center gap-2 text-sm font-semibold transition"
           >
-            <Plus aria-hidden="true" size={17} />
+            <span className="skald-add-action__icon"><Plus aria-hidden="true" size={17} /></span>
             New note
           </button>
         </div>
       </header>
 
       {error && (
-        <p role="alert" className="mt-4 rounded-lg border border-rose-400/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+        <p role="alert" className={`mt-4 rounded-lg border border-rose-400/20 bg-rose-500/10 px-4 py-3 text-sm ${isDark ? 'text-rose-200' : 'text-rose-700'}`}>
           Unable to load notes: {error.message}
         </p>
       )}
 
-      <div className={`mt-5 min-h-0 flex-1 ${activeNote ? 'grid grid-cols-1 gap-4 lg:grid-cols-[minmax(240px,320px)_minmax(0,1fr)]' : ''}`}>
-        <section
-          aria-label="Notes list"
-          className={`${activeNote ? 'hidden overflow-y-auto pr-1 lg:block' : 'block'} ${fullscreen ? 'lg:hidden' : ''}`}
-        >
-          <div className="flex flex-col gap-2 pb-8">
+      <div className={`skald-notes-workspace ${activeNote ? 'has-active-note' : ''} ${fullscreen ? 'is-fullscreen' : ''}`}>
+        <aside className="skald-notes-rail" aria-label="Notes list">
+          <div className="skald-notes-rail__heading">
+            <div>
+              <h2>{showArchived ? 'Archive' : 'Your notes'}</h2>
+              <span>
+                {pinnedCount > 0 && !showArchived ? `${pinnedCount} pinned · ` : ''}
+                {filteredNotes.length} {filteredNotes.length === 1 ? 'thought' : 'thoughts'}
+              </span>
+            </div>
+            <button
+              type="button"
+              aria-label={showArchived ? 'Show active notes' : 'Show archived notes'}
+              title={showArchived ? 'Show active notes' : 'Show archived notes'}
+              className={showArchived ? 'is-active' : ''}
+              onClick={() => {
+                setShowArchived((value) => !value)
+                setActiveNoteId(null)
+                setFullscreen(false)
+              }}
+            >
+              {showArchived ? <StickyNote size={16} aria-hidden="true" /> : <Archive size={16} aria-hidden="true" />}
+              {archivedCount > 0 && <span className="skald-notes-archive-count">{archivedCount}</span>}
+            </button>
+            {!showArchived && (
+              <button type="button" aria-label="Create a note" onClick={() => setDisplayAddNote(true)}>
+                <Plus size={16} aria-hidden="true" />
+              </button>
+            )}
+          </div>
+
+          <div className="skald-notes-list">
             {loading
               ? Array.from({ length: 4 }, (_, index) => <NoteSkeleton key={index} />)
               : filteredNotes.map((note) => (
@@ -118,13 +161,30 @@ const Notes = () => {
                   deleteNote={handleDelete}
                   setEditNoteId={setEditNoteId}
                   setDisplayEditNote={setDisplayEditNote}
+                  deleting={deleteNote.isPending}
+                  togglePinned={togglePinned}
                 />
               ))}
+            {!loading && !error && filteredNotes.length === 0 && (
+              <div className="skald-notes-list__empty">
+                <FileText size={17} aria-hidden="true" />
+                <p>
+                  {showArchived
+                    ? 'No notes in your archive.'
+                    : notes.length
+                      ? 'No notes match that search.'
+                      : 'Your first thought can start here.'}
+                </p>
+                {!showArchived && notes.length === 0 && (
+                  <button type="button" onClick={() => setDisplayAddNote(true)}>Write a note <ArrowRight size={14} /></button>
+                )}
+              </div>
+            )}
           </div>
-        </section>
+        </aside>
 
-        {activeNote && (
-          <section className={`${fullscreen ? 'fixed inset-4 z-40' : 'min-h-[400px]'} overflow-hidden rounded-xl border ${surface}`}>
+        <section className={`skald-note-reader ${fullscreen ? 'is-fullscreen' : ''}`} aria-label="Selected note">
+          {activeNote ? (
             <DisplayNote
               fullscreen={fullscreen}
               setFullscreen={setFullscreen}
@@ -132,38 +192,27 @@ const Notes = () => {
                 setActiveNoteId(null)
                 setFullscreen(false)
               }}
+              onEdit={() => activeNote._id && editSelectedNote(activeNote._id)}
+              onDelete={() => activeNote._id && handleDelete(activeNote._id)}
+              deleting={deleteNote.isPending}
             />
-          </section>
-        )}
-
-        {!loading && !error && filteredNotes.length === 0 && (
-          <div className={`rounded-2xl border px-5 py-12 text-center ${surface}`}>
-            <div className="mx-auto mb-3 flex size-11 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-300">
-              <FileText size={21} />
-            </div>
-            <h2 className="font-medium">{notes.length === 0 ? 'Make room for a thought' : 'No notes found'}</h2>
-            <p className={`mx-auto mt-1 max-w-sm text-sm ${mutedText}`}>
-              {notes.length === 0
-                ? 'Capture ideas, plans, and the details you want to remember.'
-                : 'Try a different search, or clear the search field.'}
-            </p>
-            {notes.length === 0
-              ? (
-                <button
-                  type="button"
-                  onClick={() => setDisplayAddNote(true)}
-                  className="mt-4 rounded-lg bg-indigo-500 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-400"
-                >
-                  Create your first note
-                </button>
-              )
-              : filterQuery && (
-                <button type="button" onClick={() => setFilterQuery('')} className="mt-4 text-sm text-indigo-200 hover:text-white">
-                  Clear search
+          ) : (
+            <div className="skald-note-reader__empty">
+              <span><FileText size={20} aria-hidden="true" /></span>
+              <p className="skald-workspace-kicker">{notes.length ? 'Your quiet corner' : 'A little room for ideas'}</p>
+              <h2>{notes.length ? 'Choose a note to settle into.' : 'Keep the thoughts you want to find again.'}</h2>
+              <p>{notes.length
+                ? 'Your notes stay close by, ready when you are.'
+                : 'Plans, fragments, reminders, sparks of an idea. Give them somewhere to land.'}</p>
+              {notes.length === 0 && (
+                <button type="button" className="skald-add-action inline-flex items-center gap-2 text-sm font-semibold" onClick={() => setDisplayAddNote(true)}>
+                  <span className="skald-add-action__icon"><Plus size={16} aria-hidden="true" /></span>
+                  Write your first note
                 </button>
               )}
-          </div>
-        )}
+            </div>
+          )}
+        </section>
       </div>
     </div>
   )

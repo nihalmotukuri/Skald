@@ -41,9 +41,15 @@ const toLocalDateTime = (value: string | null) => {
   if (!value) return { date: '', time: '' }
   const date = new Date(value)
   const pad = (part: number) => String(part).padStart(2, '0')
+  // Date-only tasks were historically saved at midnight; newer ones use 23:59.
+  const isDateOnlySentinel = (date.getHours() === 23 && date.getMinutes() === 59)
+    || (date.getHours() === 0 && date.getMinutes() === 0)
+  const time = isDateOnlySentinel
+    ? ''
+    : `${pad(date.getHours())}:${pad(date.getMinutes())}`
   return {
     date: `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`,
-    time: `${pad(date.getHours())}:${pad(date.getMinutes())}`
+    time
   }
 }
 
@@ -89,7 +95,7 @@ const toTaskPriority = (priority?: string): TaskPriority => {
 
 const toDueAt = (task: Task) => {
   if (!task.date) return null
-  const dueAt = new Date(`${task.date}T${task.time || '00:00'}`)
+  const dueAt = new Date(`${task.date}T${task.time || '23:59'}`)
   if (Number.isNaN(dueAt.getTime())) throw new Error('Enter a valid task due date and time.')
   return dueAt.toISOString()
 }
@@ -240,11 +246,32 @@ export const useTaskListMutations = (userId: string | undefined) => {
       if (!userId) throw new Error('You must be signed in to create a task list.')
       const normalizedName = name.trim()
       if (!normalizedName) throw new Error('Enter a name for the task list.')
+      if (normalizedName.length > 80) throw new Error('Task list names must be 80 characters or fewer.')
       const { error } = await supabase.from('task_lists').insert({ user_id: userId, name: normalizedName })
       if (error) throw error
     },
     onSuccess: invalidateLists,
     onError: reportMutationError('Creating task list')
+  })
+
+  const updateTaskList = useMutation({
+    mutationFn: async ({ id, name }: { id: string; name: string }) => {
+      if (!userId) throw new Error('You must be signed in to rename a task list.')
+      const normalizedName = name.trim()
+      if (!normalizedName) throw new Error('Enter a name for the task list.')
+      if (normalizedName.length > 80) throw new Error('Task list names must be 80 characters or fewer.')
+      const { error } = await supabase
+        .from('task_lists')
+        .update({ name: normalizedName })
+        .eq('user_id', userId)
+        .eq('id', id)
+        .select('id')
+        .single()
+      if (error) throw error
+      return normalizedName
+    },
+    onSuccess: invalidateLists,
+    onError: reportMutationError('Renaming task list')
   })
 
   const deleteTaskList = useMutation({
@@ -263,7 +290,7 @@ export const useTaskListMutations = (userId: string | undefined) => {
     onError: reportMutationError('Deleting task list')
   })
 
-  return { addTaskList, deleteTaskList }
+  return { addTaskList, updateTaskList, deleteTaskList }
 }
 
 export const useTaskActivity = (userId: string | undefined) => useQuery({

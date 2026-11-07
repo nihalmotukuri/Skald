@@ -1,8 +1,12 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Noto+Sans:ital,wght@0,100..900;1,100..900&family=Stint+Ultra+Expanded&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Noto+Sans:ital,wght@0,100..900;1,100..900&family=Redaction+100&display=swap');
 
 @font-face {
   font-family: 'DS-Digital';
   src: url('/fonts/DS-DIGI.TTF') format('truetype');
+}
+
+.skald-app-header {
+  padding: 0;
 }
 
 * {
@@ -67,6 +71,7 @@ main {
 
 .react-activity-calendar {
   justify-content: space-between;
+  padding: 0 30px;
   height: 100%;
 }
 
@@ -169,16 +174,17 @@ main {
   text-decoration: none;
 }
 
-.skald-brand img {
-  width: 30px;
-  height: 30px;
-  object-fit: contain;
+.skald-brand-mark {
+  display: inline-block;
+  flex: 0 0 auto;
 }
 
-.skald-brand span {
-  font-family: 'Stint Ultra Expanded', Georgia, serif;
-  font-size: 13px;
-  letter-spacing: 0.16em;
+.skald-wordmark {
+  color: inherit;
+  font-family: 'Redaction 100', sans-serif;
+  font-size: 32px;
+  font-weight: 400;
+  line-height: 1;
 }
 
 .skald-nav__links,
@@ -221,10 +227,11 @@ main {
 
 .skald-button {
   display: inline-flex;
-  min-height: 48px;
+  min-height: 44px;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 10px;
+  padding: 0 12px;
   padding: 0 20px;
   border: 1px solid transparent;
   border-radius: 999px;
@@ -389,15 +396,19 @@ main {
   gap: 8px;
   padding: 0 7px 25px;
   color: var(--home-ink);
-  font-family: Georgia, serif;
-  font-size: 13px;
-  font-weight: 700;
+  font-family: 'Montserrat', 'Noto Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 650;
 }
 
 .skald-preview__mini-brand img {
   width: 20px;
   height: 20px;
   object-fit: contain;
+}
+
+.skald-preview__mini-brand .skald-brand-mark {
+  font-size: 17px;
 }
 
 .skald-preview__workspace-label,
@@ -1000,36 +1011,60 @@ main {
 
 .skald-app {
   --app-bg: #f5f3ee;
+  --app-sidebar: #f0efec;
   --app-ink: #191824;
   --app-muted: #777582;
   --app-line: rgb(36 32 52 / 10%);
-  --app-panel: rgb(255 255 255 / 78%);
+  --app-panel: #fff;
   --app-accent: #6654e8;
   position: relative;
   display: flex;
   width: 100%;
   height: 100dvh;
-  min-height: 0;
-  gap: 16px;
+  min-height: 100dvh;
+  gap: 0;
   overflow: hidden;
-  padding: 16px;
-  background:
-    radial-gradient(ellipse at 86% 4%, rgb(213 205 255 / 27%), transparent 31rem),
-    var(--app-bg);
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
+  background: var(--app-bg);
   color: var(--app-ink);
   font-family: 'Montserrat', 'Noto Sans', ui-sans-serif, system-ui, sans-serif;
 }
 
 .skald-app--dark {
-  --app-bg: #101017;
+  --app-bg: #1a1a25;
+  --app-sidebar: #14141d;
   --app-ink: #f3f1fa;
   --app-muted: #a4a1b1;
-  --app-line: rgb(255 255 255 / 10%);
-  --app-panel: rgb(27 26 38 / 84%);
-  --app-accent: #a095ff;
-  background:
-    radial-gradient(ellipse at 86% 4%, rgb(93 75 189 / 16%), transparent 31rem),
-    var(--app-bg);
+  --app-line: rgb(255 255 255 / 8%);
+  --app-panel: #20202c;
+  --app-accent: #a995ff;
+  background: var(--app-bg);
+}
+
+body:has(.skald-app--dark) {
+  --app-bg: #1a1a25;
+  --app-sidebar: #14141d;
+  --app-ink: #f3f1fa;
+  --app-muted: #a4a1b1;
+  --app-line: rgb(255 255 255 / 8%);
+  --app-panel: #20202c;
+  --app-accent: #a995ff;
+  background: #0e0e16;
+}
+
+body:has(.skald-app--light) {
+  --app-bg: #f5f3ee;
+  --app-sidebar: #f0efec;
+  --app-ink: #191824;
+  --app-muted: #777582;
+  --app-line: rgb(36 32 52 / 10%);
+  --app-panel: #fff;
+  --app-accent: #6654e8;
+  background: #eae8e4;
 }
 
 .skald-app-loading {
@@ -1043,17 +1078,14 @@ main {
 .skald-sidebar {
   z-index: 3;
   display: flex;
-  width: 248px;
+  width: 224px;
   min-width: 0;
-  flex: 0 0 248px;
+  flex: 0 0 224px;
   flex-direction: column;
   justify-content: space-between;
-  padding: 18px 12px 12px;
-  border: 1px solid var(--app-line);
-  border-radius: 22px;
-  background: var(--app-panel);
-  box-shadow: 0 18px 50px rgb(20 18 42 / 5%);
-  backdrop-filter: blur(24px);
+  padding: 24px 10px 12px;
+  border-right: 1px solid var(--app-line);
+  background: var(--app-sidebar);
   transition: width 180ms ease, flex-basis 180ms ease;
 }
 
@@ -1066,27 +1098,19 @@ main {
   display: flex;
   min-height: 42px;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 10px;
+  padding: 0 12px;
   color: var(--app-ink);
   text-decoration: none;
 }
 
-.skald-sidebar-brand img {
-  width: 30px;
-  height: 30px;
-  object-fit: contain;
-}
-
-.skald-sidebar-brand span,
-.skald-app-mobile-brand span {
-  font-family: 'Stint Ultra Expanded', Georgia, serif;
-  font-size: 13px;
-  letter-spacing: 0.14em;
+.skald-sidebar-brand .skald-brand-mark {
+  font-size: 32px;
 }
 
 .skald-sidebar-label {
-  margin: 30px 12px 11px;
+  margin: 38px 12px 10px;
   color: var(--app-muted);
   font-size: 9px;
   font-weight: 700;
@@ -1100,18 +1124,18 @@ main {
 
 .skald-sidebar-nav {
   display: grid;
-  gap: 5px;
+  gap: 2px;
 }
 
 .skald-sidebar-link {
   display: flex;
-  min-height: 43px;
+  min-height: 40px;
   align-items: center;
   justify-content: flex-start;
   gap: 12px;
   padding: 0 12px;
   border: 1px solid transparent;
-  border-radius: 12px;
+  border-radius: 6px;
   color: var(--app-muted);
   font-size: 13px;
   font-weight: 500;
@@ -1124,6 +1148,15 @@ main {
   padding: 0;
 }
 
+.skald-sidebar-footer {
+  display: grid;
+  gap: 5px;
+}
+
+.skald-sidebar-settings {
+  min-height: 36px;
+}
+
 .skald-sidebar-link:hover,
 .skald-mobile-nav-link:hover {
   background: color-mix(in srgb, var(--app-accent) 9%, transparent);
@@ -1132,60 +1165,15 @@ main {
 
 .skald-sidebar-link.is-active,
 .skald-mobile-nav-link.is-active {
-  border-color: color-mix(in srgb, var(--app-accent) 15%, transparent);
-  background: color-mix(in srgb, var(--app-accent) 12%, transparent);
+  border-color: transparent;
+  background: color-mix(in srgb, var(--app-accent) 9%, transparent);
   color: var(--app-accent);
 }
 
-.skald-sidebar-account {
-  position: relative;
-  display: flex;
-  min-height: 54px;
-  align-items: center;
-  gap: 10px;
-  padding: 8px;
-  border-top: 1px solid var(--app-line);
+.skald-sidebar--collapsed .skald-sidebar-footer {
+  justify-items: center;
 }
 
-.skald-sidebar-avatar {
-  width: 34px;
-  height: 34px;
-  flex: 0 0 34px;
-  border: 1px solid var(--app-line);
-  border-radius: 12px;
-  object-fit: cover;
-}
-
-.skald-sidebar-avatar--initial {
-  display: grid;
-  place-items: center;
-  background: color-mix(in srgb, var(--app-accent) 14%, transparent);
-  color: var(--app-accent);
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.skald-sidebar-identity {
-  display: grid;
-  min-width: 0;
-  flex: 1;
-  gap: 3px;
-}
-
-.skald-sidebar-identity span {
-  overflow: hidden;
-  color: var(--app-ink);
-  font-size: 11px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.skald-sidebar-identity span + span {
-  color: var(--app-muted);
-  font-size: 9px;
-}
-
-.skald-sidebar-signout,
 .skald-app-icon-button {
   display: grid;
   width: 36px;
@@ -1193,14 +1181,13 @@ main {
   flex: 0 0 36px;
   place-items: center;
   border: 1px solid transparent;
-  border-radius: 11px;
+  border-radius: 7px;
   background: transparent;
   color: var(--app-muted);
   cursor: pointer;
   transition: color 160ms ease, background 160ms ease, border-color 160ms ease;
 }
 
-.skald-sidebar-signout:hover,
 .skald-app-icon-button:hover {
   border-color: var(--app-line);
   background: color-mix(in srgb, var(--app-accent) 9%, transparent);
@@ -1221,7 +1208,17 @@ main {
   min-width: 0;
   min-height: 0;
   flex: 1;
-  grid-template-rows: 58px minmax(0, 1fr);
+  grid-template-rows: 54px minmax(0, 1fr);
+}
+
+.skald-app-header--dashboard {
+  justify-content: flex-end;
+  padding: 4px 26px 0;
+  border: 0;
+}
+
+.skald-app-header--dashboard .skald-app-icon-button {
+  color: var(--app-muted);
 }
 
 .skald-app-header {
@@ -1229,7 +1226,14 @@ main {
   min-width: 0;
   align-items: center;
   justify-content: space-between;
+  padding: 0 20px;
   border-bottom: 1px solid var(--app-line);
+}
+
+.skald-app-header.skald-app-header--dashboard {
+  justify-content: flex-end;
+  padding: 4px 26px 0;
+  border: 0;
 }
 
 .skald-app-header__leading,
@@ -1240,23 +1244,34 @@ main {
   gap: 13px;
 }
 
+.skald-app-add-task {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  gap: 7px;
+  padding: 0 11px;
+  border: 1px solid var(--app-accent);
+  border-radius: 6px;
+  background: var(--app-accent);
+  color: white;
+  font-size: 10px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 150ms ease, border-color 150ms ease;
+}
+
+.skald-app-add-task:hover {
+  border-color: var(--app-accent);
+  background: color-mix(in srgb, var(--app-accent) 88%, black);
+}
+
 .skald-app-heading {
   min-width: 0;
 }
 
-.skald-app-heading__greeting {
-  display: block;
-  overflow: hidden;
-  color: var(--app-muted);
-  font-size: 9px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .skald-app-heading h1 {
-  margin-top: 2px;
   color: var(--app-ink);
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   line-height: 1.2;
 }
@@ -1275,6 +1290,2677 @@ main {
   overflow: hidden;
 }
 
+.skald-page {
+  width: min(100%, 1080px);
+  margin-right: auto;
+  margin-left: auto;
+  padding: 28px clamp(24px, 5vw, 68px) 40px;
+}
+
+.skald-page-header {
+  align-items: flex-end;
+  gap: 20px;
+  border-color: var(--app-line);
+  padding: 0 0 18px;
+}
+
+.skald-page-title {
+  color: var(--app-ink);
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.skald-page-description {
+  margin-top: 6px;
+  color: var(--app-muted);
+  font-size: 12px;
+}
+
+.skald-workspace-kicker {
+  margin: 0 0 7px;
+  color: var(--app-accent);
+  font-size: 9px;
+  font-weight: 650;
+  letter-spacing: 0.13em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.skald-task-page-header .skald-page-title,
+.skald-notes-header .skald-page-title {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(30px, 3.2vw, 38px);
+  font-weight: 400;
+  letter-spacing: -0.045em;
+}
+
+.skald-page-actions {
+  gap: 8px;
+}
+
+.skald-page-search {
+  min-height: 38px;
+  border-color: var(--app-line);
+  border-radius: 6px;
+  background: var(--app-panel);
+  color: var(--app-muted);
+}
+
+.skald-page-search input {
+  color: var(--app-ink);
+}
+
+.skald-page-search input::placeholder {
+  color: var(--app-muted);
+  opacity: 0.75;
+}
+
+.skald-page-button {
+  min-height: 38px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--app-accent);
+  color: white;
+  cursor: pointer;
+}
+
+.skald-page-button:hover {
+  filter: brightness(1.06);
+}
+
+.skald-page-empty {
+  display: grid;
+  min-height: 220px;
+  place-content: center;
+  justify-items: center;
+  border-color: var(--app-line);
+  border-radius: 8px;
+  background: var(--app-panel);
+  color: var(--app-ink);
+}
+
+.skald-page-empty h2,
+.skald-page-empty h3 {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.skald-page-empty p {
+  color: var(--app-muted);
+}
+
+.skald-today-page {
+  width: min(100%, 900px);
+  min-width: 0;
+  margin: 0 auto;
+  padding: 20px clamp(32px, 5vw, 68px) 40px;
+  overflow-y: auto;
+  color: var(--app-ink);
+}
+
+.skald-today-heading__topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.skald-today-heading__topline > p {
+  margin: 0;
+  color: var(--app-muted);
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.skald-today-heading__topline > a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--app-accent);
+  font-size: 10px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.skald-today-heading__topline > a:hover {
+  color: var(--app-ink);
+}
+
+.skald-today-heading h1 {
+  margin: 48px 0 0;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(38px, 4.5vw, 50px);
+  font-weight: 400;
+  letter-spacing: -0.045em;
+  line-height: 1.12;
+}
+
+.skald-today-heading__subtitle {
+  margin: 8px 0 0;
+  color: var(--app-muted);
+  font-size: 13px;
+}
+
+.skald-today-nudge {
+  display: flex;
+  min-height: 96px;
+  align-items: center;
+  gap: 16px;
+  margin-top: 36px;
+  padding: 16px;
+  border: 1px solid color-mix(in srgb, var(--app-accent) 15%, var(--app-line));
+  border-radius: 13px;
+  background: color-mix(in srgb, var(--app-accent) 5%, var(--app-panel));
+  color: var(--app-ink);
+  text-decoration: none;
+  transition: border-color 150ms ease, background 150ms ease;
+}
+
+.skald-today-nudge:hover {
+  border-color: color-mix(in srgb, var(--app-accent) 34%, var(--app-line));
+  background: color-mix(in srgb, var(--app-accent) 8%, var(--app-panel));
+}
+
+.skald-today-nudge__icon {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  place-items: center;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--app-accent) 12%, transparent);
+  color: var(--app-accent);
+}
+
+.skald-today-nudge__copy {
+  display: grid;
+  min-width: 0;
+  gap: 6px;
+}
+
+.skald-today-nudge__copy > span {
+  color: var(--app-muted);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.skald-today-nudge__copy strong {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 15px;
+  font-weight: 400;
+}
+
+.skald-today-nudge__arrow,
+.skald-today-assistant > svg:last-child {
+  flex: 0 0 auto;
+  margin-left: auto;
+  color: var(--app-accent);
+}
+
+.skald-today-list {
+  margin-top: 38px;
+}
+
+.skald-today-list__heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 0 0 11px;
+  border-bottom: 1px solid var(--app-line);
+}
+
+.skald-today-list__heading h2 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.skald-today-list__heading > span {
+  color: var(--app-muted);
+  font-size: 10px;
+}
+
+.skald-today-list ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.skald-today-list li {
+  display: flex;
+  min-height: 62px;
+  align-items: center;
+  gap: 11px;
+  border-bottom: 1px solid var(--app-line);
+}
+
+.skald-today-task__check {
+  display: grid;
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+  place-items: center;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--app-muted) 50%, transparent);
+  border-radius: 5px;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+}
+
+.skald-today-list li.is-completed .skald-today-task__check {
+  border-color: var(--app-accent);
+  background: var(--app-accent);
+}
+
+.skald-today-task__title {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.skald-today-list li.is-completed .skald-today-task__title {
+  color: var(--app-muted);
+  text-decoration: line-through;
+}
+
+.skald-today-task__list {
+  max-width: 100px;
+  overflow: hidden;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--app-accent) 9%, transparent);
+  color: var(--app-accent);
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.skald-today-task__time {
+  min-width: 35px;
+  color: var(--app-muted);
+  font-size: 9px;
+  text-align: right;
+}
+
+.skald-today-list__empty {
+  display: flex;
+  min-height: 110px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid var(--app-line);
+}
+
+.skald-today-list__empty p {
+  color: var(--app-muted);
+  font-size: 12px;
+}
+
+.skald-today-list__empty a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--app-accent);
+  font-size: 10px;
+  text-decoration: none;
+}
+
+.skald-today-assistant {
+  display: flex;
+  min-height: 52px;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+  padding: 0 13px;
+  border: 1px solid var(--app-line);
+  border-radius: 9px;
+  color: var(--app-muted);
+  font-size: 10px;
+  text-decoration: none;
+  transition: border-color 150ms ease, color 150ms ease;
+}
+
+.skald-today-assistant:hover {
+  border-color: color-mix(in srgb, var(--app-accent) 34%, var(--app-line));
+  color: var(--app-ink);
+}
+
+.skald-today-assistant > svg:first-child {
+  color: var(--app-accent);
+}
+
+.skald-today-error {
+  margin-top: 24px;
+  color: #f87171;
+  font-size: 12px;
+}
+
+.skald-today-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.skald-today-skeleton span {
+  height: 12px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--app-ink) 7%, transparent);
+  animation: skald-skeleton-pulse 1400ms ease-in-out infinite alternate;
+}
+
+.skald-today-skeleton span:first-child {
+  width: 42%;
+  height: 42px;
+  margin-top: 38px;
+}
+
+.skald-today-skeleton span:nth-child(2) {
+  width: 100%;
+  height: 88px;
+  margin-top: 22px;
+}
+
+.skald-today-skeleton span:nth-child(3) {
+  width: 100%;
+  height: 170px;
+}
+
+.skald-today-skeleton span:nth-child(4) {
+  width: 100%;
+  height: 52px;
+}
+
+@keyframes skald-skeleton-pulse {
+  to { opacity: 0.45; }
+}
+
+.skald-tasks-page {
+  min-width: 0;
+}
+
+.skald-task-page-header {
+  padding-bottom: 20px;
+}
+
+.skald-task-primary {
+  min-height: 38px;
+}
+
+.skald-task-list-controls {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.skald-task-list-button {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 11px;
+  border-color: var(--app-line) !important;
+  border-radius: 6px;
+  background: transparent !important;
+  color: var(--app-muted) !important;
+  font-size: 11px !important;
+  box-shadow: none !important;
+  cursor: pointer;
+}
+
+.skald-task-list-button:hover {
+  background: color-mix(in srgb, var(--app-ink) 4%, transparent) !important;
+  color: var(--app-ink) !important;
+}
+
+.skald-task-list-select-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.skald-dropdown-trigger {
+  display: inline-flex;
+  min-width: 0;
+  min-height: 40px;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 9px;
+  padding: 0 12px;
+  border: 1px solid var(--app-line);
+  border-radius: 8px;
+  background: var(--app-panel);
+  color: var(--app-ink);
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 140ms ease, background 140ms ease, color 140ms ease, opacity 140ms ease;
+}
+
+.skald-dropdown-trigger:hover:not(:disabled),
+.skald-dropdown-trigger[data-state='open'] {
+  border-color: color-mix(in srgb, var(--app-accent) 30%, var(--app-line));
+  background: color-mix(in srgb, var(--app-ink) 3%, var(--app-panel));
+}
+
+.skald-dropdown-trigger:focus-visible,
+.skald-dropdown-item:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--app-accent) 65%, transparent);
+  outline-offset: 2px;
+}
+
+.skald-dropdown-trigger:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.skald-dropdown-trigger__count {
+  color: var(--app-muted);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.skald-dropdown-trigger__chevron {
+  flex: 0 0 auto;
+  margin-left: auto;
+  color: var(--app-muted);
+  transition: transform 140ms ease;
+}
+
+.skald-dropdown-trigger[data-state='open'] .skald-dropdown-trigger__chevron {
+  transform: rotate(180deg);
+}
+
+.skald-dropdown-content {
+  z-index: 60;
+  isolation: isolate;
+  min-width: var(--radix-dropdown-menu-trigger-width);
+  padding: 5px;
+  border: 1px solid var(--app-line);
+  border-radius: 9px;
+  background-color: var(--app-panel) !important;
+  color: var(--app-ink);
+  box-shadow: 0 12px 30px rgb(0 0 0 / 18%);
+}
+
+.skald-dropdown-item {
+  display: flex;
+  min-height: 34px;
+  align-items: center;
+  gap: 12px;
+  padding: 7px 9px;
+  border-radius: 5px;
+  color: var(--app-ink);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer !important;
+}
+
+.skald-dropdown-item[data-highlighted] {
+  background: color-mix(in srgb, var(--app-accent) 9%, var(--app-panel));
+  color: var(--app-ink);
+  outline: none;
+}
+
+.skald-dropdown-item[aria-checked='true'] {
+  color: var(--app-accent);
+}
+
+.skald-dropdown-item__count {
+  margin-left: auto;
+  color: var(--app-muted);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.skald-dropdown-item__check {
+  flex: 0 0 auto;
+  margin-left: 2px;
+}
+
+.skald-task-view-select {
+  width: 154px;
+}
+
+.skald-task-list-select {
+  width: 164px;
+}
+
+.skald-task-list-select-error {
+  color: #b42318;
+  font-size: 10px;
+}
+
+.skald-task-filters {
+  padding: 18px 0 15px;
+}
+
+.skald-task-clear-filters {
+  background: transparent;
+  color: var(--app-accent);
+  cursor: pointer;
+}
+
+.skald-task-search,
+.skald-task-empty {
+  border-color: var(--app-line);
+  background: var(--app-panel);
+}
+
+.skald-task-search {
+  border-radius: 7px;
+}
+
+.skald-task-search {
+  color: var(--app-muted);
+}
+
+.skald-task-empty {
+  min-height: 220px;
+}
+
+.skald-task-row {
+  position: relative;
+  min-width: 0;
+  border: 0;
+  border-bottom: 1px solid var(--app-line);
+  border-radius: 0;
+  background: transparent !important;
+  padding: 14px 0;
+  cursor: pointer;
+}
+
+.skald-task-row:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--app-accent) 70%, transparent);
+  outline-offset: 3px;
+}
+
+.skald-task-row.is-completed {
+  opacity: 0.72;
+}
+
+.skald-task-row__content {
+  display: block;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  pointer-events: none;
+}
+
+.skald-task-row__title,
+.skald-task-row__description {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.skald-task-row__title {
+  color: var(--app-ink);
+  font-size: 13px;
+  font-weight: 550;
+}
+
+.skald-task-row__content.is-completed .skald-task-row__title {
+  color: var(--app-muted);
+  text-decoration: line-through;
+}
+
+.skald-task-row__description {
+  max-width: 72ch;
+  margin-top: 5px;
+  color: var(--app-muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.skald-task-row__due {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--app-accent);
+  font-size: 11px;
+  font-weight: 550;
+  pointer-events: none;
+}
+
+.skald-task-row__due.is-today {
+  color: #d99a32;
+}
+
+.skald-task-row__due.is-overdue {
+  color: #e05260;
+}
+
+.skald-task-row__actions {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 140ms ease;
+}
+
+.skald-task-row:hover .skald-task-row__actions,
+.skald-task-row:focus-within .skald-task-row__actions,
+.skald-task-row:has(.skald-task-delete-confirm) .skald-task-row__actions {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.skald-task-row__actions button {
+  cursor: pointer;
+}
+
+@media (hover: none) {
+  .skald-task-row__actions {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+.skald-task-detail-header {
+  display: flex;
+  height: 50px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 18px;
+  border-bottom: 1px solid var(--app-line);
+}
+
+.skald-task-detail-header__list,
+.skald-task-detail-header__actions {
+  display: flex;
+  align-items: center;
+}
+
+.skald-task-detail-header__list {
+  min-width: 0;
+  gap: 8px;
+  color: var(--app-muted);
+  font-size: 11px;
+  font-weight: 550;
+}
+
+.skald-task-detail-header__list span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.skald-task-detail-header__actions {
+  gap: 5px;
+}
+
+.skald-task-detail-header__actions button {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--app-muted);
+  cursor: pointer;
+}
+
+.skald-task-detail-header__actions button:hover {
+  color: var(--app-ink);
+}
+
+.skald-task-detail-layout {
+  display: grid;
+  height: calc(100% - 50px);
+  min-height: 0;
+  grid-template-columns: minmax(0, 1fr) 264px;
+}
+
+.skald-task-detail-main {
+  min-width: 0;
+  overflow-y: auto;
+  padding: 34px clamp(20px, 4vw, 48px);
+}
+
+.skald-task-detail-title-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+}
+
+.skald-task-detail-complete {
+  display: grid;
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  place-items: center;
+  margin-top: 3px;
+  border: 1px solid var(--app-muted);
+  border-radius: 50%;
+  background: transparent;
+  color: white;
+  cursor: pointer;
+}
+
+.skald-task-detail-complete.is-completed {
+  border-color: #19a974;
+  background: #19a974;
+}
+
+.skald-task-detail-complete:disabled {
+  cursor: not-allowed;
+  opacity: .5;
+}
+
+.skald-task-detail-title-row h2 {
+  min-width: 0;
+  margin: 0;
+  color: var(--app-ink);
+  font-size: clamp(18px, 2.5vw, 23px);
+  font-weight: 600;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.skald-task-detail-description {
+  margin: 12px 0 0 33px;
+  color: var(--app-ink);
+  font-size: 13px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+.skald-task-detail-description p {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.skald-task-detail-description .is-empty {
+  color: var(--app-muted);
+}
+
+.skald-task-detail-due {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 24px 0 0 33px;
+  color: var(--app-muted);
+  font-size: 12px;
+}
+
+.skald-task-detail-properties {
+  min-width: 0;
+  overflow-y: auto;
+  padding: 16px 20px;
+  border-left: 1px solid var(--app-line);
+  background: color-mix(in srgb, var(--app-bg) 75%, var(--app-panel));
+}
+
+.skald-task-detail-property {
+  display: grid;
+  min-height: 58px;
+  align-content: center;
+  gap: 6px;
+  border-bottom: 1px solid var(--app-line);
+}
+
+.skald-task-detail-property > span {
+  color: var(--app-muted);
+  font-size: 10px;
+  font-weight: 550;
+}
+
+.skald-task-detail-property > strong {
+  overflow-wrap: anywhere;
+  color: var(--app-ink);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.skald-task-delete-confirm {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: #b42318;
+  font-size: 11px;
+}
+
+.skald-task-delete-confirm.is-dark {
+  color: #fda4af;
+}
+
+.skald-task-delete-confirm button {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.skald-task-delete-confirm button:hover {
+  background: color-mix(in srgb, currentColor 11%, transparent);
+}
+
+.skald-notes-page {
+  min-width: 0;
+}
+
+.skald-notes-header {
+  padding-bottom: 20px;
+}
+
+.skald-notes-workspace {
+  display: grid;
+  min-height: 360px;
+  min-width: 0;
+  flex: 1;
+  grid-template-columns: minmax(220px, 0.78fr) minmax(0, 1.55fr);
+  margin-top: 20px;
+  overflow: hidden;
+  border: 1px solid var(--app-line);
+  border-radius: 10px;
+  background: var(--app-panel);
+}
+
+.skald-notes-rail {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  border-right: 1px solid var(--app-line);
+}
+
+.skald-notes-rail__heading {
+  display: flex;
+  min-height: 60px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--app-line);
+}
+
+.skald-notes-rail__heading h2 {
+  margin: 0;
+  color: var(--app-ink);
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.skald-notes-rail__heading span {
+  display: block;
+  margin-top: 3px;
+  color: var(--app-muted);
+  font-size: 9px;
+}
+
+.skald-notes-rail__heading > button,
+.skald-note-row__actions button,
+.skald-note-row__confirm button,
+.skald-note-reader__tools > button,
+.skald-note-reader__delete-confirm button {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--app-muted);
+  cursor: pointer;
+  transition: background 140ms ease, color 140ms ease, border-color 140ms ease;
+}
+
+.skald-notes-rail__heading > button:hover,
+.skald-note-row__actions button:hover,
+.skald-note-reader__tools > button:hover {
+  border-color: var(--app-line);
+  background: color-mix(in srgb, var(--app-ink) 5%, transparent);
+  color: var(--app-ink);
+}
+
+.skald-notes-list {
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+  padding: 5px 10px 14px;
+}
+
+.skald-note-row {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 3px;
+  border-bottom: 1px solid var(--app-line);
+  transition: background 140ms ease;
+}
+
+.skald-note-row:hover,
+.skald-note-row.is-selected {
+  background: color-mix(in srgb, var(--app-accent) 5%, transparent);
+}
+
+.skald-note-row.is-selected {
+  box-shadow: inset 2px 0 var(--app-accent);
+}
+
+.skald-note-row__open {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 4px 12px 8px;
+  border: 0;
+  background: transparent;
+  color: var(--app-ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.skald-note-row__image {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  border-radius: 7px;
+  object-fit: cover;
+}
+
+.skald-note-row__image--empty {
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--app-accent) 10%, transparent);
+  color: var(--app-accent);
+}
+
+.skald-note-row__copy {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+  gap: 4px;
+}
+
+.skald-note-row__title {
+  overflow: hidden;
+  font-size: 11px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.skald-note-row__preview {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--app-muted);
+  font-size: 10px;
+  line-height: 1.45;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  white-space: pre-wrap;
+}
+
+.skald-note-row__date {
+  color: var(--app-muted);
+  font-size: 9px;
+  opacity: 0.78;
+}
+
+.skald-note-row__actions {
+  display: flex;
+  align-items: center;
+  padding-right: 5px;
+  opacity: 0;
+  transition: opacity 140ms ease;
+}
+
+.skald-note-row:hover .skald-note-row__actions,
+.skald-note-row:focus-within .skald-note-row__actions {
+  opacity: 1;
+}
+
+.skald-note-row__actions button:last-child:hover,
+.skald-note-row__confirm button:first-of-type {
+  color: #e11d48;
+}
+
+.skald-note-row__confirm {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  padding-right: 4px;
+  color: #e11d48;
+  font-size: 9px;
+  white-space: nowrap;
+}
+
+.skald-note-row__confirm button {
+  width: 26px;
+  height: 26px;
+  flex-basis: 26px;
+  color: inherit;
+}
+
+.skald-note-row__confirm button:hover {
+  background: color-mix(in srgb, currentColor 10%, transparent);
+}
+
+.skald-notes-list__empty {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+  padding: 22px 10px;
+  color: var(--app-muted);
+}
+
+.skald-notes-list__empty > svg {
+  color: var(--app-accent);
+}
+
+.skald-notes-list__empty p {
+  margin: 0;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.skald-notes-list__empty button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--app-accent);
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.skald-note-reader {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  background: color-mix(in srgb, var(--app-bg) 35%, var(--app-panel));
+}
+
+.skald-note-reader__empty {
+  display: flex;
+  min-height: 100%;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding: clamp(24px, 6vw, 72px);
+}
+
+.skald-note-reader__empty > span {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  margin-bottom: 24px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--app-accent) 20%, var(--app-line));
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--app-accent) 7%, transparent);
+  color: var(--app-accent);
+}
+
+.skald-note-reader__empty h2 {
+  max-width: 420px;
+  margin: 0;
+  color: var(--app-ink);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(25px, 3.5vw, 38px);
+  font-weight: 400;
+  letter-spacing: -0.04em;
+  line-height: 1.15;
+}
+
+.skald-note-reader__empty > p:not(.skald-workspace-kicker) {
+  max-width: 340px;
+  margin: 12px 0 0;
+  color: var(--app-muted);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.skald-note-reader__empty .skald-page-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 22px;
+  padding: 0 13px;
+}
+
+.skald-note-reader__article {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  flex-direction: column;
+  color: var(--app-ink);
+}
+
+.skald-note-reader__toolbar {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 13px;
+  border-bottom: 1px solid var(--app-line);
+}
+
+.skald-note-reader__back,
+.skald-note-reader__tools {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.skald-note-reader__back {
+  padding: 7px 5px;
+  border: 0;
+  background: transparent;
+  color: var(--app-muted);
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.skald-note-reader__back:hover {
+  color: var(--app-ink);
+}
+
+.skald-note-reader__tools {
+  color: var(--app-muted);
+}
+
+.skald-note-reader__tool-divider {
+  width: 1px;
+  height: 18px;
+  margin: 0 3px;
+  background: var(--app-line);
+}
+
+.skald-note-reader__delete-confirm {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: #e11d48;
+  font-size: 10px;
+}
+
+.skald-note-reader__delete-confirm button {
+  color: inherit;
+}
+
+.skald-note-reader__delete-confirm button:hover {
+  background: color-mix(in srgb, currentColor 10%, transparent);
+}
+
+.skald-note-reader__scroll {
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.skald-note-reader__content {
+  width: min(100%, 720px);
+  margin: 0 auto;
+  padding: clamp(24px, 5vw, 56px) clamp(20px, 5vw, 64px) 72px;
+}
+
+.skald-note-reader__content time {
+  color: var(--app-muted);
+  font-size: 10px;
+}
+
+.skald-note-reader__content h2 {
+  margin: 17px 0 0;
+  color: var(--app-ink);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(30px, 4vw, 46px);
+  font-weight: 400;
+  letter-spacing: -0.045em;
+  line-height: 1.13;
+  overflow-wrap: anywhere;
+}
+
+.skald-note-reader__image {
+  max-height: 50vh;
+  width: 100%;
+  margin-top: 28px;
+  border: 1px solid var(--app-line);
+  border-radius: 8px;
+  object-fit: contain;
+}
+
+.skald-note-reader__body {
+  margin-top: 28px;
+  color: var(--app-ink);
+  font-size: 13px;
+  line-height: 1.9;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.skald-note-reader__placeholder {
+  color: var(--app-muted);
+}
+
+.skald-note-reader.is-fullscreen {
+  position: fixed;
+  inset: 16px;
+  z-index: 40;
+  overflow: hidden;
+  border: 1px solid var(--app-line);
+  border-radius: 12px;
+  background: var(--app-panel);
+  box-shadow: 0 24px 80px rgb(0 0 0 / 28%);
+}
+
+.skald-note-dialog__eyebrow {
+  margin: 0 0 5px;
+  color: var(--app-accent) !important;
+  font-size: 9px !important;
+  font-weight: 650;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.skald-note-dialog__title-input {
+  min-height: 42px;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 17px;
+}
+
+.skald-note-dialog__body {
+  min-height: 190px;
+  resize: vertical;
+  line-height: 1.65;
+}
+
+.skald-note-dialog__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.skald-note-dialog__footer .skald-task-dialog__submit {
+  min-width: 132px;
+  padding: 0 14px;
+}
+
+.skald-note-dialog__attach {
+  position: relative;
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  gap: 7px;
+  color: var(--app-muted);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.skald-note-dialog__attach:hover {
+  color: var(--app-ink);
+}
+
+.skald-note-dialog__attach input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+
+.skald-note-dialog__attach:focus-within {
+  outline: 2px solid var(--app-accent);
+  outline-offset: 3px;
+}
+
+.skald-note-dialog__image-preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px;
+  border: 1px solid var(--app-line);
+  border-radius: 7px;
+}
+
+.skald-note-dialog__image-preview img {
+  width: 56px;
+  height: 48px;
+  border-radius: 4px;
+  object-fit: cover;
+}
+
+.skald-note-dialog__image-preview button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px;
+  border: 0;
+  background: transparent;
+  color: var(--app-muted);
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.skald-note-dialog__image-preview button:hover {
+  color: #e11d48;
+}
+
+.skald-note-editor {
+  width: min(660px, calc(100vw - 28px));
+  max-height: calc(100dvh - 28px);
+}
+
+.skald-note-editor__form {
+  position: relative;
+  display: flex;
+  min-height: 330px;
+  max-height: calc(100dvh - 30px);
+  flex-direction: column;
+  padding: 16px 19px 8px;
+  overflow: auto;
+  background: color-mix(in srgb, var(--app-panel) 91%, var(--skald-note-tint, transparent));
+  color: var(--app-ink);
+}
+
+.skald-note-editor__top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.skald-note-editor__title {
+  min-width: 0;
+  min-height: 42px;
+  flex: 1;
+  padding: 4px 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--app-ink);
+  font-size: 19px;
+  font-weight: 500;
+}
+
+.skald-note-editor__title::placeholder,
+.skald-note-editor__body::placeholder {
+  color: var(--app-muted);
+  opacity: 0.78;
+}
+
+.skald-note-editor__icon-button {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--app-muted);
+  cursor: pointer;
+  transition: background 140ms ease, color 140ms ease;
+}
+
+.skald-note-editor__icon-button:hover,
+.skald-note-editor__icon-button.is-active {
+  background: color-mix(in srgb, var(--app-ink) 8%, transparent);
+  color: var(--app-accent);
+}
+
+.skald-note-editor__icon-button.is-active svg {
+  fill: color-mix(in srgb, var(--app-accent) 28%, transparent);
+}
+
+.skald-note-editor__body {
+  width: 100%;
+  min-height: 190px;
+  flex: 1;
+  margin-top: 6px;
+  padding: 4px 0 14px;
+  border: 0;
+  outline: 0;
+  resize: vertical;
+  background: transparent;
+  color: var(--app-ink);
+  font-size: 13px;
+  line-height: 1.75;
+}
+
+.skald-note-font--sans {
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+}
+
+.skald-note-font--serif {
+  font-family: Georgia, 'Times New Roman', serif;
+}
+
+.skald-note-font--mono {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+}
+
+.skald-note-editor__toolbar {
+  display: flex;
+  min-height: 46px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border-top: 1px solid var(--app-line);
+}
+
+.skald-note-editor__tools,
+.skald-note-editor__footer-actions {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 3px;
+}
+
+.skald-note-editor__tools > button,
+.skald-note-editor__tool {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  place-items: center;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--app-muted);
+  cursor: pointer;
+  transition: background 140ms ease, color 140ms ease;
+}
+
+.skald-note-editor__tools > button:hover,
+.skald-note-editor__tool:hover,
+.skald-note-editor__tools > button[aria-pressed='true'] {
+  background: color-mix(in srgb, var(--app-ink) 7%, transparent);
+  color: var(--app-ink);
+}
+
+.skald-note-editor__tools > button:disabled {
+  cursor: default;
+  opacity: 0.35;
+}
+
+.skald-note-editor__tool {
+  position: relative;
+}
+
+.skald-note-editor__tool input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+
+.skald-note-editor__tool:focus-within {
+  outline: 2px solid var(--app-accent);
+  outline-offset: 2px;
+}
+
+.skald-note-editor__color-dot {
+  width: 17px;
+  height: 17px;
+  border: 1px solid color-mix(in srgb, var(--app-ink) 18%, transparent);
+  border-radius: 50%;
+  background: var(--skald-note-swatch, var(--app-panel));
+}
+
+.skald-note-editor__bell {
+  font-size: 23px;
+  line-height: 1;
+}
+
+.skald-note-editor__footer-actions {
+  gap: 8px;
+}
+
+.skald-note-editor__edited {
+  color: var(--app-muted);
+  font-size: 9px;
+  white-space: nowrap;
+}
+
+.skald-note-editor__close,
+.skald-note-editor__save {
+  min-height: 32px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--app-muted);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.skald-note-editor__close:hover {
+  background: color-mix(in srgb, var(--app-ink) 6%, transparent);
+  color: var(--app-ink);
+}
+
+.skald-note-editor__save {
+  background: var(--app-accent);
+  color: white;
+}
+
+.skald-note-editor__save:hover:not(:disabled) {
+  filter: brightness(1.07);
+}
+
+.skald-note-editor__save:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.skald-note-editor__format-panel,
+.skald-note-editor__color-panel,
+.skald-note-editor__reminder-panel {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin: 0 0 9px;
+  padding: 6px;
+  border: 1px solid var(--app-line);
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--app-bg) 65%, var(--app-panel));
+}
+
+.skald-note-editor__format-panel {
+  flex-wrap: wrap;
+}
+
+.skald-note-editor__format-panel > button {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--app-muted);
+  cursor: pointer;
+}
+
+.skald-note-editor__format-panel > button:hover {
+  background: color-mix(in srgb, var(--app-ink) 8%, transparent);
+  color: var(--app-ink);
+}
+
+.skald-note-editor__format-panel > button:disabled {
+  color: var(--app-muted);
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.skald-note-editor__format-panel > span {
+  width: 1px;
+  height: 19px;
+  margin: 0 3px;
+  background: var(--app-line);
+}
+
+.skald-note-editor__format-panel select,
+.skald-note-editor__reminder-panel input {
+  min-height: 30px;
+  padding: 0 8px;
+  border: 1px solid var(--app-line);
+  border-radius: 5px;
+  background: var(--app-panel);
+  color: var(--app-ink);
+  font: inherit;
+  font-size: 10px;
+}
+
+.skald-note-editor__color-panel {
+  width: fit-content;
+  gap: 8px;
+  padding: 8px;
+}
+
+.skald-note-color-swatch {
+  display: grid;
+  width: 29px;
+  height: 29px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--app-ink) 16%, transparent);
+  border-radius: 50%;
+  background: var(--skald-note-swatch, var(--app-panel));
+  color: var(--app-ink);
+  cursor: pointer;
+}
+
+.skald-note-color-swatch.is-selected {
+  outline: 2px solid var(--app-accent);
+  outline-offset: 2px;
+}
+
+.skald-note-editor__reminder-panel {
+  flex-wrap: wrap;
+  padding: 9px 10px;
+}
+
+.skald-note-editor__reminder-panel label {
+  color: var(--app-muted);
+  font-size: 10px;
+}
+
+.skald-note-editor__reminder-panel button {
+  border: 0;
+  background: transparent;
+  color: var(--app-accent);
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.skald-note-editor__image-preview {
+  position: relative;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 0 12px;
+}
+
+.skald-note-editor__image-preview img {
+  display: block;
+  max-height: 180px;
+  max-width: 100%;
+  border: 1px solid var(--app-line);
+  border-radius: 7px;
+  object-fit: contain;
+}
+
+.skald-note-editor__image-preview button {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--app-bg) 78%, transparent);
+  color: var(--app-ink);
+  cursor: pointer;
+}
+
+.skald-note-color--default { --skald-note-tint: transparent; --skald-note-swatch: #34343b; }
+.skald-note-color--rose { --skald-note-tint: #a64c62; --skald-note-swatch: #a64c62; }
+.skald-note-color--amber { --skald-note-tint: #b98238; --skald-note-swatch: #b98238; }
+.skald-note-color--sage { --skald-note-tint: #4c8067; --skald-note-swatch: #4c8067; }
+.skald-note-color--blue { --skald-note-tint: #4c75a6; --skald-note-swatch: #4c75a6; }
+.skald-note-color--violet { --skald-note-tint: #795cb0; --skald-note-swatch: #795cb0; }
+
+.skald-note-reader__article,
+.skald-note-row {
+  background: color-mix(in srgb, var(--app-panel) 94%, var(--skald-note-tint, transparent));
+}
+
+.skald-note-reader__reminder {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin: 13px 0 0;
+  color: var(--app-accent);
+  font-size: 10px;
+}
+
+.skald-note-reader__pinned {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-right: 5px;
+  color: var(--app-accent);
+  font-size: 9px;
+}
+
+.skald-note-row__reminder {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--app-accent);
+  font-size: 9px;
+}
+
+.skald-note-row__actions button.is-pinned {
+  color: var(--app-accent);
+  opacity: 1;
+}
+
+.skald-note-row__actions button:last-child:hover {
+  color: #e11d48;
+}
+
+.skald-notes-rail__heading > button {
+  position: relative;
+}
+
+.skald-notes-rail__heading > button.is-active {
+  color: var(--app-accent);
+}
+
+.skald-notes-rail__heading .skald-notes-archive-count {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  display: grid;
+  min-width: 14px;
+  height: 14px;
+  place-items: center;
+  padding: 0 3px;
+  border-radius: 99px;
+  background: var(--app-accent);
+  color: #fff;
+  font-size: 8px;
+}
+
+.skald-note-reader__body > *:first-child {
+  margin-top: 0;
+}
+
+.skald-note-reader__body h1,
+.skald-note-reader__body h2,
+.skald-note-reader__body h3 {
+  margin: 1.5em 0 0.55em;
+  color: var(--app-ink);
+  font-family: inherit;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+}
+
+.skald-note-reader__body h1 { font-size: 1.55em; }
+.skald-note-reader__body h2 { font-size: 1.3em; }
+.skald-note-reader__body h3 { font-size: 1.1em; }
+
+.skald-note-reader__body p,
+.skald-note-reader__body ul,
+.skald-note-reader__body ol,
+.skald-note-reader__body blockquote,
+.skald-note-reader__body pre {
+  margin: 0 0 1em;
+}
+
+.skald-note-reader__body ul,
+.skald-note-reader__body ol {
+  padding-left: 1.5em;
+}
+
+.skald-note-reader__body li + li {
+  margin-top: 0.35em;
+}
+
+.skald-note-reader__body blockquote {
+  padding-left: 1em;
+  border-left: 2px solid var(--app-accent);
+  color: var(--app-muted);
+}
+
+.skald-note-reader__body code {
+  padding: 0.12em 0.3em;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--app-ink) 8%, transparent);
+  font-size: 0.9em;
+}
+
+.skald-note-reader__body pre {
+  overflow-x: auto;
+  padding: 12px;
+  border: 1px solid var(--app-line);
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--app-bg) 65%, var(--app-panel));
+}
+
+.skald-note-reader__body pre code {
+  padding: 0;
+  background: transparent;
+}
+
+.skald-note-reader__body input[type='checkbox'] {
+  margin-right: 0.5em;
+  accent-color: var(--app-accent);
+}
+
+@media (max-width: 560px) {
+  .skald-note-editor__form {
+    min-height: 300px;
+    padding: 13px 13px 7px;
+  }
+
+  .skald-note-editor__toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+    padding-top: 7px;
+  }
+
+  .skald-note-editor__tools {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .skald-note-editor__footer-actions {
+    width: 100%;
+    justify-content: flex-end;
+    padding-bottom: 5px;
+  }
+
+  .skald-note-editor__edited {
+    margin-right: auto;
+  }
+
+  .skald-note-row__actions {
+    opacity: 1;
+  }
+}
+
+.skald-add-action {
+  min-height: 36px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--app-accent);
+  text-decoration: none;
+}
+
+.skald-add-action:hover {
+  color: color-mix(in srgb, var(--app-accent) 78%, var(--app-ink));
+}
+
+.skald-add-action__icon {
+  display: grid;
+  width: 25px;
+  height: 25px;
+  flex: 0 0 25px;
+  place-items: center;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--app-accent) 18%, transparent);
+  color: var(--app-accent);
+}
+
+.skald-app-add-task {
+  min-height: 36px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--app-accent);
+  font-size: 11px;
+}
+
+.skald-app-add-task:hover {
+  border: 0;
+  background: transparent;
+  color: color-mix(in srgb, var(--app-accent) 78%, var(--app-ink));
+}
+
+.skald-task-primary {
+  min-height: 36px;
+  padding: 0;
+}
+
+.skald-note-editor {
+  width: min(1040px, calc(100vw - 32px));
+  max-width: 1040px;
+}
+
+.skald-note-editor__form {
+  min-height: 440px;
+  padding: 18px 22px 10px;
+}
+
+.skald-note-editor__body {
+  min-height: 300px;
+  font-size: 14px;
+  overflow: auto;
+  resize: vertical;
+  white-space: pre-wrap;
+}
+
+.skald-note-editor__title[data-placeholder]:empty::before,
+.skald-note-editor__body[data-placeholder]:empty::before {
+  color: var(--app-muted);
+  content: attr(data-placeholder);
+  opacity: 0.78;
+  pointer-events: none;
+}
+
+.skald-note-editor__title {
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.skald-note-editor__body > :first-child {
+  margin-top: 0;
+}
+
+.skald-note-editor__body > :last-child {
+  margin-bottom: 0;
+}
+
+.skald-note-editor__body p {
+  margin: 0 0 12px;
+}
+
+.skald-note-editor__body h2,
+.skald-note-editor__body h3 {
+  margin: 16px 0 8px;
+}
+
+.skald-note-editor__body ul,
+.skald-note-editor__body ol {
+  padding-left: 24px;
+}
+
+.skald-note-editor__attachments {
+  margin: 0 0 11px;
+}
+
+.skald-note-editor__attachment {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+  padding: 7px;
+  border: 1px solid var(--app-line);
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--app-bg) 45%, transparent);
+}
+
+.skald-note-editor__attachment > img {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  border-radius: 5px;
+  object-fit: cover;
+}
+
+.skald-note-editor__attachment > span {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  color: var(--app-muted);
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.skald-note-editor__attachment > button {
+  display: grid;
+  width: 27px;
+  height: 27px;
+  flex: 0 0 27px;
+  place-items: center;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--app-muted);
+  cursor: pointer;
+}
+
+.skald-note-editor__attachment > button:hover {
+  background: color-mix(in srgb, #e11d48 12%, transparent);
+  color: #e11d48;
+}
+
+.skald-note-editor__image-error {
+  margin: -4px 0 10px;
+  color: #e11d48;
+  font-size: 10px;
+}
+
+.skald-note-editor__tool:focus-within {
+  outline: none;
+}
+
+.skald-note-reader__body .contains-task-list {
+  padding-left: 0;
+  list-style: none;
+}
+
+.skald-note-reader__body .task-list-item {
+  list-style: none;
+}
+
+.skald-app input:focus-visible,
+.skald-app textarea:focus-visible,
+.skald-app select:focus-visible,
+.skald-page-search:focus-within,
+.skald-note-editor__title:focus-visible,
+.skald-note-editor__body:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+@media (max-width: 760px) {
+  .skald-note-editor {
+    width: calc(100vw - 20px);
+    max-width: none;
+  }
+
+  .skald-note-editor__form {
+    min-height: 420px;
+    padding: 14px 15px 8px;
+  }
+
+  .skald-note-editor__body {
+    min-height: 270px;
+  }
+}
+
+@media (max-width: 440px) {
+  .skald-note-editor__form {
+    min-height: 380px;
+    padding: 11px 12px 7px;
+  }
+
+  .skald-note-editor__body {
+    min-height: 230px;
+  }
+
+  .skald-note-editor__edited {
+    display: none;
+  }
+
+  .skald-app-add-task > span:first-child {
+    display: grid;
+  }
+
+  .skald-app-add-task > span:last-child {
+    display: none;
+  }
+}
+
+.skald-task-dialog {
+  width: min(420px, calc(100vw - 28px));
+  max-height: calc(100dvh - 28px);
+  margin: auto;
+  padding: 0;
+  overflow-y: auto;
+  border: 1px solid var(--app-line);
+  border-radius: 12px;
+  background: var(--app-panel);
+  color: var(--app-ink);
+  box-shadow: 0 12px 36px rgb(0 0 0 / 18%);
+}
+
+.skald-task-dialog::backdrop {
+  background: rgb(10 9 18 / 44%);
+}
+
+.skald-task-dialog__form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 22px;
+}
+
+.skald-task-dialog__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.skald-task-dialog__header h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 650;
+  letter-spacing: -0.035em;
+}
+
+.skald-task-dialog__header p {
+  margin: 5px 0 0;
+  color: var(--app-muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.skald-task-dialog__close {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  place-items: center;
+  border: 1px solid var(--app-line);
+  border-radius: 7px;
+  background: transparent;
+  color: var(--app-muted);
+  cursor: pointer;
+  transition: color 150ms ease, background 150ms ease;
+}
+
+.skald-task-dialog__close:hover {
+  background: color-mix(in srgb, var(--app-ink) 6%, transparent);
+  color: var(--app-ink);
+}
+
+.skald-task-dialog__field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 7px;
+}
+
+.skald-task-dialog__field > label,
+.skald-task-dialog__field > span {
+  color: var(--app-muted);
+  font-size: 11px;
+  font-weight: 550;
+}
+
+.skald-task-dialog__field > label span {
+  color: var(--app-accent);
+}
+
+.skald-task-dialog__select-wrap {
+  width: 100%;
+}
+
+.skald-task-dialog__select {
+  justify-content: space-between;
+  font-size: 12px;
+}
+
+.skald-task-dropdown--form {
+  display: flex;
+  width: 100%;
+  min-height: 36px;
+  padding: 0 10px;
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--app-bg) 78%, transparent);
+}
+
+.skald-task-dropdown--form .skald-dropdown-trigger__chevron {
+  width: 14px;
+  height: 14px;
+}
+
+.skald-task-dialog__error {
+  display: block;
+  margin-top: 5px;
+  color: #b42318;
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.skald-task-dialog__input {
+  width: 100%;
+  min-width: 0;
+  min-height: 36px;
+  padding: 9px 11px;
+  border: 1px solid var(--app-line);
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--app-bg) 78%, transparent);
+  color: var(--app-ink);
+  font: inherit;
+  font-size: 12px;
+}
+
+.skald-task-dialog__input:focus-visible,
+.skald-task-dialog__close:focus-visible,
+.skald-task-dialog__submit:focus-visible {
+  outline: 2px solid var(--app-accent);
+  outline-offset: 2px;
+}
+
+.skald-task-dialog__description {
+  min-height: 82px;
+  resize: vertical;
+}
+
+.skald-task-dialog__grid {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.skald-task-dialog__submit {
+  min-height: 38px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--app-accent);
+  color: white;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+  transition: filter 150ms ease, transform 150ms ease;
+}
+
+.skald-task-dialog__submit:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.skald-task-dialog__submit:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.skald-task-dialog--dark .skald-task-dialog__input {
+  color-scheme: dark;
+}
+
+.skald-task-lists-dialog {
+  width: min(460px, calc(100vw - 28px));
+}
+
+.skald-task-list-create,
+.skald-task-list-manager__edit {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 7px;
+}
+
+.skald-task-list-create .skald-task-dialog__input,
+.skald-task-list-manager__edit .skald-task-dialog__input {
+  flex: 1;
+}
+
+.skald-task-list-action,
+.skald-task-list-icon-action {
+  display: inline-flex;
+  min-height: 32px;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 0 10px;
+  border: 1px solid var(--app-line);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--app-muted);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.skald-task-list-action:hover,
+.skald-task-list-icon-action:hover {
+  background: color-mix(in srgb, var(--app-ink) 5%, transparent);
+  color: var(--app-ink);
+}
+
+.skald-task-list-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.skald-task-list-manager {
+  display: flex;
+  max-height: min(300px, 42vh);
+  flex-direction: column;
+  gap: 4px;
+  overflow: auto;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.skald-task-list-manager > li {
+  display: flex;
+  min-height: 39px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 4px 5px 4px 10px;
+  border-bottom: 1px solid var(--app-line);
+  color: var(--app-ink);
+  font-size: 12px;
+}
+
+.skald-task-list-manager__actions,
+.skald-task-list-manager__confirm {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--app-muted);
+}
+
+.skald-task-list-manager__confirm {
+  font-size: 10px;
+}
+
+.skald-task-list-manager__confirm button {
+  padding: 4px 6px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--app-accent);
+  font: inherit;
+  cursor: pointer;
+}
+
+.skald-task-list-manager__confirm button:disabled {
+  opacity: 0.5;
+}
+
+.skald-task-list-manager__empty {
+  margin: 0;
+  color: var(--app-muted);
+  font-size: 11px;
+}
+
+.skald-settings-header {
+  margin-bottom: 16px;
+}
+
+.skald-settings-header .skald-page-title {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(30px, 3.2vw, 38px);
+  font-weight: 400;
+  letter-spacing: -0.045em;
+}
+
+.skald-settings-header .skald-page-description {
+  font-size: 13px;
+}
+
+.skald-settings-page {
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.skald-settings-section {
+  padding: 20px 0 22px;
+  border-bottom: 1px solid var(--app-line);
+}
+
+.skald-settings-section--last {
+  border-bottom: 0;
+}
+
+.skald-settings-section__heading h2 {
+  margin: 0;
+  color: var(--app-ink);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.skald-settings-section__heading p {
+  margin: 5px 0 0;
+  color: var(--app-muted);
+  font-size: 11px;
+}
+
+.skald-settings-notice,
+.skald-settings-inline-feedback {
+  margin: 0;
+  color: var(--app-muted);
+  font-size: 11px;
+}
+
+.skald-settings-notice {
+  margin-bottom: 4px;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, #dc2626 24%, var(--app-line));
+  border-radius: 7px;
+  background: color-mix(in srgb, #dc2626 5%, var(--app-panel));
+  color: #dc2626;
+}
+
+.skald-settings-theme-options {
+  display: grid;
+  max-width: 520px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.skald-settings-theme-option {
+  display: flex;
+  min-height: 58px;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 13px;
+  border: 1px solid var(--app-line);
+  border-radius: 8px;
+  background: var(--app-panel);
+  color: var(--app-muted);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 150ms ease, color 150ms ease, background 150ms ease;
+}
+
+.skald-settings-theme-option > span,
+.skald-settings-preference > div,
+.skald-settings-password > div {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.skald-settings-theme-option > span {
+  flex: 1;
+}
+
+.skald-settings-theme-option strong,
+.skald-settings-preference strong,
+.skald-settings-password strong {
+  color: var(--app-ink);
+  font-size: 11px;
+  font-weight: 550;
+}
+
+.skald-settings-theme-option small,
+.skald-settings-preference span,
+.skald-settings-password span {
+  color: var(--app-muted);
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.skald-settings-theme-option:hover,
+.skald-settings-theme-option.is-selected {
+  border-color: color-mix(in srgb, var(--app-accent) 45%, var(--app-line));
+  color: var(--app-ink);
+}
+
+.skald-settings-theme-option.is-selected {
+  background: color-mix(in srgb, var(--app-accent) 8%, var(--app-panel));
+}
+
+.skald-settings-theme-option.is-selected > svg:last-child {
+  color: var(--app-accent);
+}
+
+.skald-settings-preferences {
+  max-width: 620px;
+  margin-top: 8px;
+}
+
+.skald-settings-preference,
+.skald-settings-password {
+  display: flex;
+  min-height: 62px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border-bottom: 1px solid var(--app-line);
+}
+
+.skald-settings-preference:last-child,
+.skald-settings-password--last {
+  border-bottom: 0;
+}
+
+.skald-settings-dropdown {
+  width: 150px;
+  flex: 0 0 150px;
+  min-height: 34px;
+  border-color: var(--app-line);
+  background: var(--app-panel);
+  color: var(--app-ink);
+  font-size: 11px;
+}
+
+.skald-settings-profile-form,
+.skald-settings-email-form {
+  max-width: 560px;
+  margin-top: 14px;
+}
+
+.skald-settings-field {
+  display: grid;
+  gap: 7px;
+}
+
+.skald-settings-field > span {
+  color: var(--app-muted);
+  font-size: 10px;
+}
+
+.skald-settings-field input {
+  width: 100%;
+  min-height: 38px;
+  padding: 0 11px;
+  border: 1px solid var(--app-line);
+  border-radius: 6px;
+  outline: none;
+  background: var(--app-panel);
+  color: var(--app-ink);
+  font: inherit;
+  font-size: 12px;
+  transition: border-color 150ms ease;
+}
+
+.skald-settings-field input:focus {
+  border-color: color-mix(in srgb, var(--app-accent) 60%, var(--app-line));
+}
+
+.skald-settings-form-footer {
+  display: flex;
+  min-height: 40px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.skald-settings-form-footer > span,
+.skald-settings-inline-feedback {
+  color: var(--app-muted);
+  font-size: 10px;
+}
+
+.skald-settings-form-footer > span.is-error,
+.skald-settings-inline-feedback.is-error {
+  color: #dc2626;
+}
+
+.skald-settings-primary,
+.skald-settings-secondary {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 11px;
+  border: 1px solid var(--app-line);
+  border-radius: 6px;
+  font: inherit;
+  font-size: 10px;
+  cursor: pointer;
+  transition: border-color 150ms ease, background 150ms ease, color 150ms ease;
+}
+
+.skald-settings-primary {
+  border-color: var(--app-accent);
+  background: var(--app-accent);
+  color: #fff;
+}
+
+.skald-settings-primary:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+
+.skald-settings-secondary {
+  flex: 0 0 auto;
+  background: var(--app-panel);
+  color: var(--app-ink);
+}
+
+.skald-settings-secondary:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--app-accent) 45%, var(--app-line));
+}
+
+.skald-settings-primary:disabled,
+.skald-settings-secondary:disabled {
+  cursor: not-allowed;
+  opacity: .55;
+}
+
+.skald-settings-password {
+  max-width: 620px;
+  min-height: 60px;
+}
+
+.skald-settings-password--last {
+  min-height: 56px;
+}
+
+.skald-settings-inline-feedback {
+  margin-top: 4px;
+}
+
+.skald-settings-status {
+  padding: 5px 8px;
+  border: 1px solid var(--app-line);
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.skald-settings-signout {
+  margin-top: 13px;
+}
+
+.skald-settings-signout {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+  border: 1px solid var(--app-line);
+  border-radius: 7px;
+  background: transparent;
+  color: var(--app-muted);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.skald-settings-signout:hover:not(:disabled) {
+  border-color: color-mix(in srgb, #dc2626 35%, var(--app-line));
+  color: #dc2626;
+}
+
+.skald-settings-signout:disabled {
+  cursor: not-allowed;
+  opacity: .6;
+}
+
 .skald-app-mobile-brand,
 .skald-mobile-nav {
   display: none;
@@ -1286,189 +3972,30 @@ main {
   outline-offset: 3px;
 }
 
-.skald-onboarding {
-  grid-column: 1 / -1;
-  width: min(100%, 1120px);
-  margin: 0 auto;
-  padding: clamp(8px, 2vw, 22px) 0 40px;
-  color: var(--app-ink);
+button:not(:disabled),
+[role='button']:not([aria-disabled='true']),
+select:not(:disabled),
+summary,
+a[href] {
+  cursor: pointer;
 }
 
-.skald-onboarding-hero {
-  position: relative;
-  display: flex;
-  min-height: 220px;
-  align-items: center;
-  justify-content: space-between;
-  gap: 25px;
-  overflow: hidden;
-  padding: clamp(25px, 5vw, 52px);
-  border: 1px solid var(--app-line);
-  border-radius: 24px;
-  background:
-    radial-gradient(ellipse at 87% 45%, color-mix(in srgb, var(--app-accent) 22%, transparent), transparent 25rem),
-    var(--app-panel);
-}
-
-.skald-onboarding-copy {
-  position: relative;
-  z-index: 1;
-  max-width: 590px;
-}
-
-.skald-onboarding-eyebrow,
-.skald-onboarding-count {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  color: var(--app-accent);
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.skald-onboarding-copy h2 {
-  margin-top: 17px;
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: clamp(34px, 5vw, 57px);
-  font-weight: 400;
-  letter-spacing: -0.055em;
-  line-height: 1.03;
-}
-
-.skald-onboarding-copy p {
-  max-width: 520px;
-  margin-top: 13px;
-  color: var(--app-muted);
-  font-size: 13px;
-  line-height: 1.8;
-}
-
-.skald-onboarding-mark {
-  display: grid;
-  width: 138px;
-  height: 138px;
-  flex: 0 0 138px;
-  place-items: center;
-  border: 1px solid color-mix(in srgb, var(--app-accent) 20%, transparent);
-  border-radius: 42px;
-  color: var(--app-accent);
-  transform: rotate(7deg);
-}
-
-.skald-onboarding-mark span {
-  display: grid;
-  width: 84px;
-  height: 84px;
-  place-items: center;
-  border: 1px solid color-mix(in srgb, var(--app-accent) 25%, transparent);
-  border-radius: 28px;
-  background: color-mix(in srgb, var(--app-accent) 10%, transparent);
-  transform: rotate(-14deg);
-}
-
-.skald-onboarding-progress {
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  gap: 20px;
-  margin: 33px 0 17px;
-}
-
-.skald-onboarding-label {
-  color: var(--app-muted);
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.15em;
-}
-
-.skald-onboarding-progress h3 {
-  margin-top: 7px;
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: clamp(21px, 3vw, 27px);
-  font-weight: 400;
-  letter-spacing: -0.03em;
-}
-
-.skald-onboarding-count {
-  flex: 0 0 auto;
-  padding-bottom: 4px;
-  letter-spacing: 0;
-  text-transform: none;
-}
-
-.skald-onboarding-cards {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.skald-onboarding-card {
-  display: flex;
-  min-height: 205px;
-  flex-direction: column;
-  align-items: flex-start;
-  padding: 20px;
-  border: 1px solid var(--app-line);
-  border-radius: 18px;
-  background: var(--app-panel);
-  color: var(--app-ink);
-  text-decoration: none;
-  transition: transform 170ms ease, border-color 170ms ease, background 170ms ease;
-}
-
-.skald-onboarding-card:hover {
-  transform: translateY(-3px);
-  border-color: color-mix(in srgb, var(--app-accent) 38%, transparent);
-}
-
-.skald-onboarding-card-icon {
-  display: grid;
-  width: 38px;
-  height: 38px;
-  place-items: center;
-  border: 1px solid color-mix(in srgb, var(--app-accent) 18%, transparent);
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--app-accent) 9%, transparent);
-  color: var(--app-accent);
-}
-
-.skald-onboarding-card-title {
-  margin-top: 17px;
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.skald-onboarding-card-copy {
-  margin-top: 6px;
-  color: var(--app-muted);
-  font-size: 11px;
-  line-height: 1.6;
-}
-
-.skald-onboarding-card-action {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: auto;
-  padding-top: 14px;
-  color: var(--app-accent);
-  font-size: 11px;
-  font-weight: 600;
-}
-
-.skald-onboarding-footnote {
-  margin-top: 17px;
-  color: var(--app-muted);
-  font-size: 10px;
-  text-align: center;
+button:disabled,
+select:disabled {
+  cursor: not-allowed;
 }
 
 @media (max-width: 760px) {
   .skald-app {
     display: block;
-    padding: 0 14px calc(78px + env(safe-area-inset-bottom));
+    width: 100%;
+    height: 100dvh;
+    min-height: 0;
+    padding: 0 14px calc(64px + env(safe-area-inset-bottom));
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
   }
 
   .skald-sidebar {
@@ -1477,11 +4004,44 @@ main {
 
   .skald-app-content {
     height: 100%;
-    grid-template-rows: 58px minmax(0, 1fr);
+    grid-template-rows: 62px minmax(0, 1fr);
+  }
+
+  .skald-app-header.skald-app-header--dashboard {
+    padding: 0;
+  }
+
+  .skald-app-header {
+    padding-right: 14px;
+    padding-left: 14px;
+  }
+
+  .skald-today-page {
+    width: 100%;
+    padding: 16px 0 24px;
+  }
+
+  .skald-today-heading h1 {
+    margin-top: 34px;
+    font-size: clamp(30px, 8vw, 38px);
+  }
+
+  .skald-today-nudge {
+    min-height: 76px;
+    gap: 11px;
+    margin-top: 24px;
+    padding: 12px;
+  }
+
+  .skald-today-nudge__copy strong {
+    font-size: 13px;
+  }
+
+  .skald-today-list {
+    margin-top: 24px;
   }
 
   .skald-app-sidebar-toggle,
-  .skald-app-heading__greeting,
   .skald-app-header__date {
     display: none;
   }
@@ -1498,14 +4058,8 @@ main {
     text-decoration: none;
   }
 
-  .skald-app-mobile-brand img {
-    width: 25px;
-    height: 25px;
-    object-fit: contain;
-  }
-
-  .skald-app-mobile-brand span {
-    font-size: 10px;
+  .skald-app-mobile-brand .skald-brand-mark {
+    font-size: 20px;
   }
 
   .skald-app-heading h1 {
@@ -1518,21 +4072,30 @@ main {
     gap: 5px;
   }
 
+  .skald-app-add-task {
+    width: 34px;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .skald-app-add-task span {
+    display: none;
+  }
+
   .skald-mobile-nav {
     position: fixed;
     z-index: 5;
-    right: 10px;
-    bottom: max(10px, env(safe-area-inset-bottom));
-    left: 10px;
+    right: 0;
+    bottom: 0;
+    left: 0;
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 2px;
-    padding: 7px 5px;
-    border: 1px solid var(--app-line);
-    border-radius: 18px;
+    gap: 0;
+    padding: 4px 4px max(4px, env(safe-area-inset-bottom));
+    border: 0;
+    border-top: 1px solid var(--app-line);
+    border-radius: 0;
     background: var(--app-panel);
-    box-shadow: 0 12px 38px rgb(15 14 29 / 18%);
-    backdrop-filter: blur(24px);
   }
 
   .skald-mobile-nav-link {
@@ -1575,39 +4138,105 @@ main {
     text-align: center;
   }
 
-  .skald-onboarding {
-    padding-top: 8px;
+  .skald-page {
+    padding: 20px 16px 32px;
   }
 
-  .skald-onboarding-hero {
-    min-height: 190px;
-    border-radius: 20px;
+  .skald-task-page-header,
+  .skald-notes-header {
+    align-items: flex-start;
   }
 
-  .skald-onboarding-mark {
-    width: 68px;
-    height: 68px;
-    flex-basis: 68px;
-    border-radius: 24px;
+  .skald-task-list-controls {
+    max-width: 100%;
   }
 
-  .skald-onboarding-mark span {
-    width: 42px;
-    height: 42px;
-    border-radius: 15px;
+  .skald-task-filters > div {
+    align-items: stretch;
   }
 
-  .skald-onboarding-mark svg {
-    width: 18px;
+  .skald-task-list-select {
+    width: min(164px, 42vw);
   }
 
-  .skald-onboarding-cards {
+  .skald-task-view-select {
+    width: min(154px, 42vw);
+  }
+
+  .skald-notes-workspace {
+    min-height: 420px;
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .skald-onboarding-card {
-    min-height: 170px;
+  .skald-notes-rail {
+    border-right: 0;
   }
+
+  .skald-notes-workspace.has-active-note .skald-notes-rail {
+    display: none;
+  }
+
+  .skald-note-reader__empty {
+    min-height: 360px;
+  }
+
+  .skald-note-reader.is-fullscreen {
+    inset: 8px;
+  }
+
+  .skald-task-dialog__form {
+    gap: 12px;
+    padding: 18px;
+  }
+
+  .skald-settings-section {
+    padding: 17px 0 18px;
+  }
+
+  .skald-settings-preference,
+  .skald-settings-password {
+    gap: 10px;
+  }
+
+  .skald-settings-dropdown {
+    width: 128px;
+    flex-basis: 128px;
+  }
+
+  .skald-settings-password > div {
+    flex: 1;
+  }
+
+  .skald-task-detail-layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+
+  .skald-task-detail-main {
+    padding: 24px 20px;
+  }
+
+  .skald-task-detail-properties {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 16px;
+    padding: 8px 20px;
+    border-top: 1px solid var(--app-line);
+    border-left: 0;
+  }
+
+  .skald-task-detail-property {
+    min-height: 52px;
+  }
+
+  .skald-note-dialog__body {
+    min-height: 150px;
+  }
+
+  .skald-today-page {
+    padding: 16px 0 24px;
+  }
+
 }
 
 @media (max-width: 440px) {
@@ -1624,35 +4253,256 @@ main {
     gap: 7px;
   }
 
-  .skald-app-mobile-brand span {
-    display: none;
+  .skald-app-header__actions {
+    gap: 3px;
   }
 
-  .skald-onboarding-hero {
-    padding: 24px 20px;
+  .skald-auth .skald-brand-mark {
+    display: block;
+    margin-right: auto;
+    margin-left: auto;
+    color: #6654e8;
+    font-size: 36px;
   }
 
-  .skald-onboarding-mark {
-    width: 48px;
-    height: 48px;
-    flex-basis: 48px;
-    border-radius: 17px;
+  .skald-settings-theme-options {
+    grid-template-columns: minmax(0, 1fr);
   }
 
-  .skald-onboarding-mark span {
-    width: 30px;
-    height: 30px;
-    border-radius: 11px;
+  .skald-settings-preference {
+    align-items: flex-start;
+    flex-direction: column;
+    justify-content: center;
+    gap: 9px;
+    padding: 12px 0;
   }
+
+  .skald-settings-dropdown {
+    width: 100%;
+    flex-basis: auto;
+  }
+
+  .skald-settings-password {
+    align-items: flex-start;
+    flex-direction: column;
+    justify-content: center;
+    padding: 12px 0;
+  }
+
+  .skald-settings-status {
+    align-self: flex-start;
+  }
+
+  .skald-app-add-task {
+    width: 32px;
+    height: 32px;
+    min-height: 32px;
+    flex-basis: 32px;
+  }
+
 }
 
 @media (prefers-reduced-motion: reduce) {
   .skald-sidebar,
   .skald-sidebar-link,
-  .skald-sidebar-signout,
   .skald-app-icon-button,
-  .skald-onboarding-card,
   .skald-mobile-nav-link {
     transition: none;
+  }
+
+  .skald-app-add-task {
+    transition: none;
+  }
+
+  .skald-today-skeleton span {
+    animation: none;
+  }
+}
+
+.skald-task-dialog.skald-note-editor {
+  width: min(1040px, calc(100vw - 32px));
+  max-width: 1040px;
+}
+
+@media (max-width: 760px) {
+  .skald-task-dialog.skald-note-editor {
+    width: calc(100vw - 20px);
+    max-width: none;
+  }
+}
+
+.skald-task-dialog.skald-task-detail-dialog {
+  width: min(920px, calc(100vw - 32px));
+  max-width: 920px;
+  height: min(660px, calc(100dvh - 32px));
+  overflow: hidden;
+}
+
+@media (max-width: 760px) {
+  .skald-task-dialog.skald-task-detail-dialog {
+    width: calc(100vw - 20px);
+    max-width: none;
+    height: calc(100dvh - 20px);
+  }
+}
+
+.skald-assistant-page {
+  display: flex;
+  width: min(100%, 1080px);
+  height: 100%;
+  min-height: 0;
+  flex-direction: column;
+  margin: 0 auto;
+  padding: 26px clamp(24px, 5vw, 68px) 28px;
+  overflow: hidden;
+  background: var(--app-bg);
+  color: var(--app-ink);
+}
+
+.skald-assistant-header {
+  display: flex;
+  min-height: 58px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid var(--app-line);
+  padding: 0 0 16px;
+}
+
+.skald-assistant-header h1 {
+  overflow: hidden;
+  color: var(--app-ink);
+  font-size: 16px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.skald-assistant-header p {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  color: var(--app-muted);
+  font-size: 10px;
+}
+
+.skald-assistant-header > svg {
+  flex: 0 0 auto;
+  color: var(--app-accent);
+}
+
+.skald-assistant-avatar {
+  display: flex;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--app-accent) 10%, var(--app-panel));
+  color: var(--app-accent);
+}
+
+.skald-assistant-conversation {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.skald-assistant-messages {
+  width: min(100%, 820px);
+  margin: 0 auto;
+  padding: 20px 0;
+}
+
+.skald-assistant-message-avatar {
+  background: color-mix(in srgb, var(--app-accent) 12%, var(--app-panel));
+  color: var(--app-accent);
+}
+
+.skald-assistant-message-copy {
+  color: var(--app-ink);
+}
+
+.skald-assistant-message-copy a {
+  color: var(--app-accent);
+}
+
+.skald-assistant-proposal {
+  border-color: var(--app-line);
+  background: var(--app-panel);
+}
+
+.skald-assistant-proposal__kind {
+  color: var(--app-muted);
+}
+
+.skald-assistant-proposal__details {
+  background: var(--app-bg);
+  color: var(--app-ink);
+}
+
+.skald-assistant-confirm {
+  background: color-mix(in srgb, var(--app-accent) 12%, var(--app-panel));
+  color: var(--app-ink);
+  cursor: pointer;
+}
+
+.skald-assistant-confirm:hover {
+  background: color-mix(in srgb, var(--app-accent) 20%, var(--app-panel));
+}
+
+.skald-assistant-user-bubble {
+  background: var(--app-accent);
+  color: #fff;
+}
+
+.skald-assistant-composer {
+  width: min(100%, 820px);
+  flex: 0 0 auto;
+  margin: 12px auto 0;
+  border: 1px solid var(--app-line);
+  border-radius: 10px;
+  padding: 10px 12px 8px;
+  background: var(--app-panel);
+}
+
+.skald-assistant-composer textarea {
+  color: var(--app-ink);
+}
+
+.skald-assistant-send {
+  background: var(--app-accent);
+  color: #fff;
+  cursor: pointer;
+}
+
+.skald-assistant-send:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.skald-assistant-send:disabled {
+  cursor: not-allowed;
+}
+
+@media (max-width: 760px) {
+  .skald-assistant-page {
+    padding: 18px 14px 20px;
+  }
+
+  .skald-assistant-header {
+    min-height: 54px;
+    padding-bottom: 13px;
+  }
+
+  .skald-assistant-messages {
+    padding: 16px 0;
+  }
+
+  .skald-assistant-composer {
+    margin-top: 8px;
   }
 }

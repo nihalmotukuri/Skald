@@ -5,6 +5,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { getAuthCallbackUrl, getSafeAuthDestination } from '@/lib/authRedirect'
 import { useAppStore } from '@/store/appStore'
+import BrandMark from '@/components/BrandMark'
 
 type AuthMode = 'signin' | 'signup' | 'recovery'
 type AuthLocationState = {
@@ -146,8 +147,7 @@ const SignIn = () => {
         isDark ? 'border-white/15 bg-white/[0.04] shadow-black/30' : 'border-black/10 bg-white/75 shadow-slate-900/10'
       }`}>
         <header className="mb-8 text-center">
-          <img src={isDark ? '/images/logo.png' : '/images/logo-dark.png'} className="mx-auto mb-3 size-11" alt="" />
-          <p className="text-sm tracking-[0.3em] text-indigo-500">SKALD</p>
+          <BrandMark className="mb-3" />
           <h1 className="mt-5 text-2xl font-semibold">
             {mode === 'signup' ? 'Create your account' : mode === 'recovery' ? 'Reset your password' : 'Welcome back'}
           </h1>

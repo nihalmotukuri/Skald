@@ -1,6 +1,7 @@
 import { ArrowDown, ArrowRight, Check, Command, Layers3, Moon, Sparkles, Sun } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAppStore } from "@/store/appStore";
+import BrandMark from "@/components/BrandMark";
 
 const previewTasks = [
   { title: "Make space for the important work", label: "Focus", time: "09:30", checked: true },
@@ -21,8 +22,7 @@ const Home = () => {
     <main className={`skald-home ${isDark ? 'skald-home--dark' : 'skald-home--light'}`}>
       <nav className="skald-nav" aria-label="Main navigation">
         <Link to="/" className="skald-brand" aria-label="Skald home">
-          <img src={isDark ? "/images/logo.png" : "/images/logo-dark.png"} alt="" />
-          <span>SKALD</span>
+          <BrandMark />
         </Link>
 
         <div className="skald-nav__links">
@@ -74,8 +74,7 @@ const Home = () => {
           <div className="skald-preview__window">
             <aside className="skald-preview__sidebar">
               <div className="skald-preview__mini-brand">
-                <img src="/images/logo.png" alt="" />
-                <span>skald</span>
+                <BrandMark />
               </div>
               <div className="skald-preview__workspace-label">WORKSPACE</div>
               <div className="skald-preview__nav-item skald-preview__nav-item--active">
@@ -172,8 +171,7 @@ const Home = () => {
 
       <footer className="skald-footer">
         <Link to="/" className="skald-brand" aria-label="Skald home">
-          <img src={isDark ? "/images/logo.png" : "/images/logo-dark.png"} alt="" />
-          <span>SKALD</span>
+          <BrandMark />
         </Link>
         <span>Make room for what matters.</span>
         <span>© {new Date().getFullYear()} Skald</span>

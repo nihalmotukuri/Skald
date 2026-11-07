@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { getSafeAuthDestination } from '@/lib/authRedirect'
 import { supabase } from '@/lib/supabase'
+import BrandMark from '@/components/BrandMark'
 
 const AuthCallback = () => {
   const [error, setError] = useState<string | null>(null)
@@ -38,7 +39,7 @@ const AuthCallback = () => {
   return (
     <main className="min-h-screen bg-[#0f111a] px-5 py-10 text-white flex items-center justify-center">
       <section className="w-full max-w-md rounded-3xl border border-white/15 bg-white/[0.04] p-8 text-center">
-        <img src="/images/logo.png" className="mx-auto mb-4 size-11" alt="" />
+        <BrandMark className="mx-auto mb-4 size-11" />
         <h1 className="text-xl font-semibold">{error ? 'Sign-in could not be completed' : 'Finishing sign-in…'}</h1>
         {error && (
           <>

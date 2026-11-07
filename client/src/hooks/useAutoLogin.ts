@@ -3,6 +3,8 @@ import { useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useAppStore } from '@/store/appStore'
 
+const initialLoaderDuration = 1300
+
 export const useAutoLogin = () => {
   const queryClient = useQueryClient()
 
@@ -10,11 +12,13 @@ export const useAutoLogin = () => {
     let requestId = 0
     let currentUserId: string | null = null
     let hasHandledInitialSession = false
+    const initialAuthStartedAt = Date.now()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       const authUser = session?.user ?? null
       if (hasHandledInitialSession && authUser?.id === currentUserId && event !== 'USER_UPDATED') return
       const currentRequestId = ++requestId
+      const isInitialSession = !hasHandledInitialSession
       hasHandledInitialSession = true
       currentUserId = authUser?.id ?? null
       queryClient.clear()
@@ -22,14 +26,20 @@ export const useAutoLogin = () => {
 
       if (!authUser) {
         useAppStore.getState().setUser(null)
-        useAppStore.getState().setAuthLoading(false)
+        if (isInitialSession) {
+          window.setTimeout(() => {
+            if (currentRequestId === requestId) useAppStore.getState().setAuthLoading(false)
+          }, Math.max(0, initialLoaderDuration - (Date.now() - initialAuthStartedAt)))
+        } else {
+          useAppStore.getState().setAuthLoading(false)
+        }
         return
       }
 
       useAppStore.getState().setUser(null)
       useAppStore.getState().setAuthLoading(true)
       queueMicrotask(() => {
-        void loadProfile(authUser.id, authUser.email ?? '', authUser.user_metadata, currentRequestId)
+        void loadProfile(authUser.id, authUser.email ?? '', authUser.user_metadata, currentRequestId, isInitialSession)
       })
     })
 
@@ -37,7 +47,8 @@ export const useAutoLogin = () => {
       userId: string,
       email: string,
       metadata: Record<string, unknown>,
-      currentRequestId: number
+      currentRequestId: number,
+      isInitialSession: boolean
     ) {
       try {
         const profileResult = await supabase
@@ -63,6 +74,12 @@ export const useAutoLogin = () => {
           useAppStore.getState().setUser(null)
         }
       } finally {
+        if (isInitialSession) {
+          await new Promise((resolve) => window.setTimeout(
+            resolve,
+            Math.max(0, initialLoaderDuration - (Date.now() - initialAuthStartedAt))
+          ))
+        }
         if (currentRequestId === requestId) useAppStore.getState().setAuthLoading(false)
       }
     }

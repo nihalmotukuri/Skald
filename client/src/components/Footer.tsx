@@ -7,12 +7,7 @@ const Footer = () => {
                 borderTop: "1px solid #7b8392"
             }}
         >
-            <p
-                className="text-white"
-                style={{
-                    fontFamily: '"Stint Ultra Expanded", serif',
-                }}
-            >SKALD © 2025</p>
+            <p className="skald-wordmark text-white">skald © 2025</p>
         </footer>
     )
 }
