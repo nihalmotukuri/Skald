@@ -5,8 +5,8 @@ import { useTasks, useTaskLists, useTaskMutations } from '@/queries/tasks'
 import { useNotes, useNoteMutations } from '@/queries/notes'
 import type { Task } from '@/types/task'
 import type { Note } from '@/types/note'
+import { Bot, CircleAlert, RotateCcw, Send, Sparkles } from "lucide-react"
 import { LuBot } from "react-icons/lu"
-import { RiSendPlaneLine } from "react-icons/ri"
 import ReactMarkdown from 'react-markdown'
 import { Pulsar } from 'ldrs/react'
 import 'ldrs/react/Pulsar.css'
@@ -34,6 +34,13 @@ type AssistantProposal = {
   action: ProposedAction
   status: 'pending' | 'applying' | 'applied' | 'dismissed' | 'failed'
   error?: string
+}
+
+type FailedRequest = {
+  userMessage: string
+  previousMessages: AiChat[]
+  userId: string
+  assistantMessageId: string
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -185,8 +192,10 @@ const Assistant = () => {
   const [responseLoading, setResponseLoading] = useState(false)
   const [requestError, setRequestError] = useState<string | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const conversationEndRef = useRef<HTMLDivElement>(null)
   const applyingProposals = useRef(new Set<string>())
   const requestController = useRef<AbortController | null>(null)
+  const failedRequest = useRef<FailedRequest | null>(null)
 
   const user = useAppStore((state) => state.user)
   const isDark = useAppStore((state) => state.isDark)
@@ -211,6 +220,7 @@ const Assistant = () => {
     setConversation({ userId: user.id, messages: loadConversation(user.id) })
     setRequestError(null)
     setResponseLoading(false)
+    failedRequest.current = null
     return () => requestController.current?.abort()
   }, [user?.id])
 
@@ -226,13 +236,17 @@ const Assistant = () => {
   useEffect(() => {
     const textarea = textareaRef.current
     textarea?.focus()
-  })
+  }, [])
+
+  useEffect(() => {
+    conversationEndRef.current?.scrollIntoView({ behavior: responseLoading ? 'smooth' : 'auto' })
+  }, [convo, responseLoading])
 
   const handleInput = () => {
     const textarea = textareaRef.current;
     if (textarea) {
       textarea.style.height = "auto";
-      textarea.style.height = `${textarea.scrollHeight}px`;
+      textarea.style.height = `${Math.min(textarea.scrollHeight, 160)}px`;
     }
   }
 
@@ -338,10 +352,12 @@ const Assistant = () => {
       }
       if (buffer.trim()) handleEvent(buffer)
       if (!completed) throw new Error('Mr Groff ended the response unexpectedly. Please try again.')
+      failedRequest.current = null
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') return
       console.error('Mr Groff request failed:', error)
       if (useAppStore.getState().user?.id === userId) {
+        failedRequest.current = { userMessage, previousMessages, userId, assistantMessageId }
         setRequestError(error instanceof Error ? error.message : 'Mr Groff could not respond. Please try again.')
         setConversation((current) => ({
           ...current,
@@ -451,24 +467,58 @@ const Assistant = () => {
     }
   }
 
-  const handlePrompt = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    const message = prompt.trim()
-    if (!message || responseLoading || !user?.id) return
-    const previousMessages = convo
-    const userMessage: AiChat = { id: crypto.randomUUID(), role: 'user', message }
-    const assistantMessage: AiChat = { id: crypto.randomUUID(), role: 'assistant', message: '' }
+  const sendMessage = (
+    message: string,
+    previousMessages: AiChat[],
+    userId: string,
+    userMessageId = crypto.randomUUID(),
+    assistantMessageId = crypto.randomUUID(),
+  ) => {
+    const userMessage: AiChat = { id: userMessageId, role: 'user', message }
+    const assistantMessage: AiChat = { id: assistantMessageId, role: 'assistant', message: '' }
     setConversation((current) => ({
-      userId: user.id,
+      userId,
       messages: [
-        ...(current.userId === user.id ? current.messages : previousMessages),
+        ...(current.userId === userId
+          ? current.messages.filter((entry) => entry.id !== assistantMessageId)
+          : previousMessages),
         userMessage,
         assistantMessage
       ].slice(-100)
     }))
-    void aiResponse(message, previousMessages, user.id, assistantMessage.id)
+    failedRequest.current = null
+    void aiResponse(message, previousMessages, userId, assistantMessageId)
+  }
+
+  const handlePrompt = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    const message = prompt.trim()
+    if (!message || responseLoading || !user?.id) return
+    sendMessage(message, convo, user.id)
     setPrompt('')
-    if (textareaRef.current) textareaRef.current.style.height = "21px"
+    if (textareaRef.current) textareaRef.current.style.height = "auto"
+  }
+
+  const retryLastRequest = () => {
+    const retry = failedRequest.current
+    if (!retry || responseLoading || useAppStore.getState().user?.id !== retry.userId) return
+    setRequestError(null)
+    setConversation((current) => {
+      const hasAssistantMessage = current.messages.some((entry) => entry.id === retry.assistantMessageId)
+      return {
+        ...current,
+        messages: hasAssistantMessage
+          ? current.messages.map((entry) => entry.id === retry.assistantMessageId
+            ? { ...entry, message: '', proposals: undefined }
+            : entry)
+          : [...current.messages, {
+            id: retry.assistantMessageId,
+            role: 'assistant',
+            message: ''
+          }]
+      }
+    })
+    void aiResponse(retry.userMessage, retry.previousMessages, retry.userId, retry.assistantMessageId)
   }
 
   useEffect(() => {
@@ -476,19 +526,47 @@ const Assistant = () => {
   }, [setBreadcrumb])
 
   return (
-    <div className={`relative col-span-1 row-span-1 grid grid-cols-[1fr] grid-rows-[1fr] ${isDark ? "bg-white/2 border-white/6" : "bg-white"} backdrop-blur-md border rounded-md shadow-xl p-[24px] overflow-y-auto mt-4`}>
-      <div className="w-full overflow-y-auto col-span-1 row-span-1">
-        <div className="pb-[100px]">
+    <section className={`col-span-1 row-span-1 mt-4 flex min-h-0 flex-col overflow-hidden rounded-xl border shadow-xl ${
+      isDark ? "border-white/10 bg-white/[0.025] text-white" : "border-slate-200 bg-white text-slate-900"
+    }`}>
+      <header className={`flex shrink-0 items-center justify-between border-b px-4 py-3 sm:px-6 ${
+        isDark ? 'border-white/10' : 'border-slate-200'
+      }`}>
+        <div className="flex min-w-0 items-center gap-3">
+          <span className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${isDark ? 'bg-indigo-400/15 text-indigo-200' : 'bg-indigo-50 text-indigo-600'}`}>
+            <Bot size={21} aria-hidden="true" />
+          </span>
+          <div className="min-w-0">
+            <h1 className="truncate text-base font-semibold">Mr Groff</h1>
+            <p className={`flex items-center gap-1.5 text-xs ${isDark ? 'text-white/50' : 'text-slate-500'}`}>
+              <span className={`size-1.5 rounded-full ${contextError ? 'bg-rose-400' : contextLoading ? 'bg-amber-300' : 'bg-emerald-400'}`} />
+              {contextError ? 'Some workspace context unavailable' : contextLoading ? 'Loading your workspace context…' : 'Ready with your tasks and notes'}
+            </p>
+          </div>
+        </div>
+        <Sparkles size={17} className={isDark ? 'text-indigo-200/70' : 'text-indigo-500'} aria-hidden="true" />
+      </header>
+
+      {contextError && (
+        <div role="status" className={`mx-4 mt-3 rounded-lg border px-3 py-2 text-xs sm:mx-6 ${
+          isDark ? 'border-amber-300/20 bg-amber-300/5 text-amber-100' : 'border-amber-200 bg-amber-50 text-amber-900'
+        }`}>
+          I can still chat, but couldn’t load all your task and note context. Action proposals will be checked before applying.
+        </div>
+      )}
+
+      <div className="min-h-0 flex-1 overflow-y-auto px-3 sm:px-6">
+        <div className="mx-auto w-full max-w-3xl py-5">
           {convo.map(c => (
             c.role === 'assistant'
               ? (
                 <div
                   key={c.id}
-                  className="w-full max-w-[720px] grid grid-cols-[52px_1fr] pl-[18px] ai-text"
+                  className="mb-6 grid w-full grid-cols-[36px_minmax(0,1fr)] gap-3 ai-text sm:grid-cols-[40px_minmax(0,1fr)]"
                 >
-                  <LuBot className={`text-[22px] ${isDark ? "bg-white/8" : "bg-[#602bf8]"} text-white size-auto p-[8px] rounded-3xl`} />
+                  <LuBot className={`size-9 rounded-xl p-2 text-xl text-white ${isDark ? "bg-indigo-400/20" : "bg-indigo-500"}`} aria-label="Mr Groff" />
 
-                  <div className={`w-full pt-[6px] ${isDark ? "text-slate-200" : "text-blue-950"}`}>
+                  <div className={`min-w-0 pt-1 text-sm leading-7 ${isDark ? "text-slate-200" : "text-slate-800"} [&_a]:text-indigo-400 [&_li]:ml-5 [&_li]:list-disc [&_ol]:my-2 [&_p]:my-2 [&_ul]:my-2`}>
                     <ReactMarkdown>
                       {c.message}
                     </ReactMarkdown>
@@ -541,71 +619,112 @@ const Assistant = () => {
               : (
                 <div
                   key={c.id}
-                  className="ml-auto flex justify-end w-full max-w-[720px] pr-[18px] my-[16px]"
+                  className="my-4 flex w-full justify-end"
                 >
                   <div
-                    className={`${isDark ? "bg-white/5" : "bg-[#602bf8] text-white"} px-3 py-2 max-w-full`}
-                    style={{
-                      borderRadius: "16px",
-                      borderBottomRightRadius: "0"
-                    }}
+                    className="max-w-[85%] whitespace-pre-wrap break-words rounded-2xl rounded-br-sm bg-indigo-500 px-4 py-2.5 text-sm leading-6 text-white sm:max-w-[75%]"
                   >
-                    <p className="w-full">
-                      {c.message}
-                    </p>
+                    {c.message}
                   </div>
                 </div>
               )
           ))}
 
-          {
-            responseLoading
-              ? (
-                <div className="ml-[22px] mt-2">
-                  <Pulsar
-                    size="30"
-                    speed="2.4"
-                    color={isDark ? "white" : "#602bf8"}
-                  />
-                </div>
-              ) : null
-          }
+          {convo.length === 1 && !responseLoading && (
+            <div className="ml-12 mt-5 flex flex-wrap gap-2 sm:ml-[52px]">
+              {['Help me plan today', 'What should I prioritize?', 'Capture a task'].map((suggestion) => (
+                <button
+                  key={suggestion}
+                  type="button"
+                  onClick={() => {
+                    setPrompt(suggestion)
+                    textareaRef.current?.focus()
+                  }}
+                  className={`rounded-full border px-3 py-2 text-xs transition focus-visible:outline-2 focus-visible:outline-indigo-300 ${
+                    isDark
+                      ? 'border-white/10 text-white/65 hover:border-indigo-300/40 hover:bg-indigo-400/10 hover:text-white'
+                      : 'border-slate-200 text-slate-600 hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700'
+                  }`}
+                >
+                  {suggestion}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {responseLoading && (
+            <div className="ml-12 mt-1 flex min-h-8 items-center gap-2 sm:ml-[52px]">
+              <Pulsar size="26" speed="2.4" color={isDark ? "white" : "#602bf8"} />
+              <span className={`text-xs ${isDark ? 'text-white/45' : 'text-slate-500'}`}>Mr Groff is thinking…</span>
+            </div>
+          )}
+          <div ref={conversationEndRef} />
         </div>
       </div>
 
       <form
         onSubmit={handlePrompt}
-        className={`absolute bottom-[24px] right-0 left-0 m-auto grid grid-rows-[1fr_32px] gap-[12px] w-full max-w-[690px] border ${isDark ? "bg-white/6 border-white/10" : "bg-white/10 border-black/30"} backdrop-blur-md rounded-2xl shadow-lg px-4 py-3`}
+        className={`mx-3 mb-3 mt-2 shrink-0 rounded-2xl border p-3 shadow-lg sm:mx-auto sm:mb-5 sm:w-[calc(100%-3rem)] sm:max-w-3xl ${
+          isDark ? 'border-white/10 bg-[#151722]' : 'border-slate-200 bg-white'
+        }`}
       >
-        {requestError && <p role="alert" className="text-sm text-red-400">{requestError}</p>}
-        <textarea
-          ref={textareaRef}
-          onInput={handleInput}
-          className={`${isDark ? "text-white" : "text-slate-800"} resize-none outline-none w-full bg-transparent  text-[14px]`}
-          placeholder="Ask anything"
-          rows={1}
-          maxLength={4000}
-          onChange={e => setPrompt(e.currentTarget.value)}
-          onKeyDown={e => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault()
-              e.currentTarget.form?.requestSubmit()
-            }
-          }}
-          value={prompt}
-        >
-        </textarea>
-
-        <button
-          className={`text-[16px] ${ isDark ? "bg-white text-[#0f111a]" : "bg-[#602bf8] text-white"} size-auto p-[8px] rounded-2xl ml-auto cursor-pointer`}
-          type="submit"
-          disabled={responseLoading || !prompt.trim()}
-          aria-label="Send message"
-        >
-          <RiSendPlaneLine />
-        </button>
+        {requestError && (
+          <div role="alert" className={`mb-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border px-3 py-2 text-sm ${
+            isDark ? 'border-rose-300/20 bg-rose-500/10 text-rose-200' : 'border-rose-200 bg-rose-50 text-rose-800'
+          }`}>
+            <span className="flex min-w-0 items-start gap-2">
+              <CircleAlert size={16} className="mt-0.5 shrink-0" aria-hidden="true" />
+              <span>{requestError}</span>
+            </span>
+            {failedRequest.current && (
+              <button
+                type="button"
+                onClick={retryLastRequest}
+                className="inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-1 font-medium hover:bg-black/5"
+              >
+                <RotateCcw size={14} aria-hidden="true" />
+                Retry
+              </button>
+            )}
+          </div>
+        )}
+        <div className="flex items-end gap-3">
+          <textarea
+            ref={textareaRef}
+            onInput={handleInput}
+            className={`max-h-40 min-h-10 flex-1 resize-none bg-transparent py-2 text-sm outline-none placeholder:text-slate-500 ${
+              isDark ? "text-white" : "text-slate-800"
+            }`}
+            placeholder="Message Mr Groff… (Enter to send, Shift+Enter for a new line)"
+            aria-label="Message Mr Groff"
+            rows={1}
+            maxLength={4000}
+            onChange={(event) => {
+              setPrompt(event.currentTarget.value)
+              if (requestError) setRequestError(null)
+            }}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault()
+                event.currentTarget.form?.requestSubmit()
+              }
+            }}
+            value={prompt}
+          />
+          <button
+            className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-indigo-500 text-white transition hover:bg-indigo-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-300 disabled:cursor-not-allowed disabled:opacity-40"
+            type="submit"
+            disabled={responseLoading || !prompt.trim()}
+            aria-label="Send message"
+          >
+            <Send size={17} aria-hidden="true" />
+          </button>
+        </div>
+        <p className={`mt-1 px-1 text-[11px] ${isDark ? 'text-white/35' : 'text-slate-400'}`}>
+          Mr Groff can draft changes, but asks before applying them.
+        </p>
       </form>
-    </div>
+    </section>
   )
 }
 
