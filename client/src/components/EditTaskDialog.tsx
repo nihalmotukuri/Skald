@@ -70,6 +70,7 @@ const EditTaskDialog = ({ setDisplayEditTask, editTaskId }: AddTaskDialogProps) 
                             setEditedTask({ ...editedTask, title: e.currentTarget.value });
                         }}
                         value={editedTask?.title ?? ""}
+                        required
                     />
                 </div>
 
@@ -145,7 +146,7 @@ const EditTaskDialog = ({ setDisplayEditTask, editTaskId }: AddTaskDialogProps) 
                 <button
                     className={`${isDark ? "bg-white/5 border-white/10 hover:bg-white/10" : "bg-neutral-100/20 !border-black/10 shadow-md hover:bg-neutral-200"} backdrop-blur-md border rounded-md text-[12px] px-[12px] py-[6px] w-full cursor-pointer`}
                     type='submit'
-                    disabled={editTask.isPending || !(editedTask?.title && editedTask?.description && editedTask?.date && editedTask?.time && editedTask?.priority)}
+                    disabled={editTask.isPending || !editedTask?.title?.trim()}
                 >
                     Edit Task
                 </button>

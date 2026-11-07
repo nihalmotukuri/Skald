@@ -24,7 +24,7 @@ const AddTaskDialog = ({ setDisplayAddTask }: AddTaskDialogProps) => {
         time: '',
         taskList: '',
     })
-    const [priority, setPriority] = useState('')
+    const [priority, setPriority] = useState('Medium')
 
     const selectPriority = (selectedPriority: string) => setPriority(selectedPriority)
     const selectTaskList = (selectedTaskList: string) => setAddTaskData({ ...addTaskData, taskList: selectedTaskList })
@@ -81,44 +81,41 @@ const AddTaskDialog = ({ setDisplayAddTask }: AddTaskDialogProps) => {
                 </div>
 
                 <div className='flex flex-col gap-2'>
-                    <label className='text-[15px]' htmlFor="description">Description *</label>
+                    <label className='text-[15px]' htmlFor="description">Description</label>
                     <textarea
                         name="description"
                         className={`${isDark ? "bg-white/5 border-white/10" : "bg-neutral-100/20 !border-black/10"} shadow-md  backdrop-blur-md border rounded-md text-[14px] px-[12px] py-[6px] resize-none`}
                         rows={5}
                         value={addTaskData.description}
                         onChange={e => setAddTaskData({ ...addTaskData, description: e.currentTarget.value })}
-                        required
                     ></textarea>
                 </div>
 
                 <div className='flex justify-between'>
                     <div className='flex flex-col gap-2'>
-                        <label className='text-[15px]' htmlFor="date">Date *</label>
+                        <label className='text-[15px]' htmlFor="date">Due date</label>
                         <input
                             className={`${isDark ? "bg-white/5 border-white/10" : "bg-neutral-100/20 !border-black/10"} shadow-md  backdrop-blur-md border rounded-md text-[14px] px-[12px] py-[6px]`}
                             type="date"
                             name="date"
                             value={addTaskData.date}
                             onChange={e => setAddTaskData({ ...addTaskData, date: e.currentTarget.value })}
-                            required
                         />
                     </div>
 
                     <div className='flex flex-col gap-2'>
-                        <label className='text-[15px]' htmlFor="time">Time *</label>
+                        <label className='text-[15px]' htmlFor="time">Time</label>
                         <input
                             className={`${isDark ? "bg-white/5 border-white/10" : "bg-neutral-100/20 !border-black/10"} shadow-md  backdrop-blur-md border rounded-md text-[14px] px-[12px] py-[6px]`}
                             type="time"
                             value={addTaskData.time}
                             onChange={e => setAddTaskData({ ...addTaskData, time: e.currentTarget.value })}
-                            required
                         />
                     </div>
 
                     <div className='flex flex-col gap-2'>
-                        <label className='text-[15px]'>Priority *</label>
-                        <SelectPriority selectPriority={selectPriority} currentPriority="" />
+                        <label className='text-[15px]'>Priority</label>
+                        <SelectPriority selectPriority={selectPriority} currentPriority={priority} />
                     </div>
                 </div>
 
@@ -137,7 +134,7 @@ const AddTaskDialog = ({ setDisplayAddTask }: AddTaskDialogProps) => {
                 <button
                     type='submit'
                     className={`${isDark ? "bg-white/5 border-white/10 hover:bg-white/10" : "bg-neutral-100/20 !border-black/10 shadow-md hover:bg-neutral-200"} backdrop-blur-md border rounded-md text-[12px] px-[12px] py-[6px] w-full cursor-pointer`}
-                    disabled={addTask.isPending || !(addTaskData.title && addTaskData.description && addTaskData.date && addTaskData.time && priority)}
+                    disabled={addTask.isPending || !addTaskData.title.trim()}
                 >
                     Add Task
                 </button>
