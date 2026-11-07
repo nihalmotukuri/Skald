@@ -388,7 +388,7 @@ html:has(.skald-home) {
   background: var(--home-panel);
   box-shadow: 0 12px 34px rgb(21 15 52 / 8%);
   backdrop-filter: blur(12px);
-  transform: rotateY(-3deg) rotateX(1deg);
+  transform: none;
   transform-origin: center;
 }
 
