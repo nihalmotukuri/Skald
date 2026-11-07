@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 from app import main
 from app.auth import CurrentUser, get_current_user
 from app.config import get_settings
-from app.models import ChatMessage
+from app.models import ChatMessage, ChatResult, CreateTaskProposal, ProposalEnvelope
 
 USER_ID = UUID("3f3c9f96-90f7-4a80-8b62-6cb2f3c8b582")
 
@@ -44,10 +44,17 @@ def test_chat_uses_authenticated_user_context(
         messages: list[ChatMessage],
         context: dict[str, list[dict[str, str]]],
         settings: object,
-    ) -> str:
+    ) -> ChatResult:
         calls["messages"] = messages
         calls["context"] = context
-        return "Let's plan your day."
+        return ChatResult(
+            reply="Let's plan your day.",
+            proposals=[ProposalEnvelope(action=CreateTaskProposal(
+                action="create_task",
+                summary="Add a planning task",
+                title="Plan the day",
+            ))],
+        )
 
     monkeypatch.setattr(main, "load_user_context", fake_context)
     monkeypatch.setattr(main, "generate_reply", fake_reply)
@@ -58,7 +65,10 @@ def test_chat_uses_authenticated_user_context(
     )
 
     assert response.status_code == 200
-    assert response.json() == {"reply": "Let's plan your day."}
+    payload = response.json()
+    assert payload["reply"] == "Let's plan your day."
+    assert payload["proposals"][0]["action"]["action"] == "create_task"
+    assert payload["proposals"][0]["action"]["title"] == "Plan the day"
     assert calls["user_id"] == USER_ID
     assert calls["access_token"] == "signed-user-token"
 

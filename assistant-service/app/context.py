@@ -58,7 +58,7 @@ async def load_user_context(
                 access_token,
                 "tasks",
                 {
-                    "select": "title,description,due_at,priority,status,completed_at,task_list_id",
+                    "select": "id,title,description,due_at,priority,status,completed_at,task_list_id",
                     "user_id": user_filter,
                     "order": "created_at.desc",
                     "limit": "30",
@@ -70,7 +70,7 @@ async def load_user_context(
                 access_token,
                 "notes",
                 {
-                    "select": "title,body,created_at",
+                    "select": "id,title,body,created_at",
                     "user_id": user_filter,
                     "order": "created_at.desc",
                     "limit": "20",
@@ -99,6 +99,7 @@ async def load_user_context(
         "tasks": [
             {
                 "title": _text(task.get("title"), 300),
+                "id": _text(task.get("id"), 36),
                 "description": _text(task.get("description"), 700),
                 "due_at": _text(task.get("due_at"), 40),
                 "priority": _text(task.get("priority"), 20),
@@ -110,9 +111,14 @@ async def load_user_context(
         "notes": [
             {
                 "title": _text(note.get("title"), 300),
+                "id": _text(note.get("id"), 36),
                 "body": _text(note.get("body"), 1200),
                 "created_at": _text(note.get("created_at"), 40),
             }
             for note in notes
+        ],
+        "task_lists": [
+            {"id": _text(task_list.get("id"), 36), "name": _text(task_list.get("name"), 80)}
+            for task_list in task_lists
         ],
     }

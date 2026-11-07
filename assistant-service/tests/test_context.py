@@ -44,6 +44,7 @@ class FakeAsyncClient:
         FakeAsyncClient.calls.append({"url": url, "params": params, "headers": headers})
         if url.endswith("/tasks"):
             return FakeResponse([{
+                "id": "task-1",
                 "title": "Plan launch",
                 "description": "Review the release",
                 "task_list_id": "list-1",
@@ -53,7 +54,7 @@ class FakeAsyncClient:
             }])
         if url.endswith("/task_lists"):
             return FakeResponse([{"id": "list-1", "name": "Work"}])
-        return FakeResponse([{"title": "Idea", "body": "A note", "created_at": "2026-11-07T00:00:00Z"}])
+        return FakeResponse([{"id": "note-1", "title": "Idea", "body": "A note", "created_at": "2026-11-07T00:00:00Z"}])
 
 
 def test_context_queries_are_bound_to_verified_user(
@@ -72,7 +73,10 @@ def test_context_queries_are_bound_to_verified_user(
     result = asyncio.run(context.load_user_context(USER_ID, "verified-access-token", settings))
 
     assert result["tasks"][0]["task_list"] == "Work"
+    assert result["tasks"][0]["id"] == "task-1"
     assert result["notes"][0]["title"] == "Idea"
+    assert result["notes"][0]["id"] == "note-1"
+    assert result["task_lists"][0]["id"] == "list-1"
     assert len(FakeAsyncClient.calls) == 3
     for call in FakeAsyncClient.calls:
         assert call["params"]["user_id"] == f"eq.{USER_ID}"
