@@ -42,9 +42,10 @@ Do not edit the hosted schema independently of the checked-in migrations; keepin
 The client uses Supabase Auth's PKCE flow for Google OAuth, email/password sign-in and sign-up, email confirmation, and password recovery. In Supabase Dashboard, set the production Site URL and allow the exact callback URLs used by your deployments under **Authentication → URL Configuration**:
 
 - Local development: `http://localhost:5173/auth/callback`
+- Local development (127.0.0.1): `http://127.0.0.1:5173/auth/callback`
 - Production: `https://<your-frontend-domain>/auth/callback`
 
-Enable the Google provider under **Authentication → Providers** and configure its Google OAuth client using the redirect URI shown by Supabase. Email sign-up and password recovery use the same callback URL; enable email confirmation and configure a production SMTP sender before opening registration to users. New and reset passwords must be at least 12 characters. Only Google is currently offered as an OAuth provider. MFA is not enabled; enabling it should be a deliberate product/security decision, with the corresponding enrollment and challenge UX configured before requiring it.
+Enable the Google provider under **Authentication → Providers** and configure its Google OAuth client using the redirect URI shown by Supabase. Google OAuth has been tested through the local Google sign-in step. Email sign-up and password recovery use the same callback URL; enable email confirmation and configure a production SMTP sender before opening registration to users. New and reset passwords must be at least 12 characters. Only Google is currently offered as an OAuth provider. MFA is not enabled; enabling it should be a deliberate product/security decision, with the corresponding enrollment and challenge UX configured before requiring it.
 
 ## Mr Groff assistant service
 
@@ -61,7 +62,17 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
 
-Set `VITE_ASSISTANT_API_URL` in `client/.env` to the service URL (the example uses `http://localhost:8000`). Remove any old `VITE_GEMINI_KEY` from the client environment; configure `GEMINI_API_KEY` only in the assistant service. If a Gemini key was previously shipped in a browser build, rotate it in Google AI Studio. Set `CORS_ORIGINS` to the exact deployed frontend origin(s) in production. Run service tests with `pip install -r requirements-dev.txt && pytest`.
+Set `VITE_ASSISTANT_API_URL` in `client/.env` to the service URL (the example uses `http://localhost:8000`). Remove any old `VITE_GEMINI_KEY` from the client environment; configure `GEMINI_API_KEY` only in the assistant service. If a Gemini key was previously shipped in a browser build, rotate it in Google AI Studio. Set `CORS_ORIGINS` to the exact deployed frontend origin(s) in production. Deploy the assistant service separately from the Vercel frontend, expose its `/health` endpoint to the host's health check, and set the service start command to `uvicorn app.main:app --host 0.0.0.0 --port <platform-port>`. Run service tests with `pip install -r requirements-dev.txt && pytest`.
+
+### Production release checklist
+
+1. In Vercel, configure `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, and `VITE_ASSISTANT_API_URL` for the intended deployment environments, then redeploy. The assistant API URL must be the public HTTPS URL of the deployed FastAPI service.
+2. On the assistant-service host, configure `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_JWKS_URL`, and `GEMINI_API_KEY`; set `CORS_ORIGINS` to the exact frontend origin (scheme and host, no path). Keep the Gemini key server-side.
+3. In Supabase Auth URL Configuration, use the production frontend origin as the Site URL and allow the production `/auth/callback` and `/auth/update-password` URLs. Confirm the Google OAuth client still lists the Supabase-provided `/auth/v1/callback` URI.
+4. Before applying any schema changes, authenticate and link the Supabase CLI to the intended project, inspect `supabase migration list --remote`, then reconcile initial migration `20261107100000` if the Dashboard-applied migration is not recorded. Do not run `db push` until the linked project and migration history are verified.
+5. After deployment, verify `/health`, sign in with Google, create and edit a task and note, and send a Mr Groff message. Confirm the API streams successfully and an action proposal only mutates data after explicit approval.
+
+The production domains and service host have not yet been provided/configured in this repository, so these steps are deployment prerequisites rather than a claim that the new app is already live.
 
 ## Deployment and legacy data
 
