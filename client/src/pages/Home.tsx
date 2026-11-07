@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowRight, Check, Command, Layers3, Moon, Sparkles, Sun } from "lucide-react";
+import { ArrowDown, ArrowRight, Bot, CalendarDays, Check, Command, ListTodo, Moon, NotebookPen, Settings, Sparkles, Sun } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAppStore } from "@/store/appStore";
 import BrandMark from "@/components/BrandMark";
@@ -78,14 +78,14 @@ const Home = () => {
               </div>
               <div className="skald-preview__workspace-label">WORKSPACE</div>
               <div className="skald-preview__nav-item skald-preview__nav-item--active">
-                <span className="skald-preview__nav-dot" /> Today <span className="skald-preview__count">3</span>
+                <CalendarDays size={14} /> Today <span className="skald-preview__count">3</span>
               </div>
-              <div className="skald-preview__nav-item"><Layers3 size={14} /> Tasks</div>
-              <div className="skald-preview__nav-item"><span className="skald-preview__note-icon">▤</span> Notes</div>
+              <div className="skald-preview__nav-item"><ListTodo size={14} /> Tasks</div>
+              <div className="skald-preview__nav-item"><NotebookPen size={14} /> Notes</div>
+              <div className="skald-preview__nav-item"><Bot size={14} /> Mr Groff</div>
               <div className="skald-preview__sidebar-bottom">
-                <span className="skald-preview__avatar">S</span>
-                <span>your space</span>
-                <span className="skald-preview__presence" />
+                <Settings size={14} />
+                <span>Settings</span>
               </div>
             </aside>
 
