@@ -14,13 +14,11 @@ const DashboardGrid = () => {
     const isDark = useAppStore((state) => state.isDark)
     const breadcrumb = useAppStore((state) => state.breadcrumb)
     const setTheme = useAppStore((state) => state.setTheme)
-    const setPathname = useAppStore((state) => state.setPathname)
     const toggleSidebar = useAppStore((state) => state.toggleSidebar)
     const location = useLocation()
 
     if (!user && !loading) {
-        setPathname(location.pathname)
-        return <Navigate to="/signin" />
+        return <Navigate to="/signin" replace state={{ from: location }} />
     }
 
     return (

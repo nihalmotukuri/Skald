@@ -20,7 +20,7 @@ const features = [
 const Sidebar = ({ user }: { user: User }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [showLogout, setShowLogout] = useState<boolean>(false)
+  const [logoutError, setLogoutError] = useState<string | null>(null)
 
   const open = useAppStore((state) => state.sidebarOpen)
   const isDark = useAppStore((state) => state.isDark)
@@ -31,10 +31,11 @@ const Sidebar = ({ user }: { user: User }) => {
     const { error } = await supabase.auth.signOut()
     if (error) {
       console.error("Sign out failed:", error)
-      window.alert("Unable to sign out. Please try again.")
+      setLogoutError("Unable to sign out. Please try again.")
       return
     }
     useAppStore.getState().setUser(null)
+    navigate("/signin", { replace: true })
   }
 
   const openSidebar = () => (
@@ -70,9 +71,7 @@ const Sidebar = ({ user }: { user: User }) => {
       </div>
 
       <div
-        className="flex items-center p-[8px] rounded-[12px] cursor-pointer relative"
-        onMouseEnter={() => setShowLogout(true)}
-        onMouseLeave={() => setShowLogout(false)}
+        className="group relative flex items-center rounded-[12px] p-[8px]"
       >
         <img
           className="size-[40px] rounded-[10px] mr-[12px]"
@@ -86,19 +85,17 @@ const Sidebar = ({ user }: { user: User }) => {
           <p className="mt-[-4px] text-[14px]">{user.email}</p>
         </div>
 
-        {showLogout
-          ? (
-            <div
-              className={`absolute ${isDark ? "bg-white/2 border border-white/20 text-white/60" : "bg-white/20 border border-black/40"} top-0 left-0 h-full w-full rounded-[10px] flex justify-center items-center text-2xl `}
-              style={{ backdropFilter: "blur(10px)"}}
-              onClick={userLogout}
-            >
-              <span className="text-[18px] pr-[8px]">Logout</span>
-              <IoIosLogOut />
-            </div>
-          ) : null
-        }
+        <button
+          type="button"
+          aria-label="Sign out"
+          onClick={userLogout}
+          className={`pointer-events-none absolute inset-0 flex items-center justify-center rounded-[10px] border text-2xl opacity-0 backdrop-blur-md transition-opacity group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100 focus-visible:pointer-events-auto focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-indigo-300 ${isDark ? "border-white/20 bg-[#0f111acc] text-white/90" : "border-black/30 bg-white/90 text-black/80"}`}
+        >
+          <span className="pr-2 text-[18px]">Sign out</span>
+          <IoIosLogOut aria-hidden="true" />
+        </button>
       </div>
+      {logoutError && <p role="alert" className="px-2 pb-2 text-xs text-red-300">{logoutError}</p>}
     </motion.div>
   );
 
@@ -131,9 +128,7 @@ const Sidebar = ({ user }: { user: User }) => {
       </div>
 
       <div
-        className="flex justify-center p-[6px] m-[6px] rounded-[12px] cursor-pointer relative"
-        onMouseEnter={() => setShowLogout(true)}
-        onMouseLeave={() => setShowLogout(false)}
+        className="group relative m-[6px] flex justify-center rounded-[12px] p-[6px]"
       >
         <img
           className="size-[36px] rounded-[10px]"
@@ -142,18 +137,16 @@ const Sidebar = ({ user }: { user: User }) => {
           alt="profile-pic"
         />
 
-        {showLogout
-          ? (
-            <div
-              className={`absolute ${isDark ? "bg-white/2 backdrop-blur-md border border-white/20 text-white/60" : "bg-white/20 border border-black/40 backdrop-blur"} top-0 left-0 h-full w-full rounded-[10px] flex justify-center items-center text-2xl`}
-              onClick={userLogout}
-            >
-              <IoIosLogOut
-              />
-            </div>
-          ) : null
-        }
+        <button
+          type="button"
+          aria-label="Sign out"
+          onClick={userLogout}
+          className={`pointer-events-none absolute inset-0 flex items-center justify-center rounded-[10px] border text-2xl opacity-0 backdrop-blur-md transition-opacity group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100 focus-visible:pointer-events-auto focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-indigo-300 ${isDark ? "border-white/20 bg-[#0f111acc] text-white/90" : "border-black/30 bg-white/90 text-black/80"}`}
+        >
+          <IoIosLogOut aria-hidden="true" />
+        </button>
       </div>
+      {logoutError && <p role="alert" className="px-2 pb-2 text-xs text-red-300">{logoutError}</p>}
     </motion.div>
   );
 

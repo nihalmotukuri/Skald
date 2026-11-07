@@ -7,6 +7,8 @@ import Tasks from './pages/Tasks';
 import Notes from './pages/Notes';
 import Assistant from './pages/Assistant';
 import SignIn from './pages/SignIn';
+import AuthCallback from './pages/AuthCallback';
+import UpdatePassword from './pages/UpdatePassword';
 
 import { useAutoLogin } from '@/hooks/useAutoLogin.ts';
 import './App.css';
@@ -19,6 +21,8 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/signin" element={<SignIn />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
+        <Route path="/auth/update-password" element={<UpdatePassword />} />
 
         <Route path="/app" element={<Layout />}>
           <Route index element={<Navigate to="dashboard" replace />} />

@@ -37,6 +37,15 @@ The initial migration creates profiles, task lists, tasks, notes, a private note
 
 Do not edit the hosted schema independently of the checked-in migrations; keeping schema changes versioned prevents drift between environments. The frontend now uses Supabase Auth and Supabase tables/storage for profiles, task lists, tasks, and notes. Zustand holds authentication and UI state, while TanStack Query owns task, note, task-list, and activity data. The legacy Express/Firebase Admin API is still present but no longer used for those client data flows.
 
+### Authentication configuration
+
+The client uses Supabase Auth's PKCE flow for Google OAuth, email/password sign-in and sign-up, email confirmation, and password recovery. In Supabase Dashboard, set the production Site URL and allow the exact callback URLs used by your deployments under **Authentication → URL Configuration**:
+
+- Local development: `http://localhost:5173/auth/callback`
+- Production: `https://<your-frontend-domain>/auth/callback`
+
+Enable the Google provider under **Authentication → Providers** and configure its Google OAuth client using the redirect URI shown by Supabase. Email sign-up and password recovery use the same callback URL; enable email confirmation and configure a production SMTP sender before opening registration to users. New and reset passwords must be at least 12 characters. Only Google is currently offered as an OAuth provider. MFA is not enabled; enabling it should be a deliberate product/security decision, with the corresponding enrollment and challenge UX configured before requiring it.
+
 ## Mr Groff assistant service
 
 The assistant API is in `assistant-service/`. It validates Supabase access tokens against the project's JWKS endpoint and issuer, then uses the verified user's own bearer token and the publishable key to fetch RLS-scoped tasks, notes, and task lists. Gemini credentials remain in the service environment. Chat replies stream to the client as they are generated. Mr Groff can return typed create/update/delete proposals, validated against records in that user's context. The API never executes writes: the UI shows the exact proposed changes, refreshes the relevant data, and only calls the existing user-scoped Supabase mutations after the user confirms each proposal.
