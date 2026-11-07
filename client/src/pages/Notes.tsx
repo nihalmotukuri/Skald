@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { FileText, Plus, Search, X } from "lucide-react";
 import { useAppStore } from '@/store/appStore'
 import { useNotes, useNoteMutations } from '@/queries/notes'
 import AddNoteDialog from "@/components/AddNoteDialog";
@@ -6,45 +7,54 @@ import EditNoteDialog from "@/components/EditNoteDialog";
 import NoteSkeleton from "@/components/NoteSkeleton";
 import DisplayNote from "@/components/DisplayNote";
 import NoteItem from "@/components/NoteItem";
-import { SlNote } from "react-icons/sl";
-import { RxCross1 } from "react-icons/rx";
 
 const Notes = () => {
   const userId = useAppStore((state) => state.user?.id)
   const { data: notes = [], isLoading: loading, error } = useNotes(userId)
   const { deleteNote } = useNoteMutations(userId)
   const activeNoteId = useAppStore((state) => state.activeNoteId)
+  const setActiveNoteId = useAppStore((state) => state.setActiveNoteId)
   const isDark = useAppStore((state) => state.isDark)
   const setBreadcrumb = useAppStore((state) => state.setBreadcrumb)
-  const [filterQuery, setFilterQuery] = useState("");
-  const [debouncedFilterQuery, setDebouncedFilterQuery] = useState("");
-  const [displayAddNote, setDisplayAddNote] = useState(false);
-  const [displayEditNote, setDisplayEditNote] = useState(false);
-  const [editNoteId, setEditNoteId] = useState<string>("");
-  const [fullscreen, setFullscreen] = useState(false);
+  const [filterQuery, setFilterQuery] = useState("")
+  const [displayAddNote, setDisplayAddNote] = useState(false)
+  const [displayEditNote, setDisplayEditNote] = useState(false)
+  const [editNoteId, setEditNoteId] = useState("")
+  const [fullscreen, setFullscreen] = useState(false)
 
   useEffect(() => {
-    setBreadcrumb("Notes");
-  }, [setBreadcrumb]);
+    setBreadcrumb("Notes")
+  }, [setBreadcrumb])
 
-  const filteredNotes = useMemo(() => {
-    const notesReversed = [...notes].reverse();
-    if (debouncedFilterQuery) {
-      return notesReversed.filter((n) =>
-        n.title.trim().toLowerCase().includes(debouncedFilterQuery.trim().toLowerCase())
-      );
+  useEffect(() => {
+    if (activeNoteId && !notes.some((note) => note._id === activeNoteId)) {
+      setActiveNoteId(null)
+      setFullscreen(false)
     }
-    return notesReversed
-  }, [notes, debouncedFilterQuery]);
+  }, [activeNoteId, notes, setActiveNoteId])
 
-  useEffect(() => {
-    const handler = setTimeout(() => setDebouncedFilterQuery(filterQuery), 500);
-    return () => clearTimeout(handler);
-  }, [filterQuery]);
+  const normalizedQuery = filterQuery.trim().toLowerCase()
+  const filteredNotes = useMemo(() => [...notes]
+    .filter((note) => !normalizedQuery
+      || note.title.toLowerCase().includes(normalizedQuery)
+      || note.description.toLowerCase().includes(normalizedQuery))
+    .sort((first, second) => (second.createdAt ?? '').localeCompare(first.createdAt ?? '')),
+  [notes, normalizedQuery])
+  const activeNote = notes.find((note) => note._id === activeNoteId)
+  const pageText = isDark ? 'text-white' : 'text-slate-900'
+  const mutedText = isDark ? 'text-white/55' : 'text-slate-500'
+  const surface = isDark ? 'border-white/10 bg-white/[0.035]' : 'border-slate-200 bg-white'
+
+  const handleDelete = (noteId: string) => {
+    deleteNote.mutate(noteId, {
+      onSuccess: () => {
+        if (activeNoteId === noteId) setActiveNoteId(null)
+      }
+    })
+  }
 
   return (
-    <div className="w-full col-span-1 row-span-1 grid grid-cols-1 grid-rows-[68px_1fr] overflow-y-auto relative">
-      {error && <p role="alert" className="absolute top-[64px] right-4 z-10 rounded bg-red-950/90 px-3 py-2 text-sm text-red-100">Unable to load notes: {error.message}</p>}
+    <div className={`col-span-1 row-span-1 flex min-h-0 flex-col overflow-y-auto ${pageText}`}>
       {displayAddNote && <AddNoteDialog setDisplayAddNote={setDisplayAddNote} />}
       {displayEditNote && (
         <EditNoteDialog
@@ -53,82 +63,110 @@ const Notes = () => {
         />
       )}
 
-      <div className="row-span-1 col-span-1">
-        <div className="py-[16px] flex justify-between items-center px-[2px] border-b border-[#32343c]">
-          <div className="relative">
+      <header className="flex flex-col gap-4 border-b border-white/10 pb-5 pt-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className={`mb-1 text-xs font-medium uppercase tracking-[0.2em] ${mutedText}`}>Your workspace</p>
+          <h1 className="text-2xl font-semibold sm:text-3xl">Notes</h1>
+          <p className={`mt-1 text-sm ${mutedText}`}>{notes.length} {notes.length === 1 ? 'note' : 'notes'}</p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <label className={`flex min-h-10 w-full items-center gap-2 rounded-lg border px-3 sm:w-64 ${surface}`}>
+            <Search aria-hidden="true" size={16} className={mutedText} />
             <input
-                className={`${isDark ? "bg-white/5 border-white/10" : "!border-black/10 shadow-sm"} w-[240px] border rounded-md text-[14px] px-[12px] py-[6px] pr-[32px]`}
-              type="text"
-              placeholder="Search notes..."
+              type="search"
+              placeholder="Search title or content"
+              aria-label="Search notes"
               value={filterQuery}
-              onChange={(e) => setFilterQuery(e.target.value)}
+              onChange={(event) => setFilterQuery(event.target.value)}
+              className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-white/35"
             />
             {filterQuery && (
-              <div
-                className={`absolute z-1 top-[3px] right-[3px] hover:${isDark ? "bg-white/10" : "bg-black/10"} p-[6px] rounded-md cursor-pointer`}
-                onClick={() => setFilterQuery("")}
-              >
-                <RxCross1 />
-              </div>
+              <button type="button" aria-label="Clear search" onClick={() => setFilterQuery('')}>
+                <X size={15} className={mutedText} />
+              </button>
             )}
-          </div>
-
-          <div className="flex items-center">
-            <button
-              className={`flex justify-between items-center w-[112px] ${isDark ? "bg-white/5 border-white/10 hover:bg-white/10" : "!border-black/10 shadow-sm hover:bg-neutral-100 text-gray-600"} backdrop-blur-md border rounded-md px-[12px] py-[6px] cursor-pointer`}
-              onClick={() => setDisplayAddNote(true)}
-            >
-              <SlNote className="text-[12px]" />
-              <span className="text-[14px] ml-2">Add Note</span>
-            </button>
-          </div>
+          </label>
+          <button
+            type="button"
+            onClick={() => setDisplayAddNote(true)}
+            className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-lg bg-indigo-500 px-3 text-sm font-medium text-white transition hover:bg-indigo-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-300"
+          >
+            <Plus aria-hidden="true" size={17} />
+            New note
+          </button>
         </div>
-      </div>
+      </header>
 
-      <div
-        className={`relative col-span-1 row-span-1 overflow-y-auto ${fullscreen ? "grid grid-cols-[0px_1fr]" : activeNoteId ? "grid grid-cols-[400px_1fr]" : ""}`}
-      >
-        <div
-          className={`overflow-y-auto ${!fullscreen ? "py-[12px] px-[18px]" : null} ${activeNoteId && !fullscreen ? "border-r" : null} border-[#32343c] flex flex-col gap-2`}
+      {error && (
+        <p role="alert" className="mt-4 rounded-lg border border-rose-400/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+          Unable to load notes: {error.message}
+        </p>
+      )}
+
+      <div className={`mt-5 min-h-0 flex-1 ${activeNote ? 'grid grid-cols-1 gap-4 lg:grid-cols-[minmax(240px,320px)_minmax(0,1fr)]' : ''}`}>
+        <section
+          aria-label="Notes list"
+          className={`${activeNote ? 'hidden overflow-y-auto pr-1 lg:block' : 'block'} ${fullscreen ? 'lg:hidden' : ''}`}
         >
-          {loading
-            ? Array.from({ length: 3 }).map((_, idx) => <NoteSkeleton key={idx} />)
-            : filteredNotes.map((note) => (
-              <NoteItem
-                key={note._id}
-                note={note}
-                deleteNote={(noteId) => deleteNote.mutate(noteId)}
-                setEditNoteId={setEditNoteId}
-                setDisplayEditNote={setDisplayEditNote}
-              />
-            ))}
+          <div className="flex flex-col gap-2 pb-8">
+            {loading
+              ? Array.from({ length: 4 }, (_, index) => <NoteSkeleton key={index} />)
+              : filteredNotes.map((note) => (
+                <NoteItem
+                  key={note._id}
+                  note={note}
+                  deleteNote={handleDelete}
+                  setEditNoteId={setEditNoteId}
+                  setDisplayEditNote={setDisplayEditNote}
+                />
+              ))}
+          </div>
+        </section>
 
-          {notes.length === 0 && !loading && !error && (
-            <div className="flex justify-center">
-              <p className="text-[18px] text-gray-400 text-center mt-[54px] bg-white/6 p-4 rounded-2xl inline-block m-auto">
-                You haven’t written any notes yet. Start by jotting down your first one!
-              </p>
+        {activeNote && (
+          <section className={`${fullscreen ? 'fixed inset-4 z-40' : 'min-h-[400px]'} overflow-hidden rounded-xl border ${surface}`}>
+            <DisplayNote
+              fullscreen={fullscreen}
+              setFullscreen={setFullscreen}
+              onBack={() => {
+                setActiveNoteId(null)
+                setFullscreen(false)
+              }}
+            />
+          </section>
+        )}
+
+        {!loading && !error && filteredNotes.length === 0 && (
+          <div className={`rounded-2xl border px-5 py-12 text-center ${surface}`}>
+            <div className="mx-auto mb-3 flex size-11 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-300">
+              <FileText size={21} />
             </div>
-          )}
-
-          {filteredNotes.length === 0 && notes.length > 0 && !error && (
-            <div className="flex justify-center">
-              <p className="text-[18px] text-gray-400 text-center mt-[54px] bg-white/4 border border-white/10 p-4 rounded-2xl inline-block m-auto">
-                No notes match your search.
-              </p>
-            </div>
-          )}
-        </div>
-
-        {activeNoteId && (
-          <DisplayNote
-            fullscreen={fullscreen}
-            setFullscreen={setFullscreen}
-          />
+            <h2 className="font-medium">{notes.length === 0 ? 'Make room for a thought' : 'No notes found'}</h2>
+            <p className={`mx-auto mt-1 max-w-sm text-sm ${mutedText}`}>
+              {notes.length === 0
+                ? 'Capture ideas, plans, and the details you want to remember.'
+                : 'Try a different search, or clear the search field.'}
+            </p>
+            {notes.length === 0
+              ? (
+                <button
+                  type="button"
+                  onClick={() => setDisplayAddNote(true)}
+                  className="mt-4 rounded-lg bg-indigo-500 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-400"
+                >
+                  Create your first note
+                </button>
+              )
+              : filterQuery && (
+                <button type="button" onClick={() => setFilterQuery('')} className="mt-4 text-sm text-indigo-200 hover:text-white">
+                  Clear search
+                </button>
+              )}
+          </div>
         )}
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Notes;
+export default Notes
