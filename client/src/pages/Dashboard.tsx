@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { ArrowRight, Check, ListTodo, NotebookPen, Sparkles } from 'lucide-react'
 import { useAppStore } from '@/store/appStore'
 import { useTasks } from '@/queries/tasks'
 import { useNotes } from '@/queries/notes'
@@ -21,6 +22,7 @@ const EMPTY_TASKS: Task[] = []
 
 const Dashboard = () => {
   const userId = useAppStore((state) => state.user?.id)
+  const userName = useAppStore((state) => state.user?.displayName.trim().split(/\s+/)[0] || 'there')
   const isDark = useAppStore((state) => state.isDark)
   const setBreadcrumb = useAppStore((state) => state.setBreadcrumb)
   const setActiveNoteId = useAppStore((state) => state.setActiveNoteId)
@@ -76,6 +78,52 @@ const Dashboard = () => {
   }
 
   const lastNote = notes.at(-1)
+
+  const renderWelcome = () => (
+    <section className={`skald-onboarding ${isDark ? 'skald-onboarding--dark' : 'skald-onboarding--light'}`}>
+      <div className="skald-onboarding-hero">
+        <div className="skald-onboarding-copy">
+          <span className="skald-onboarding-eyebrow"><Sparkles size={14} /> A fresh page</span>
+          <h2>Welcome in, {userName}.</h2>
+          <p>Skald is your space to collect the loose ends, keep the good ideas, and choose what matters next.</p>
+        </div>
+        <div className="skald-onboarding-mark" aria-hidden="true">
+          <span><Sparkles size={25} /></span>
+        </div>
+      </div>
+
+      <div className="skald-onboarding-progress">
+        <div>
+          <span className="skald-onboarding-label">YOUR FIRST FEW MINUTES</span>
+          <h3>Start with whatever’s on your mind.</h3>
+        </div>
+        <span className="skald-onboarding-count"><Check size={14} /> No rush</span>
+      </div>
+
+      <div className="skald-onboarding-cards">
+        <Link to="/app/tasks" className="skald-onboarding-card">
+          <span className="skald-onboarding-card-icon"><ListTodo size={19} /></span>
+          <span className="skald-onboarding-card-title">Make a little plan</span>
+          <span className="skald-onboarding-card-copy">Add the next thing you want to get done.</span>
+          <span className="skald-onboarding-card-action">Create a task <ArrowRight size={15} /></span>
+        </Link>
+        <Link to="/app/notes" className="skald-onboarding-card">
+          <span className="skald-onboarding-card-icon"><NotebookPen size={19} /></span>
+          <span className="skald-onboarding-card-title">Save a thought</span>
+          <span className="skald-onboarding-card-copy">Keep an idea close, even if it’s not for today.</span>
+          <span className="skald-onboarding-card-action">Write a note <ArrowRight size={15} /></span>
+        </Link>
+        <Link to="/app/assistant" className="skald-onboarding-card">
+          <span className="skald-onboarding-card-icon"><Sparkles size={19} /></span>
+          <span className="skald-onboarding-card-title">Talk it through</span>
+          <span className="skald-onboarding-card-copy">Ask Mr Groff to help untangle your next step.</span>
+          <span className="skald-onboarding-card-action">Meet Mr Groff <ArrowRight size={15} /></span>
+        </Link>
+      </div>
+
+      <p className="skald-onboarding-footnote">Your workspace is private. Start small; you can shape it as you go.</p>
+    </section>
+  )
 
   const renderDashboard = () => (
     <>
@@ -232,7 +280,9 @@ const Dashboard = () => {
         ? <p role="alert" className="col-span-3">Unable to load dashboard data: {notesState.error?.message ?? tasksState.error?.message}</p>
         : notesState.isLoading || tasksState.isLoading
         ? <DashboardSkeleton />
-        : renderDashboard()}
+        : tasks.length === 0 && notes.length === 0
+          ? renderWelcome()
+          : renderDashboard()}
     </div>
   )
 }

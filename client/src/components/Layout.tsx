@@ -1,83 +1,94 @@
-import { Navigate, useLocation } from 'react-router-dom'
-import { useAppStore } from '@/store/appStore'
-import { Outlet } from 'react-router-dom'
-import { BsLayoutSidebarInset } from "react-icons/bs"
-import { MdArrowForwardIos } from "react-icons/md"
-import { CiLight, CiDark } from "react-icons/ci"
-import Sidebar from './Sidebar'
+import { Link, Navigate, Outlet, useLocation } from 'react-router-dom'
+import { Moon, PanelLeftClose, PanelLeftOpen, Sun } from 'lucide-react'
 import { LineWobble } from 'ldrs/react'
 import 'ldrs/react/LineWobble.css'
+import { useAppStore } from '@/store/appStore'
+import Sidebar from './Sidebar'
+
+const routeTitles: Record<string, string> = {
+  '/app/dashboard': 'Dashboard',
+  '/app/tasks': 'Tasks',
+  '/app/notes': 'Notes',
+  '/app/assistant': 'Mr Groff',
+}
 
 const DashboardGrid = () => {
-    const user = useAppStore((state) => state.user)
-    const loading = useAppStore((state) => state.authLoading)
-    const isDark = useAppStore((state) => state.isDark)
-    const breadcrumb = useAppStore((state) => state.breadcrumb)
-    const setTheme = useAppStore((state) => state.setTheme)
-    const toggleSidebar = useAppStore((state) => state.toggleSidebar)
-    const location = useLocation()
+  const user = useAppStore((state) => state.user)
+  const loading = useAppStore((state) => state.authLoading)
+  const isDark = useAppStore((state) => state.isDark)
+  const setTheme = useAppStore((state) => state.setTheme)
+  const sidebarOpen = useAppStore((state) => state.sidebarOpen)
+  const toggleSidebar = useAppStore((state) => state.toggleSidebar)
+  const location = useLocation()
+  const pageTitle = routeTitles[location.pathname.replace(/\/+$/, '')] ?? 'Workspace'
+  const firstName = user?.displayName.trim().split(/\s+/)[0] || 'there'
 
-    if (!user && !loading) {
-        return <Navigate to="/signin" replace state={{ from: location }} />
-    }
+  if (!user && !loading) {
+    return <Navigate to="/signin" replace state={{ from: location }} />
+  }
 
-    return (
+  return (
+    <main className={`skald-app ${isDark ? 'skald-app--dark' : 'skald-app--light'}`}>
+      {loading ? (
+        <div className="skald-app-loading" role="status" aria-label="Loading your workspace">
+          <LineWobble
+            size="80"
+            stroke="5"
+            bgOpacity="0.1"
+            speed="1.75"
+            color={isDark ? '#a095ff' : '#6654e8'}
+          />
+        </div>
+      ) : user ? (
         <>
-            <main
-                className={`${isDark ? "bg-[#0f111a]" : "bg-[#fff] !text-[#2d3748]"} flex p-[24px] gap-[24px] h-screen relative`}
-            >
-                {loading
-                    ? (
-                        <div className={`bg-white/2 backdrop-blur-sm absolute top-0 left-0 z-1 size-full flex justify-center items-center`}>
-                            <LineWobble
-                                size="80"
-                                stroke="5"
-                                bgOpacity="0.1"
-                                speed="1.75"
-                                color={isDark ? "#a3b4ff" : "#602bf8"}
-                            />
-                        </div>
-                    )
-                    : user ? (
-                        <>
-                            <Sidebar user={user} />
+          <Sidebar user={user} open={sidebarOpen} />
 
-                            <div className="flex-1 h-full w-full grid grid-cols-1 grid-rows-[60px_1fr] gap-0">
-                                <div className="w-full row-span-1 col-span-1 flex justify-between items-center">
-                                    <div className='h-[60px] flex items-center'>
-                                        <BsLayoutSidebarInset
-                                            className="text-[24px] cursor-pointer"
-                                            onClick={toggleSidebar} />
+          <section className="skald-app-content" aria-label="Workspace">
+            <header className="skald-app-header">
+              <div className="skald-app-header__leading">
+                <button
+                  type="button"
+                  className="skald-app-icon-button skald-app-sidebar-toggle"
+                  onClick={toggleSidebar}
+                  aria-label={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
+                  title={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
+                >
+                  {sidebarOpen ? <PanelLeftClose size={19} /> : <PanelLeftOpen size={19} />}
+                </button>
+                <Link to="/app/dashboard" className="skald-app-mobile-brand" aria-label="Skald workspace home">
+                  <img src={isDark ? '/images/logo.png' : '/images/logo-dark.png'} alt="" />
+                  <span>SKALD</span>
+                </Link>
+                <div className="skald-app-heading">
+                  <span className="skald-app-heading__greeting">Your space, {firstName}</span>
+                  <h1>{pageTitle}</h1>
+                </div>
+              </div>
 
-                                        <span className="mx-[22px] h-[24px] w-[1px] bg-[#45454d]"></span>
+              <div className="skald-app-header__actions">
+                <span className="skald-app-header__date">
+                  {new Date().toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+                </span>
+                <button
+                  type="button"
+                  className="skald-app-icon-button"
+                  onClick={() => setTheme(!isDark)}
+                  aria-label={`Switch to ${isDark ? 'light' : 'dark'} theme`}
+                  title={`Switch to ${isDark ? 'light' : 'dark'} theme`}
+                >
+                  {isDark ? <Sun size={18} /> : <Moon size={18} />}
+                </button>
+              </div>
+            </header>
 
-                                        <p className={`text-[18px] pb-[4px] ${isDark ? "text-gray-400" : "text-black/80"} flex items-center`}>
-                                            {user?.displayName?.split(' ')[0]}'s Skald
-                                            <MdArrowForwardIos className="mx-[12px] text-[18px] mt-[4px]" />
-                                            <span className={`${isDark ? "text-white" : "text-black/80"}`}>{breadcrumb}</span>
-                                        </p>
-                                    </div>
-
-                                    <div className={`${isDark ? "hover:bg-white/10  " : "hover:bg-[#eae5f7]"} p-1 rounded-2xl`}>
-                                        {isDark
-                                            ? <CiLight
-                                                className='text-[22px] cursor-pointer'
-                                                onClick={() => setTheme(false)} />
-                                            : <CiDark
-                                                className='text-[24px] cursor-pointer'
-                                                onClick={() => setTheme(true)} />
-                                        }
-                                    </div>
-                                </div>
-
-                                <Outlet />
-                            </div>
-                        </>
-                    ) : null
-                }
-            </main>
+            <div className="skald-app-view">
+              <Outlet />
+            </div>
+          </section>
         </>
-    )
+      ) : null}
+    </main>
+  )
 }
 
 export default DashboardGrid
