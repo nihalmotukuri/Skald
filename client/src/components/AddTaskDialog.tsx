@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
-import type { AppDispatch, RootState } from '@/redux/store'
-import { addTask } from '@/redux/tasksThunks'
+import { useAppStore } from '@/store/appStore'
+import { useTaskMutations } from '@/queries/tasks'
 import { RxCross2 } from "react-icons/rx"
 import type { Task } from '@/types/task'
 import SelectPriority from './SelectPriority'
@@ -13,9 +12,9 @@ interface AddTaskDialogProps {
 }
 
 const AddTaskDialog = ({ setDisplayAddTask }: AddTaskDialogProps) => {
-    const dispatch = useDispatch<AppDispatch>()
-    const { user } = useSelector((store: RootState) => store.userStore)
-    const { isDark } = useSelector((store: RootState) => store.themeStore)
+    const userId = useAppStore((state) => state.user?.id)
+    const isDark = useAppStore((state) => state.isDark)
+    const { addTask } = useTaskMutations(userId)
 
     const [addTaskData, setAddTaskData] = useState({
         title: '',
@@ -35,23 +34,24 @@ const AddTaskDialog = ({ setDisplayAddTask }: AddTaskDialogProps) => {
         e.preventDefault()
 
         const newTask: Task = {
-            firebaseUid: user?.firebaseUid ?? '',
             ...addTaskData,
             priority
         }
 
-        dispatch(addTask(newTask))
-
-        setAddTaskData({
-            title: '',
-            description: '',
-            status: 'Pending',
-            date: '',
-            time: '',
-            taskList: '',
+        addTask.mutate(newTask, {
+            onSuccess: () => {
+                setAddTaskData({
+                    title: '',
+                    description: '',
+                    status: 'Pending',
+                    date: '',
+                    time: '',
+                    taskList: '',
+                })
+                setPriority('')
+                setDisplayAddTask(false)
+            }
         })
-        setPriority('')
-        setDisplayAddTask(false)
     }
 
     return (
@@ -137,7 +137,7 @@ const AddTaskDialog = ({ setDisplayAddTask }: AddTaskDialogProps) => {
                 <button
                     type='submit'
                     className={`${isDark ? "bg-white/5 border-white/10 hover:bg-white/10" : "bg-neutral-100/20 !border-black/10 shadow-md hover:bg-neutral-200"} backdrop-blur-md border rounded-md text-[12px] px-[12px] py-[6px] w-full cursor-pointer`}
-                    disabled={!(addTaskData.title && addTaskData.description && addTaskData.date && addTaskData.time && priority)}
+                    disabled={addTask.isPending || !(addTaskData.title && addTaskData.description && addTaskData.date && addTaskData.time && priority)}
                 >
                     Add Task
                 </button>

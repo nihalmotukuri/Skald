@@ -1,7 +1,5 @@
 import { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import type { AppDispatch, RootState } from "@/redux/store";
-import { deleteTask } from "@/redux/tasksThunks";
+import { useAppStore } from '@/store/appStore'
 import { Checkbox } from "@/components/ui/checkbox";
 import { HiChevronDown, HiChevronUp } from "react-icons/hi2";
 import { ImStopwatch } from "react-icons/im";
@@ -15,15 +13,14 @@ import type { Task } from "@/types/task.ts";
 type TaskProps = {
     task: Task;
     toggleTask: (id: string) => void;
+    deleteTask: (id: string) => void;
     setDisplayEditTask: (value: boolean) => void;
     setEditTaskId: (id: string) => void;
 };
 
-const TaskItem = ({ task, toggleTask, setDisplayEditTask, setEditTaskId }: TaskProps) => {
+const TaskItem = ({ task, toggleTask, deleteTask, setDisplayEditTask, setEditTaskId }: TaskProps) => {
     const [openTask, setOpenTask] = useState(false);
-    const dispatch = useDispatch<AppDispatch>();
-
-    const { isDark } = useSelector((store: RootState) => store.themeStore)
+    const isDark = useAppStore((state) => state.isDark)
 
     const taskStatus = () => {
         switch (task.status) {
@@ -69,7 +66,7 @@ const TaskItem = ({ task, toggleTask, setDisplayEditTask, setEditTaskId }: TaskP
     };
 
     const onDeleteTask = (taskId: string) => {
-        dispatch(deleteTask(taskId));
+        deleteTask(taskId);
     };
 
     const formatDueDate = (date: string, time: string, completed: boolean) => {

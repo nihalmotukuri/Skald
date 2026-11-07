@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useDispatch, useSelector } from 'react-redux'
-import type { RootState, AppDispatch } from '@/redux/store'
-import { setActiveNoteId } from '@/redux/notesSlice'
-import { setBreadcrumb } from '@/redux/breadcrumbSlice'
+import { useAppStore } from '@/store/appStore'
+import { useTasks } from '@/queries/tasks'
+import { useNotes } from '@/queries/notes'
 import { PiTimerLight } from "react-icons/pi"
 import { TbCancel } from "react-icons/tb"
 import { TbProgress } from "react-icons/tb"
@@ -18,15 +17,18 @@ import customParseFormat from 'dayjs/plugin/customParseFormat';
 
 dayjs.extend(customParseFormat);
 
-const Dashboard = () => {
-  const dispatch = useDispatch<AppDispatch>()
-  const navigate = useNavigate()
-  const notesState = useSelector((store: RootState) => store.notesStore)
-  const tasksState = useSelector((store: RootState) => store.tasksStore)
-  const { isDark } = useSelector((store: RootState) => store.themeStore)
+const EMPTY_TASKS: Task[] = []
 
-  const notes = notesState.notes
-  const tasks = tasksState.tasks
+const Dashboard = () => {
+  const userId = useAppStore((state) => state.user?.id)
+  const isDark = useAppStore((state) => state.isDark)
+  const setBreadcrumb = useAppStore((state) => state.setBreadcrumb)
+  const setActiveNoteId = useAppStore((state) => state.setActiveNoteId)
+  const notesState = useNotes(userId)
+  const tasksState = useTasks(userId)
+  const notes = notesState.data ?? []
+  const tasks = tasksState.data ?? EMPTY_TASKS
+  const navigate = useNavigate()
 
   const [currentDate, setCurrentDate] = useState<string>('')
   const [filteredTasks, setFilteredTasks] = useState<Task[]>([])
@@ -65,11 +67,11 @@ const Dashboard = () => {
   });
 
   useEffect(() => {
-    dispatch(setBreadcrumb("Dashboard"))
-  }, [dispatch])
+    setBreadcrumb("Dashboard")
+  }, [setBreadcrumb])
 
   const onLatestNote = (noteId: string) => {
-    dispatch(setActiveNoteId(noteId))
+    setActiveNoteId(noteId)
     navigate('/app/notes/')
   }
 
@@ -226,7 +228,9 @@ const Dashboard = () => {
 
   return (
     <div className='row-span-1 col-span-1 w-full overflow-y-auto pt-[16px] grid grid-cols-[repeat(3,1fr)] gap-5'>
-      {notesState.loading || tasksState.loading
+      {notesState.isError || tasksState.isError
+        ? <p role="alert" className="col-span-3">Unable to load dashboard data: {notesState.error?.message ?? tasksState.error?.message}</p>
+        : notesState.isLoading || tasksState.isLoading
         ? <DashboardSkeleton />
         : renderDashboard()}
     </div>

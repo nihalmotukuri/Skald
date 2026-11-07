@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from "react"
-import type { RootState } from "@/redux/store"
-import { useDispatch, useSelector } from "react-redux"
-import { setBreadcrumb } from "@/redux/breadcrumbSlice"
+import { useAppStore } from '@/store/appStore'
+import { supabase } from '@/lib/supabase'
 import { LuBot } from "react-icons/lu"
 import { RiSendPlaneLine } from "react-icons/ri"
 import ReactMarkdown from 'react-markdown'
@@ -9,58 +8,74 @@ import { Pulsar } from 'ldrs/react'
 import 'ldrs/react/Pulsar.css'
 
 type AiChat = {
-  id: number,
+  id: string,
+  role: 'user' | 'assistant',
   message: string,
 }
 
 const aiChat: AiChat[] = [
   {
-    id: 0,
+    id: 'welcome',
+    role: 'assistant',
     message: "Hail, traveler. I'm here to guide your thoughts."
   },
 ]
 
-const Assistant = () => {
-  const [convo, setConvo] = useState<AiChat[]>(() => {
-    try {
-      const storedConvo = localStorage.getItem('skald_ai_chat')
+const loadConversation = (userId: string | undefined): AiChat[] => {
+  if (!userId) return aiChat
 
-      if (storedConvo) {
-        const parsedConvo = JSON.parse(storedConvo);
-        if (Array.isArray(parsedConvo) && parsedConvo.length > 0) {
-          return parsedConvo;
-        }
+  try {
+    const storedConvo = localStorage.getItem(`skald_ai_chat:${userId}`)
+    if (!storedConvo) return aiChat
+    const parsedConvo: unknown = JSON.parse(storedConvo)
+    if (!Array.isArray(parsedConvo)) return aiChat
+
+    const messages = parsedConvo.flatMap((item: unknown, index): AiChat[] => {
+      if (!item || typeof item !== 'object' || !('message' in item) || typeof item.message !== 'string') {
+        return []
       }
-      return aiChat
+      const id = 'id' in item && typeof item.id === 'string' ? item.id : `restored-${index}`
+      const role = 'role' in item && (item.role === 'user' || item.role === 'assistant')
+        ? item.role
+        : 'id' in item && typeof item.id === 'number' && item.id % 2 === 1
+          ? 'user'
+          : 'assistant'
+      return [{ id, role, message: item.message }]
+    })
+    return messages.length ? messages.slice(-100) : aiChat
+  } catch (error) {
+    console.error('Unable to restore Mr Groff conversation:', error)
+    return aiChat
+  }
+}
 
-    } catch (err) {
-      console.error(err)
-      return aiChat;
-    }
-  })
+const Assistant = () => {
+  const [conversation, setConversation] = useState(() => ({
+    userId: useAppStore.getState().user?.id,
+    messages: loadConversation(useAppStore.getState().user?.id)
+  }))
   const [prompt, setPrompt] = useState("")
   const [responseLoading, setResponseLoading] = useState(false)
+  const [requestError, setRequestError] = useState<string | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-
-  const { tasks } = useSelector((store: RootState) => store.tasksStore)
-  const { notes } = useSelector((store: RootState) => store.notesStore)
-  const { user } = useSelector((store: RootState) => store.userStore)
-  const { isDark } = useSelector((store: RootState) => store.themeStore)
-
-  const tasksSummary = tasks.map(
-    (task, i) => `${i + 1}. ${task.title} [${task.status}]`
-  ).join('\n')
-
-  const notesSummary = notes.map(
-    (note, i) => `${i + 1}. ${note.title}: ${note.description?.slice(0, 30) ?? ""}...`
-  ).join('\n')
-
-  const dispatch = useDispatch()
+  const user = useAppStore((state) => state.user)
+  const isDark = useAppStore((state) => state.isDark)
+  const setBreadcrumb = useAppStore((state) => state.setBreadcrumb)
+  const convo = conversation.userId === user?.id ? conversation.messages : aiChat
 
   useEffect(() => {
-    localStorage.setItem('skald_ai_chat', JSON.stringify(convo))
-  }, [convo])
+    if (!user?.id) return
+    setConversation({ userId: user.id, messages: loadConversation(user.id) })
+    setRequestError(null)
+    setResponseLoading(false)
+  }, [user?.id])
+
+  useEffect(() => {
+    if (user?.id && conversation.userId === user.id) {
+      localStorage.setItem(`skald_ai_chat:${user.id}`, JSON.stringify(conversation.messages))
+    }
+  }, [conversation, user?.id])
 
   useEffect(() => {
     const textarea = textareaRef.current
@@ -75,60 +90,88 @@ const Assistant = () => {
     }
   }
 
-  const aiResponse = async (userMessage: string) => {
+  const aiResponse = async (userMessage: string, previousMessages: AiChat[], userId: string) => {
     setResponseLoading(true)
+    setRequestError(null)
+    try {
+      const apiUrl = import.meta.env.VITE_ASSISTANT_API_URL?.replace(/\/+$/, '')
+      if (!apiUrl) throw new Error('Mr Groff is not configured. Set VITE_ASSISTANT_API_URL for the web app.')
 
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${import.meta.env.VITE_GEMINI_KEY}`,
-      {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      if (sessionError) throw sessionError
+      if (!session || session.user.id !== userId) throw new Error('Your session expired. Sign in again to continue.')
+
+      const messages = [
+        ...previousMessages
+          .filter((message) => message.id !== 'welcome')
+          .slice(-19)
+          .map(({ role, message }) => ({ role, content: message })),
+        { role: 'user' as const, content: userMessage }
+      ]
+      const res = await fetch(`${apiUrl}/api/chat`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [
-            {
-              role: "user",
-              parts: [
-                {
-                  text: `You are the Skald Assistant, an opinionated, helpful, and context-aware AI built into the Skald productivity web application for users like ${user?.displayName}. Your primary role is to guide users in organizing their workflow, managing their daily tasks, and capturing notes efficiently using Skald’s robust feature set. Skald enables users to create, edit, delete, and categorize tasks—including tasks such as ${tasksSummary}—assign statuses like pending, in-progress, done, or blocked, and set priorities to highlight what matters most. Users can visualize their productivity with interactive charts, a heatmap, and a weekly calendar, and can organize tasks into custom lists for better clarity. The notes feature allows users to create, edit, delete, and view notes—including notes such as ${notesSummary}—with support for both text and image attachments, all timestamped for easy reference and organization. Authentication is handled securely via Google Sign-In with Firebase, ensuring all user data is synced and protected using the user’s Firebase UID. The user interface is modern, responsive, and visually appealing, crafted with Tailwind CSS, Framer Motion for smooth animations, and Recharts for insightful data visualization, all structured into modular React components for seamless navigation and usability. State management is handled globally with Redux Toolkit, supporting efficient and reliable updates for tasks, notes, user data, theming, and more. Skald supports both dark and light themes, allowing users to personalize their experience. As the Skald Assistant, you must be opinionated and proactive in your guidance, offering clear, actionable advice and suggestions. You are permitted to slightly deviate from Skald’s strict feature set if it helps the user achieve their productivity goals, but you must never discuss or speculate about features or integrations that are not implemented in Skald. Always keep your responses focused, practical, and tailored to ${user?.displayName}, referencing their current tasks and notes where relevant. Your purpose is to empower users to get the most out of Skald, streamline their workflow, and foster productive habits, while maintaining a friendly and knowledgeable tone at all times.`
-                }
-              ]
-            },
-            {
-              role: "user",
-              parts: [{ text: userMessage }]
-            }
-          ]
-        }),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({ messages })
+      })
+      const data: { detail?: unknown; reply?: unknown } = await res.json()
+      if (!res.ok) {
+        throw new Error(typeof data.detail === 'string' ? data.detail : 'Mr Groff could not respond. Please try again.')
       }
-    )
-    const data = await res.json();
-    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text
-    setResponseLoading(false)
-    setConvo(prev => [...prev, { id: prev.length, message: reply }])
+      if (typeof data.reply !== 'string' || !data.reply.trim()) {
+        throw new Error('Mr Groff returned an empty response. Please try again.')
+      }
+      const reply = data.reply.trim()
+      if (useAppStore.getState().user?.id === userId) {
+        const assistantMessage: AiChat = { id: crypto.randomUUID(), role: 'assistant', message: reply }
+        setConversation((current) => ({
+          userId,
+          messages: [
+            ...(current.userId === userId ? current.messages : loadConversation(userId)),
+            assistantMessage
+          ].slice(-100)
+        }))
+      }
+    } catch (error) {
+      console.error('Mr Groff request failed:', error)
+      if (useAppStore.getState().user?.id === userId) {
+        setRequestError(error instanceof Error ? error.message : 'Mr Groff could not respond. Please try again.')
+      }
+    } finally {
+      if (useAppStore.getState().user?.id === userId) setResponseLoading(false)
+    }
   }
 
-  const handlePrompt = (e: React.KeyboardEvent | React.MouseEvent) => {
+  const handlePrompt = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    const textarea = textareaRef.current
-    setConvo(prev => [...prev, { id: prev.length, message: prompt }])
-    aiResponse(prompt)
-
-    if (textarea) {
-      textarea.style.height = "21px"
-    }
+    const message = prompt.trim()
+    if (!message || responseLoading || !user?.id) return
+    const previousMessages = convo
+    const userMessage: AiChat = { id: crypto.randomUUID(), role: 'user', message }
+    setConversation((current) => ({
+      userId: user.id,
+      messages: [
+        ...(current.userId === user.id ? current.messages : previousMessages),
+        userMessage
+      ].slice(-100)
+    }))
+    void aiResponse(message, previousMessages, user.id)
     setPrompt('')
+    if (textareaRef.current) textareaRef.current.style.height = "21px"
   }
 
   useEffect(() => {
-    dispatch(setBreadcrumb("Assistant"))
-  }, [dispatch])
+    setBreadcrumb("Assistant")
+  }, [setBreadcrumb])
 
   return (
     <div className={`relative col-span-1 row-span-1 grid grid-cols-[1fr] grid-rows-[1fr] ${isDark ? "bg-white/2 border-white/6" : "bg-white"} backdrop-blur-md border rounded-md shadow-xl p-[24px] overflow-y-auto mt-4`}>
       <div className="w-full overflow-y-auto col-span-1 row-span-1">
         <div className="pb-[100px]">
           {convo.map(c => (
-            c.id % 2 == 0
+            c.role === 'assistant'
               ? (
                 <div
                   key={c.id}
@@ -178,9 +221,11 @@ const Assistant = () => {
         </div>
       </div>
 
-      <div
+      <form
+        onSubmit={handlePrompt}
         className={`absolute bottom-[24px] right-0 left-0 m-auto grid grid-rows-[1fr_32px] gap-[12px] w-full max-w-[690px] border ${isDark ? "bg-white/6 border-white/10" : "bg-white/10 border-black/30"} backdrop-blur-md rounded-2xl shadow-lg px-4 py-3`}
       >
+        {requestError && <p role="alert" className="text-sm text-red-400">{requestError}</p>}
         <textarea
           ref={textareaRef}
           onInput={handleInput}
@@ -189,9 +234,9 @@ const Assistant = () => {
           rows={1}
           onChange={e => setPrompt(e.currentTarget.value)}
           onKeyDown={e => {
-            if (e.key === "Enter") {
+            if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault()
-              handlePrompt(e)
+              e.currentTarget.form?.requestSubmit()
             }
           }}
           value={prompt}
@@ -201,11 +246,12 @@ const Assistant = () => {
         <button
           className={`text-[16px] ${ isDark ? "bg-white text-[#0f111a]" : "bg-[#602bf8] text-white"} size-auto p-[8px] rounded-2xl ml-auto cursor-pointer`}
           type="submit"
-          onClick={handlePrompt}
+          disabled={responseLoading || !prompt.trim()}
+          aria-label="Send message"
         >
           <RiSendPlaneLine />
         </button>
-      </div>
+      </form>
     </div>
   )
 }

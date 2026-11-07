@@ -1,39 +1,26 @@
-import { useEffect } from 'react'
-import { useSelector, useDispatch } from 'react-redux'
 import { Navigate, useLocation } from 'react-router-dom'
-import { setPathname } from '@/redux/userSlice'
-import { toggleTheme } from '@/redux/themeSlice'
-import type { AppDispatch, RootState } from '@/redux/store'
+import { useAppStore } from '@/store/appStore'
 import { Outlet } from 'react-router-dom'
 import { BsLayoutSidebarInset } from "react-icons/bs"
 import { MdArrowForwardIos } from "react-icons/md"
 import { CiLight, CiDark } from "react-icons/ci"
-import { toggleSidebar } from '@/redux/sidebarSlice'
 import Sidebar from './Sidebar'
 import { LineWobble } from 'ldrs/react'
 import 'ldrs/react/LineWobble.css'
 
 const DashboardGrid = () => {
-    const dispatch = useDispatch<AppDispatch>()
-    const { user, loading } = useSelector((store: RootState) => store.userStore)
-    const { isDark } = useSelector((store: RootState) => store.themeStore)
-    const breadcrumb = useSelector((store: RootState) => store.breadcrumbStore.value)
+    const user = useAppStore((state) => state.user)
+    const loading = useAppStore((state) => state.authLoading)
+    const isDark = useAppStore((state) => state.isDark)
+    const breadcrumb = useAppStore((state) => state.breadcrumb)
+    const setTheme = useAppStore((state) => state.setTheme)
+    const setPathname = useAppStore((state) => state.setPathname)
+    const toggleSidebar = useAppStore((state) => state.toggleSidebar)
     const location = useLocation()
-    const storedTheme = localStorage.getItem('is_dark')
-    const theme = storedTheme ? JSON.parse(storedTheme) : true
-
-    useEffect(() => {
-        dispatch(toggleTheme(theme))
-    }, [dispatch, theme])
 
     if (!user && !loading) {
-        dispatch(setPathname(location.pathname))
+        setPathname(location.pathname)
         return <Navigate to="/signin" />
-    }
-
-    const setTheme = (value: boolean) => {
-        dispatch(toggleTheme(value))
-        localStorage.setItem('is_dark', JSON.stringify(value))
     }
 
     return (
@@ -62,7 +49,7 @@ const DashboardGrid = () => {
                                     <div className='h-[60px] flex items-center'>
                                         <BsLayoutSidebarInset
                                             className="text-[24px] cursor-pointer"
-                                            onClick={() => dispatch(toggleSidebar())} />
+                                            onClick={toggleSidebar} />
 
                                         <span className="mx-[22px] h-[24px] w-[1px] bg-[#45454d]"></span>
 

@@ -1,9 +1,8 @@
-import { useSelector } from "react-redux"
-import type { RootState } from "@/redux/store"
+import { useAppStore } from '@/store/appStore'
 import { Skeleton } from "./ui/skeleton"
 
 const DashboardSkeleton = () => {
-    const { isDark } = useSelector((store: RootState) => store.themeStore)
+    const isDark = useAppStore((state) => state.isDark)
 
     return (
         <>

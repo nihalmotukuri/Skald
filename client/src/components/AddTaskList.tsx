@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
-import type { AppDispatch, RootState } from '@/redux/store'
-import { addTaskList } from '@/redux/userThunks'
+import { useAppStore } from '@/store/appStore'
+import { useTaskLists, useTaskListMutations } from '@/queries/tasks'
 import { CiBoxList } from "react-icons/ci"
 import {
     DropdownMenu,
@@ -12,17 +11,21 @@ import {
 const AddTaskList = () => {
     const [open, setOpen] = useState(false)
     const [newTaskList, setNewTaskList] = useState('')
-    const dispatch = useDispatch<AppDispatch>()
-
-    const { isDark } = useSelector((store: RootState) => store.themeStore)
-    const { user } = useSelector((store: RootState) => store.userStore)
+    const userId = useAppStore((state) => state.user?.id)
+    const isDark = useAppStore((state) => state.isDark)
+    const { data: taskLists = [], error: taskListsError } = useTaskLists(userId)
+    const { addTaskList } = useTaskListMutations(userId)
 
     const onAddTaskList = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
-        if (!newTaskList.trim() && user?.taskList.includes(newTaskList)) return
-        dispatch(addTaskList(newTaskList))
-        setNewTaskList('')
-        setOpen(false)
+        const normalizedName = newTaskList.trim()
+        if (!normalizedName || taskLists.some((taskList) => taskList.name.toLowerCase() === normalizedName.toLowerCase())) return
+        addTaskList.mutate(normalizedName, {
+            onSuccess: () => {
+                setNewTaskList('')
+                setOpen(false)
+            }
+        })
     }
 
     return (
@@ -40,6 +43,7 @@ const AddTaskList = () => {
             <DropdownMenuContent className={`${isDark ? "bg-white/5 border-white/10 text-white" : "bg-neutral-100/10 !border-black/20 !text-gray-600"} backdrop-blur-xl border rounded-md absolute z-[1] w-[240px] right-[-180px] text-white p-[12px]`} align="start">
                 <form className='flex flex-col' onSubmit={onAddTaskList}>
                     <label className='text-[15px]' htmlFor="title">Task List </label>
+                    {taskListsError && <p role="alert" className="text-sm text-red-400">{taskListsError.message}</p>}
                     <input
                         className={`${isDark ? "bg-white/5 border-white/10" : "bg-neutral-100/20 !border-black/10"} shadow-sm backdrop-blur-md border rounded-md text-[14px] px-[12px] py-[6px] mt-[4px]`}
                         type="text"
@@ -51,7 +55,7 @@ const AddTaskList = () => {
                     <button
                         className={`cursor-pointer ${isDark ? "hover:bg-white/10 border-white/10" : "hover:bg-black/10 !border-black/20"} backdrop-blur-md border rounded-md shadow-sm text-[14px] px-[12px] py-[6px] mt-[14px]`}
                         type="submit"
-                        disabled={user?.taskList.includes(newTaskList)}
+                        disabled={addTaskList.isPending || taskLists.some((taskList) => taskList.name.toLowerCase() === newTaskList.trim().toLowerCase())}
                     >
                         Add New List
                     </button>

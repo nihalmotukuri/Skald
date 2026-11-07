@@ -1,8 +1,3 @@
-import { useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import type { AppDispatch, RootState } from './redux/store';
-import { fetchNotes } from './redux/notesThunks';
-import { fetchTasks } from './redux/tasksThunks';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Home from './pages/Home';
 import NotFound from './pages/NotFound';
@@ -17,17 +12,7 @@ import { useAutoLogin } from '@/hooks/useAutoLogin.ts';
 import './App.css';
 
 function App() {
-  const dispatch = useDispatch<AppDispatch>();
-  const { user } = useSelector((store: RootState) => store.userStore);
-
   useAutoLogin();
-
-  useEffect(() => {
-    if (user) {
-      dispatch(fetchNotes());
-      dispatch(fetchTasks());
-    }
-  }, [dispatch, user]);
 
   return (
     <BrowserRouter>

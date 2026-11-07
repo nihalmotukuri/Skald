@@ -1,7 +1,6 @@
-import { useEffect, useState } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import type { RootState } from "@/redux/store";
-import { setBreadcrumb } from "@/redux/breadcrumbSlice";
+import { useEffect, useMemo, useState } from "react";
+import { useAppStore } from '@/store/appStore'
+import { useNotes, useNoteMutations } from '@/queries/notes'
 import AddNoteDialog from "@/components/AddNoteDialog";
 import EditNoteDialog from "@/components/EditNoteDialog";
 import NoteSkeleton from "@/components/NoteSkeleton";
@@ -9,11 +8,14 @@ import DisplayNote from "@/components/DisplayNote";
 import NoteItem from "@/components/NoteItem";
 import { SlNote } from "react-icons/sl";
 import { RxCross1 } from "react-icons/rx";
-import type { Note } from "@/types/note";
 
 const Notes = () => {
-  const { notes, loading } = useSelector((store: RootState) => store.notesStore);
-  const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
+  const userId = useAppStore((state) => state.user?.id)
+  const { data: notes = [], isLoading: loading, error } = useNotes(userId)
+  const { deleteNote } = useNoteMutations(userId)
+  const activeNoteId = useAppStore((state) => state.activeNoteId)
+  const isDark = useAppStore((state) => state.isDark)
+  const setBreadcrumb = useAppStore((state) => state.setBreadcrumb)
   const [filterQuery, setFilterQuery] = useState("");
   const [debouncedFilterQuery, setDebouncedFilterQuery] = useState("");
   const [displayAddNote, setDisplayAddNote] = useState(false);
@@ -21,26 +23,18 @@ const Notes = () => {
   const [editNoteId, setEditNoteId] = useState<string>("");
   const [fullscreen, setFullscreen] = useState(false);
 
-  const dispatch = useDispatch();
-
-  const { activeNoteId } = useSelector((store: RootState) => store.notesStore)
-  const { isDark } = useSelector((store: RootState) => store.themeStore)
-
   useEffect(() => {
-    dispatch(setBreadcrumb("Notes"));
-  }, [dispatch]);
+    setBreadcrumb("Notes");
+  }, [setBreadcrumb]);
 
-  useEffect(() => {
+  const filteredNotes = useMemo(() => {
     const notesReversed = [...notes].reverse();
     if (debouncedFilterQuery) {
-      setFilteredNotes(
-        notesReversed.filter((n) =>
-          n.title.trim().toLowerCase().includes(debouncedFilterQuery.trim().toLowerCase())
-        )
+      return notesReversed.filter((n) =>
+        n.title.trim().toLowerCase().includes(debouncedFilterQuery.trim().toLowerCase())
       );
-    } else {
-      setFilteredNotes(notesReversed);
     }
+    return notesReversed
   }, [notes, debouncedFilterQuery]);
 
   useEffect(() => {
@@ -50,6 +44,7 @@ const Notes = () => {
 
   return (
     <div className="w-full col-span-1 row-span-1 grid grid-cols-1 grid-rows-[68px_1fr] overflow-y-auto relative">
+      {error && <p role="alert" className="absolute top-[64px] right-4 z-10 rounded bg-red-950/90 px-3 py-2 text-sm text-red-100">Unable to load notes: {error.message}</p>}
       {displayAddNote && <AddNoteDialog setDisplayAddNote={setDisplayAddNote} />}
       {displayEditNote && (
         <EditNoteDialog
@@ -102,12 +97,13 @@ const Notes = () => {
               <NoteItem
                 key={note._id}
                 note={note}
+                deleteNote={(noteId) => deleteNote.mutate(noteId)}
                 setEditNoteId={setEditNoteId}
                 setDisplayEditNote={setDisplayEditNote}
               />
             ))}
 
-          {notes.length === 0 && !loading && (
+          {notes.length === 0 && !loading && !error && (
             <div className="flex justify-center">
               <p className="text-[18px] text-gray-400 text-center mt-[54px] bg-white/6 p-4 rounded-2xl inline-block m-auto">
                 You haven’t written any notes yet. Start by jotting down your first one!
@@ -115,7 +111,7 @@ const Notes = () => {
             </div>
           )}
 
-          {filteredNotes.length === 0 && notes.length > 0 && (
+          {filteredNotes.length === 0 && notes.length > 0 && !error && (
             <div className="flex justify-center">
               <p className="text-[18px] text-gray-400 text-center mt-[54px] bg-white/4 border border-white/10 p-4 rounded-2xl inline-block m-auto">
                 No notes match your search.

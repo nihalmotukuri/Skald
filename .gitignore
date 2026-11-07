@@ -10,16 +10,23 @@ lerna-debug.log*
 # Dependency directories
 client/node_modules
 server/node_modules
+assistant-service/.venv
+assistant-service/__pycache__
+assistant-service/**/__pycache__
+assistant-service/.pytest_cache
+assistant-service/.ruff_cache
 
 # Build output
 client/dist
 client/dist-ssr
 server/dist
 server/dist-ssr
+assistant-service/.coverage
 
 # Local env files
 client/.env
 server/.env
+assistant-service/.env
 .env
 
 # Editor directories and files

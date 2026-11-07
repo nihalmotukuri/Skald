@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import { clearUser } from "@/redux/userSlice";
-import type { RootState, AppDispatch } from "@/redux/store";
+import { supabase } from "@/lib/supabase";
+import { useAppStore } from "@/store/appStore";
 import { TbLayoutDashboard } from "react-icons/tb";
 import { LuListTodo } from "react-icons/lu"
 import { PiNotebookLight } from "react-icons/pi"
@@ -21,16 +20,21 @@ const features = [
 const Sidebar = ({ user }: { user: User }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const dispatch = useDispatch<AppDispatch>();
   const [showLogout, setShowLogout] = useState<boolean>(false)
 
-  const open = useSelector((store: RootState) => store.sidebarStore.value);
-  const { isDark } = useSelector((store: RootState) => store.themeStore)
+  const open = useAppStore((state) => state.sidebarOpen)
+  const isDark = useAppStore((state) => state.isDark)
 
   const isActive = (path: string) => location.pathname === path;
 
-  const userLogout = () => {
-    dispatch(clearUser())
+  const userLogout = async () => {
+    const { error } = await supabase.auth.signOut()
+    if (error) {
+      console.error("Sign out failed:", error)
+      window.alert("Unable to sign out. Please try again.")
+      return
+    }
+    useAppStore.getState().setUser(null)
   }
 
   const openSidebar = () => (

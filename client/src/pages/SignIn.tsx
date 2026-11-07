@@ -1,33 +1,31 @@
 import { useState } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
-import type { AppDispatch, RootState } from '@/redux/store'
-import { createUser } from '@/redux/userThunks'
-import { useNavigate } from 'react-router-dom'
+import { useAppStore } from '@/store/appStore'
 import { FcGoogle } from "react-icons/fc"
-import { signInWithGoogle } from '@/auth/firebase.ts'
-import Cookies from 'js-cookie'
+import { supabase } from '@/lib/supabase'
 import { Ring } from 'ldrs/react'
 import 'ldrs/react/Ring.css'
 import Marquee from 'react-fast-marquee'
 
 const SignIn = () => {
     const [loading, setLoading] = useState(false)
-    const dispatch = useDispatch<AppDispatch>()
-    const navigate = useNavigate()
-    const { pathname } = useSelector((store: RootState) => store.userStore)
+    const [error, setError] = useState<string | null>(null)
+    const pathname = useAppStore((state) => state.pathname)
 
     const handleGoogleSignin = async () => {
         setLoading(true)
-        const { idToken } = await signInWithGoogle()
-        Cookies.set('skald_token', idToken)
-        const res = await dispatch(createUser(idToken))
-        
-        if (res.payload.ok && !pathname) {
+        setError(null)
+        const destination = pathname?.startsWith('/app/') ? pathname : '/app/dashboard'
+
+        try {
+            const { error: signInError } = await supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: { redirectTo: `${window.location.origin}${destination}` }
+            })
+            if (signInError) throw signInError
+        } catch (signInError) {
+            console.error('Google sign-in failed:', signInError)
+            setError(signInError instanceof Error ? signInError.message : 'Unable to start Google sign-in.')
             setLoading(false)
-            navigate('/app/dashboard', {replace: true})
-        } else if (res.payload.ok && pathname) {
-            setLoading(false)
-            navigate(pathname,  {replace: true})
         }
     }
 
@@ -83,8 +81,10 @@ const SignIn = () => {
                     >Forge your path. Sign in to begin.</h1>
 
                     <div>
+                        {error && <p role="alert" className="mt-4 text-center text-sm text-red-300">{error}</p>}
                         <button
                             onClick={handleGoogleSignin}
+                            disabled={loading}
                             className="w-full flex items-center justify-center gap-3 border px-[24px] py-[10px] rounded-md m-auto mt-[24px] cursor-pointer hover:bg-white/5"
                             style={{ fontFamily: '"Stint Ultra Expanded", serif' }}
                         >

@@ -1,8 +1,6 @@
 import { useState, useRef } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
-import type { AppDispatch, RootState } from '@/redux/store'
-import { setActiveNoteId } from '@/redux/notesSlice'
-import { editNote } from '@/redux/notesThunks'
+import { useAppStore } from '@/store/appStore'
+import { useNotes, useNoteMutations } from '@/queries/notes'
 import type React from 'react'
 import { RxCross2 } from "react-icons/rx"
 import type { Note } from '@/types/note'
@@ -13,18 +11,23 @@ interface AddTaskDialogProps {
 }
 
 const EditNoteDialog = ({ setDisplayEditNote, editNoteId }: AddTaskDialogProps) => {
-    const { notes } = useSelector((store: RootState) => store.notesStore)
+    const userId = useAppStore((state) => state.user?.id)
+    const { data: notes = [] } = useNotes(userId)
+    const { editNote } = useNoteMutations(userId)
+    const setActiveNoteId = useAppStore((state) => state.setActiveNoteId)
     const [editedNote, setEditedNote] = useState<Note | undefined>(() => notes.find((n: Note) => n._id === editNoteId))
     const imageRef = useRef<HTMLInputElement>(null)
-    const dispatch = useDispatch<AppDispatch>()
-    const { isDark } = useSelector((store: RootState) => store.themeStore)
+    const isDark = useAppStore((state) => state.isDark)
 
     const onEditNote = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
         if (!editedNote) return;
-        dispatch(editNote(editedNote));
-        dispatch(setActiveNoteId(editedNote._id))
-        setDisplayEditNote(false);
+        editNote.mutate(editedNote, {
+            onSuccess: (savedNote) => {
+                setActiveNoteId(savedNote._id ?? null)
+                setDisplayEditNote(false)
+            }
+        })
     }
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -92,8 +95,9 @@ const EditNoteDialog = ({ setDisplayEditNote, editNoteId }: AddTaskDialogProps) 
 
                 <button
                     className={`${isDark ? "bg-white/5 border-white/10 hover:bg-white/10" : "bg-neutral-100/20 !border-black/10 shadow-md hover:bg-neutral-200"} backdrop-blur-md border rounded-md text-[12px] px-[12px] py-[6px] w-full cursor-pointer`}
-                    type='submit'>
-                    Edit Note
+                    type='submit'
+                    disabled={editNote.isPending}>
+                    {editNote.isPending ? 'Saving...' : 'Edit Note'}
                 </button>
             </form>
         </section>

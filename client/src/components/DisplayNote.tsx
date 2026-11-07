@@ -1,6 +1,5 @@
-import { useSelector, useDispatch } from "react-redux"
-import type { RootState } from "@/redux/store"
-import { setActiveNoteId } from "@/redux/notesSlice"
+import { useAppStore } from '@/store/appStore'
+import { useNotes } from '@/queries/notes'
 import { RxCross1 } from "react-icons/rx"
 import { BsFullscreen, BsFullscreenExit } from "react-icons/bs"
 
@@ -10,14 +9,15 @@ interface DisplayNoteProps {
 }
 
 const DisplayNote = ({ fullscreen, setFullscreen }: DisplayNoteProps) => {
-    const { notes, activeNoteId } = useSelector((store: RootState) => store.notesStore)
+    const userId = useAppStore((state) => state.user?.id)
+    const activeNoteId = useAppStore((state) => state.activeNoteId)
+    const setActiveNoteId = useAppStore((state) => state.setActiveNoteId)
+    const { data: notes = [] } = useNotes(userId)
     const activeNote = notes.find(n => n._id === activeNoteId)
-    const dispatch = useDispatch()
-
-    const { isDark } = useSelector((store: RootState) => store.themeStore)
+    const isDark = useAppStore((state) => state.isDark)
 
     const onCloseNote = () => {
-        dispatch(setActiveNoteId(''))
+        setActiveNoteId(null)
         setFullscreen(false)
     }
     

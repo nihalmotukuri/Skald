@@ -1,8 +1,6 @@
-import { useSelector, useDispatch } from 'react-redux' 
 import React, { useState } from 'react'
-import type { AppDispatch, RootState } from '@/redux/store'
-import { removeTaskListInTask } from '@/redux/tasksThunks'
-import { removeTaskListInUser } from '@/redux/userThunks'
+import { useAppStore } from '@/store/appStore'
+import { useTaskLists, useTaskListMutations } from '@/queries/tasks'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,19 +21,21 @@ interface OnHover {
 }
 
 const TaskListDropdown = ({ selectedTaskList, setSelectedTaskList }: TaskListDropdownProps) => {
-  const { user } = useSelector((store: RootState) => store.userStore)
+  const userId = useAppStore((state) => state.user?.id)
+  const { data: taskLists = [], error } = useTaskLists(userId)
+  const { deleteTaskList } = useTaskListMutations(userId)
   const [onHover, setOnHover] = useState<OnHover>({
     display: false,
     index: null
   })
-  const dispatch = useDispatch<AppDispatch>()
-  const { isDark } = useSelector((store: RootState) => store.themeStore)
+  const isDark = useAppStore((state) => state.isDark)
 
-  const onTaskListDelete = (e: React.MouseEvent, taskList: string) => {
+  const onTaskListDelete = (e: React.MouseEvent, taskListId: string) => {
     e.stopPropagation()
 
-    dispatch(removeTaskListInTask(taskList))
-    dispatch(removeTaskListInUser(taskList))
+    deleteTaskList.mutate(taskListId, {
+      onSuccess: () => setSelectedTaskList('All Tasks')
+    })
   }
 
   return (
@@ -51,6 +51,11 @@ const TaskListDropdown = ({ selectedTaskList, setSelectedTaskList }: TaskListDro
         align="start"
       >
         <DropdownMenuGroup>
+          {error && (
+            <DropdownMenuItem disabled className="text-red-400">
+              Unable to load task lists.
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem
             onClick={() => setSelectedTaskList("All Tasks")}
             className={`${isDark ? "hover:bg-white hover:text-black" : "hover:bg-black/10"} cursor-pointer`}
@@ -60,10 +65,10 @@ const TaskListDropdown = ({ selectedTaskList, setSelectedTaskList }: TaskListDro
             </p>
           </DropdownMenuItem>
 
-          {user?.taskList?.map((tL: string, index) => (
+          {taskLists.map((taskList, index) => (
             <DropdownMenuItem
-              key={index}
-              onClick={() => setSelectedTaskList(tL)}
+              key={taskList.id}
+              onClick={() => setSelectedTaskList(taskList.name)}
               className={`${isDark ? "hover:bg-white hover:text-black" : "hover:bg-black/10"} cursor-pointer relative`}
               onMouseEnter={() => { 
                 setOnHover({display: true, index: index})
@@ -73,12 +78,12 @@ const TaskListDropdown = ({ selectedTaskList, setSelectedTaskList }: TaskListDro
               }}
             >
               <p className="text-[14px] font-medium flex items-center">
-                {tL}
+                {taskList.name}
               </p>
 
               <div 
                 className={`absolute right-0 top-0 p-2 rounded-2xl hover:bg-[0f111a] ${onHover.display && onHover.index === index ? null : 'hidden'}`}
-                onClick={(e) => onTaskListDelete(e, tL)}
+                onClick={(e) => onTaskListDelete(e, taskList.id)}
                 >
                 <RxCross1 />
               </div>

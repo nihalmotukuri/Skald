@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { useSelector } from 'react-redux'
-import type { RootState } from '@/redux/store'
+import { useAppStore } from '@/store/appStore'
+import { useTaskLists } from '@/queries/tasks'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,8 +16,9 @@ interface SelectTaskListProps {
 
 const SelectTaskList = ({ selectTaskList, currentTaskList }: SelectTaskListProps) => {
   const [selectedTaskList, setSelectedTaskList] = useState('')
-  const { user } = useSelector((store: RootState) => store.userStore)
-  const { isDark } = useSelector((store: RootState) => store.themeStore)
+  const userId = useAppStore((state) => state.user?.id)
+  const isDark = useAppStore((state) => state.isDark)
+  const { data: taskLists = [], error } = useTaskLists(userId)
 
   const onSelectTaskList = (taskList: string) => {
     setSelectedTaskList(taskList)
@@ -33,16 +34,18 @@ const SelectTaskList = ({ selectTaskList, currentTaskList }: SelectTaskListProps
       </DropdownMenuTrigger>
       <DropdownMenuContent className={`${isDark ? "bg-white/5 border-white/10 text-white" : "bg-neutral-100/10 !border-black/20 text-gray-600"} backdrop-blur-[8px] border border-white/20 absolute z-1000 right-[-64px]`}>
         <DropdownMenuGroup>
-          {user?.taskList?.length ?? 0 > 0
+          {error
+            ? <DropdownMenuItem disabled><p className="text-sm text-red-400">Unable to load task lists.</p></DropdownMenuItem>
+            : taskLists.length > 0
             ? (
-              user?.taskList.map((tL: string, index) => (
+              taskLists.map((taskList) => (
                 <DropdownMenuItem
-                  key={index}
-                  onClick={() => onSelectTaskList(tL)}
+                  key={taskList.id}
+                  onClick={() => onSelectTaskList(taskList.name)}
             className={`${isDark ? "hover:bg-white hover:text-black" : "hover:bg-black/10"} cursor-pointer`}
                   >
                   <p className="text-[14px] font-medium flex items-center">
-                    {tL}
+                    {taskList.name}
                   </p>
                 </DropdownMenuItem>
               )))

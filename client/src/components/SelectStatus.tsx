@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { useSelector } from 'react-redux';
-import type { RootState } from '@/redux/store';
+import { useAppStore } from '@/store/appStore'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,7 +15,7 @@ interface Props {
 
 const SelectStatus = ({ selectStatus, currentStatus }: Props) => {
   const [selectedStatus, setSelectedStatus] = useState("");
-  const { isDark } = useSelector((store: RootState) => store.themeStore)
+  const isDark = useAppStore((state) => state.isDark)
 
   const onSelectStatus = (status: string) => {
     selectStatus(status);

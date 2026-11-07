@@ -1,9 +1,8 @@
-import { useState, useEffect } from "react";
-import { useSelector } from "react-redux";
-import type { RootState } from "@/redux/store";
 import ActivityCalendar from "react-activity-calendar";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
+import { useAppStore } from '@/store/appStore'
+import { useTaskActivity } from '@/queries/tasks'
 
 interface HeatmapData {
   _id: string;
@@ -11,14 +10,13 @@ interface HeatmapData {
 }
 
 const Heatmap = () => {
-  const [tasksDone, setTasksDone] = useState<HeatmapData[]>([])
-  const { isDark } = useSelector((store: RootState) => store.themeStore)
+  const userId = useAppStore((state) => state.user?.id)
+  const isDark = useAppStore((state) => state.isDark)
+  const { data: tasksDone = [], error } = useTaskActivity(userId)
 
   const today = new Date();
-  const sixMonthsAgo = new Date();
-  sixMonthsAgo.setMonth(today.getMonth() - 6);
-
-  const startDate = new Date(sixMonthsAgo);
+  const startDate = new Date(today);
+  startDate.setMonth(today.getMonth() - 6);
   startDate.setDate(startDate.getDate() - startDate.getDay());
 
   const endDate = new Date(today);
@@ -30,19 +28,6 @@ const Heatmap = () => {
     fullData.push({ date: cursor.toISOString().split("T")[0], count: 0, level: 0 });
     cursor.setDate(cursor.getDate() + 1);
   }
-
-  const firebaseUid = useSelector((store: RootState) => store.userStore.user?.firebaseUid);
-
-  const fetchTaskDone = async () => {
-    if (!firebaseUid) return;
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/tasks/heatmap/${firebaseUid}`);
-    const data = await res.json();
-    setTasksDone(data);
-  };
-
-  useEffect(() => {
-    fetchTaskDone();
-  }, [firebaseUid]);
 
   const mergedData = fullData.map((entry) => {
     const taskData = tasksDone.find((t: HeatmapData) => t._id === entry.date);
@@ -79,6 +64,7 @@ const Heatmap = () => {
   return (
     <motion.div>
       <Card className={`${isDark ? "text-slate-400 border-white/10 bg-white/2" : "text-[#2d3748] bg-white"} backdrop-blur-md border rounded-2xl p-6 w-full shadow-lg`}>
+        {error && <p role="alert" className="pb-2 text-center text-sm text-red-400">Unable to load activity: {error.message}</p>}
         <div className="px-6 pt-2">
           <p className={`text-xs ${isDark ? "text-slate-500" : "text-black/40"} tracking-widest uppercase font-medium text-center`}>
             Weekly Activity

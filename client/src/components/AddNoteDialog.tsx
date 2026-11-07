@@ -1,7 +1,6 @@
 import React, { useState, useRef } from 'react'
-import { useDispatch, useSelector } from "react-redux"
-import type { AppDispatch, RootState } from "@/redux/store";
-import { addNote } from "@/redux/notesThunks";
+import { useAppStore } from '@/store/appStore'
+import { useNoteMutations } from '@/queries/notes'
 import { RxCross2 } from "react-icons/rx"
 import type { Note } from '@/types/note.ts'
 
@@ -10,35 +9,30 @@ interface AddNoteDialogProps {
 }
 
 const AddNoteDialog = ({ setDisplayAddNote }: AddNoteDialogProps) => {
-    const dispatch = useDispatch<AppDispatch>()
-    const { user } = useSelector((store: RootState) => store.userStore)
-    const firebaseUid = user?.firebaseUid ?? ''
+    const userId = useAppStore((state) => state.user?.id)
+    const { addNote } = useNoteMutations(userId)
     const [noteForm, setNoteForm] = useState<Note>({
-        firebaseUid,
         title: '',
         description: '',
         image: null
     })
-    const { isDark } = useSelector((store: RootState) => store.themeStore)
+    const isDark = useAppStore((state) => state.isDark)
 
     const imageRef = useRef<HTMLInputElement>(null)
 
     const onAddNote = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
-        dispatch(addNote(noteForm))
-
-        setNoteForm({
-            firebaseUid,
-            title: '',
-            description: '',
-            image: null
+        addNote.mutate(noteForm, {
+            onSuccess: () => {
+                setNoteForm({
+                    title: '',
+                    description: '',
+                    image: null
+                })
+                if (imageRef.current) imageRef.current.value = ''
+                setDisplayAddNote(false)
+            }
         })
-
-        if (imageRef.current) {
-            imageRef.current.value = ''
-        }
-
-        setDisplayAddNote(false)
     }
 
     const handleNoteChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -109,7 +103,7 @@ const AddNoteDialog = ({ setDisplayAddNote }: AddNoteDialogProps) => {
                 <button
                     className={`${isDark ? "bg-white/5 border-white/10 hover:bg-white/10" : "bg-neutral-100/20 !border-black/10 shadow-md hover:bg-neutral-200"} backdrop-blur-md border rounded-md text-[12px] px-[12px] py-[6px] w-full cursor-pointer`}
                     type='submit'>
-                    Add Note
+                    {addNote.isPending ? 'Adding...' : 'Add Note'}
                 </button>
             </form>
         </section>

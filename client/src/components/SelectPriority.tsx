@@ -7,8 +7,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MdOutlineArrowDownward, MdOutlineArrowForward, MdOutlineArrowUpward } from "react-icons/md";
-import { useSelector } from 'react-redux';
-import type { RootState } from '@/redux/store';
+import { useAppStore } from '@/store/appStore'
 
 interface Props {
   selectPriority: (priority: string) => void;
@@ -17,7 +16,7 @@ interface Props {
 
 const SelectPriority = ({ selectPriority, currentPriority }: Props) => {
   const [selectedPriority, setSelectedPriority] = useState("");
-  const { isDark } = useSelector((store: RootState) => store.themeStore)
+  const isDark = useAppStore((state) => state.isDark)
 
   const onSelectPriority = (priority: string) => {
     selectPriority(priority);

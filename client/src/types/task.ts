@@ -1,6 +1,5 @@
 export interface Task {
     _id?: string;
-    firebaseUid?: string;
     title?: string;
     description?: string;
     date?: string;
@@ -8,6 +7,7 @@ export interface Task {
     priority?: string;
     status?: string;
     taskList?: string;
+    taskListId?: string | null;
     completed?: boolean;
     completedAt?: Date | null;
 }

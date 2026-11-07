@@ -1,9 +1,8 @@
-import { useSelector } from "react-redux"
-import type { RootState } from "@/redux/store"
+import { useAppStore } from '@/store/appStore'
 import { Skeleton } from "@/components/ui/skeleton"
 
 const NoteSkeleton = () => {
-    const { isDark } = useSelector((store: RootState) => store.themeStore)
+    const isDark = useAppStore((state) => state.isDark)
 
     return (
         <Skeleton className={`space-y-2 w-full justify-between h-[239px] py-[18px] px-[22px] ${isDark ? "bg-white/4" : "bg-[#f5f5f5]"} rounded-md`}>

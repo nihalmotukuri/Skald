@@ -1,7 +1,6 @@
 import { useState } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
-import type { AppDispatch, RootState } from '@/redux/store'
-import { editTask } from '@/redux/tasksThunks'
+import { useAppStore } from '@/store/appStore'
+import { useTasks, useTaskMutations } from '@/queries/tasks'
 import type React from 'react'
 import { RxCross2 } from "react-icons/rx"
 import SelectStatus from './SelectStatus'
@@ -14,15 +13,15 @@ interface AddTaskDialogProps {
 }
 
 const EditTaskDialog = ({ setDisplayEditTask, editTaskId }: AddTaskDialogProps) => {
-    const { tasks } = useSelector((store: RootState) => store.tasksStore)
+    const userId = useAppStore((state) => state.user?.id)
+    const { data: tasks = [] } = useTasks(userId)
+    const { editTask } = useTaskMutations(userId)
     const [editedTask, setEditedTask] = useState(() => tasks.find(t => t._id === editTaskId))
-    const { isDark } = useSelector((store: RootState) => store.themeStore)
+    const isDark = useAppStore((state) => state.isDark)
 
     const selectTaskList = (taskList: string) => {
         setEditedTask({ ...editedTask, taskList })
     }
-
-    const dispatch = useDispatch<AppDispatch>()
 
     const selectPriority = (priority: string) => {
         setEditedTask({ ...editedTask, priority })
@@ -40,8 +39,7 @@ const EditTaskDialog = ({ setDisplayEditTask, editTaskId }: AddTaskDialogProps) 
         e.preventDefault()
 
         if (!editedTask) return;
-        dispatch(editTask(editedTask));
-        setDisplayEditTask(false);
+        editTask.mutate(editedTask, { onSuccess: () => setDisplayEditTask(false) });
     }
 
     return (
@@ -147,7 +145,7 @@ const EditTaskDialog = ({ setDisplayEditTask, editTaskId }: AddTaskDialogProps) 
                 <button
                     className={`${isDark ? "bg-white/5 border-white/10 hover:bg-white/10" : "bg-neutral-100/20 !border-black/10 shadow-md hover:bg-neutral-200"} backdrop-blur-md border rounded-md text-[12px] px-[12px] py-[6px] w-full cursor-pointer`}
                     type='submit'
-                    disabled={!(editedTask?.title && editedTask?.description && editedTask?.date && editedTask?.time && editedTask?.priority)}
+                    disabled={editTask.isPending || !(editedTask?.title && editedTask?.description && editedTask?.date && editedTask?.time && editedTask?.priority)}
                 >
                     Edit Task
                 </button>

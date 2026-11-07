@@ -1,5 +1,4 @@
-import { useSelector } from "react-redux";
-import type { RootState } from "@/redux/store";
+import { useAppStore } from '@/store/appStore'
 import { PieChart, Pie, Cell } from "recharts";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,7 +9,7 @@ interface TaskCompletionChartProps {
 }
 
 const TaskCompletionChart = ({ total, completed }: TaskCompletionChartProps) => {
-  const { isDark } = useSelector((store: RootState) => store.themeStore)
+  const isDark = useAppStore((state) => state.isDark)
   const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
 
   const startAngle = 90; 

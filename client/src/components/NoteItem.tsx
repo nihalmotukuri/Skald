@@ -1,27 +1,25 @@
 import { useState } from "react"
-import { useDispatch, useSelector } from "react-redux"
-import { setActiveNoteId } from "@/redux/notesSlice"
-import type { AppDispatch, RootState } from "@/redux/store";
+import { useAppStore } from '@/store/appStore'
 import type { Note } from "@/types/note";
 import type React from "react"
-import { deleteNote } from "@/redux/notesThunks"
 import { MdOutlineEdit, MdDeleteOutline } from "react-icons/md"
 import dayjs from "dayjs"
 
 interface NoteItemProps {
   note: Note;
+  deleteNote: (noteId: string) => void;
   setEditNoteId: React.Dispatch<React.SetStateAction<string>>;
   setDisplayEditNote: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-const NoteItem = ({ note, setEditNoteId, setDisplayEditNote }: NoteItemProps) => {
+const NoteItem = ({ note, deleteNote, setEditNoteId, setDisplayEditNote }: NoteItemProps) => {
     const [displayBtns, setDisplayBtns] = useState(false)
-    const dispatch = useDispatch<AppDispatch>()
-    const { activeNoteId } = useSelector((store: RootState) => store.notesStore)
-    const { isDark } = useSelector((store: RootState) => store.themeStore)
+    const activeNoteId = useAppStore((state) => state.activeNoteId)
+    const setActiveNoteId = useAppStore((state) => state.setActiveNoteId)
+    const isDark = useAppStore((state) => state.isDark)
 
     const onNoteItem = (note: Note) => {
-        dispatch(setActiveNoteId(note._id))
+        setActiveNoteId(note._id ?? null)
     }
 
     const onEditNote = (e: React.MouseEvent, noteId: string) => {
@@ -32,8 +30,8 @@ const NoteItem = ({ note, setEditNoteId, setDisplayEditNote }: NoteItemProps) =>
 
     const onDeleteNote = (e: React.MouseEvent, noteId: string) => {
         e.stopPropagation()
-        dispatch(setActiveNoteId(''))
-        dispatch(deleteNote(noteId))
+        setActiveNoteId(null)
+        deleteNote(noteId)
     }
 
     const formatTaskDate = (date: string) => {

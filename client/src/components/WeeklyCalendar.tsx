@@ -1,11 +1,10 @@
 import { useState } from "react";
-import { useSelector } from "react-redux";
-import type { RootState } from "@/redux/store";
+import { useAppStore } from '@/store/appStore'
 
 const WeeklyCalendar = ({ setCurrentDate }: { setCurrentDate: (value: string) => void}) => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [highlighted, setHighlighted] = useState<Date | null>(null)
-  const { isDark } = useSelector((store: RootState) => store.themeStore)
+  const isDark = useAppStore((state) => state.isDark)
 
   const today = new Date()
 

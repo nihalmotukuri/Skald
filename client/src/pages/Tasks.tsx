@@ -1,14 +1,11 @@
-import { useState, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { editTask } from '@/redux/tasksThunks'
+import { useState, useEffect, useMemo } from "react";
+import { useAppStore } from '@/store/appStore'
+import { useTasks, useTaskMutations } from '@/queries/tasks'
 import { IoAddOutline } from "react-icons/io5"
 import TaskItem from "@/components/TaskItem.tsx";
-import { setBreadcrumb } from "@/redux/breadcrumbSlice.ts";
 import AddTaskDialog from "@/components/AddTaskDialog";
 import TaskSkeleton from "../components/TaskSkeleton.tsx"
 import EditTaskDialog from "@/components/EditTaskDialog.tsx";
-import type { Task } from "@/types/task.ts";
-import type { AppDispatch, RootState } from "@/redux/store.ts";
 import TaskListDropdown from '@/components/TaskListDropdown.tsx'
 import AddTaskList from '@/components/AddTaskList.tsx'
 import { RxCross1 } from "react-icons/rx"
@@ -18,16 +15,16 @@ const Tasks = () => {
   const [displayEditTask, setDisplayEditTask] = useState<boolean>(false)
   const [editTaskId, setEditTaskId] = useState<string>('')
 
-  const dispatch = useDispatch<AppDispatch>()
-
-  const { tasks, loading } = useSelector((store: RootState) => store.tasksStore)
+  const userId = useAppStore((state) => state.user?.id)
+  const isDark = useAppStore((state) => state.isDark)
+  const setBreadcrumb = useAppStore((state) => state.setBreadcrumb)
+  const { data: tasks = [], isLoading: loading, error } = useTasks(userId)
+  const { editTask, deleteTask } = useTaskMutations(userId)
   const [selectedTaskList, setSelectedTaskList] = useState('All Tasks')
-  const [filteredTasks, setFilteredTasks] = useState<Task[]>([])
   const [filterQuery, setFilterQuery] = useState('')
   const [debouncedFilterQuery, setDebouncedFilterQuery] = useState('')
-  const { isDark } = useSelector((store: RootState) => store.themeStore)
 
-  useEffect(() => {
+  const filteredTasks = useMemo(() => {
     let tempTasks = [...tasks].reverse()
 
     if (selectedTaskList !== 'All Tasks') {
@@ -42,12 +39,12 @@ const Tasks = () => {
       )
     }
 
-    setFilteredTasks(tempTasks)
+    return tempTasks
   }, [tasks, selectedTaskList, debouncedFilterQuery])
 
   useEffect(() => {
-    dispatch(setBreadcrumb("To-do List"))
-  }, [dispatch])
+    setBreadcrumb("To-do List")
+  }, [setBreadcrumb])
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -60,9 +57,9 @@ const Tasks = () => {
   const toggleTask = (taskId: string) => {
     const task = tasks.find(t => t._id === taskId)
     if (task?.completed) {
-      dispatch(editTask({ ...task, completed: false, completedAt: null, status: "In Progress" }))
+      editTask.mutate({ ...task, completed: false, completedAt: null, status: "In Progress" })
     } else {
-      dispatch(editTask({ ...task, completed: true, completedAt: new Date(), status: "Done" }))
+      if (task) editTask.mutate({ ...task, completed: true, completedAt: new Date(), status: "Done" })
     }
   }
 
@@ -79,6 +76,7 @@ const Tasks = () => {
               key={task._id}
               task={task}
               toggleTask={toggleTask}
+              deleteTask={(taskId) => deleteTask.mutate(taskId)}
               setDisplayEditTask={setDisplayEditTask}
               setEditTaskId={setEditTaskId}
             />
@@ -88,6 +86,7 @@ const Tasks = () => {
 
   return (
     <div className="w-full col-span-1 row-span-1 grid grid-cols-1 grid-rows-[108px_1fr] overflow-y-auto relative">
+      {error && <p role="alert" className="absolute top-[92px] right-4 z-10 rounded bg-red-950/90 px-3 py-2 text-sm text-red-100">Unable to load tasks: {error.message}</p>}
       {displayAddTask && (
         <AddTaskDialog setDisplayAddTask={setDisplayAddTask} />
       )}
@@ -151,13 +150,13 @@ const Tasks = () => {
       </div>
 
       <div className="row-span-1 col-span-1 overflow-y-auto relative">
-        {tasks.length === 0 && !loading ? (
+        {tasks.length === 0 && !loading && !error ? (
           <div className="flex justify-center">
             <p className="text-[18px] text-gray-400 text-center mt-[54px] bg-white/6 p-4 rounded-2xl inline-block m-auto">
               You haven’t added any tasks yet. Start by creating your first one!
             </p>
           </div>
-        ) : filteredTasks.length === 0 && !loading ? (
+        ) : filteredTasks.length === 0 && !loading && !error ? (
           <div className="flex justify-center">
             <p className="text-[18px] text-gray-400 text-center mt-[54px] bg-white/4 border border-white/10 p-4 rounded-2xl inline-block m-auto">
               No tasks match your search. Try adjusting your filter or keywords.
