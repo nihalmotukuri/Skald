@@ -4,9 +4,9 @@ import { useSearchParams } from 'react-router-dom'
 import { useAppStore } from '@/store/appStore'
 import { useTasks, useTaskMutations } from '@/queries/tasks'
 import type { Task } from '@/types/task'
+import LoadingIndicator from '@/components/LoadingIndicator'
 import TaskItem from "@/components/TaskItem.tsx";
 import AddTaskDialog from "@/components/AddTaskDialog";
-import TaskSkeleton from "../components/TaskSkeleton.tsx"
 import EditTaskDialog from "@/components/EditTaskDialog.tsx";
 import TaskListDropdown from '@/components/TaskListDropdown.tsx'
 import AddTaskList from '@/components/AddTaskList.tsx'
@@ -230,7 +230,8 @@ const Tasks = () => {
           <label className="skald-page-search skald-task-search flex min-h-10 w-full items-center gap-2 border px-3 sm:max-w-xs">
             <Search aria-hidden="true" size={16} className={mutedText} />
             <input
-              type="search"
+              type="text"
+              role="searchbox"
               placeholder="Search title or description"
               aria-label="Search tasks"
               value={filterQuery}
@@ -252,10 +253,11 @@ const Tasks = () => {
         </p>
       )}
 
-      <ul className="flex flex-col gap-2 pb-10" aria-label="Tasks">
-        {loading
-          ? Array.from({ length: 5 }, (_, index) => <TaskSkeleton key={index} />)
-          : filteredTasks.map((task) => (
+      {loading ? (
+        <LoadingIndicator label="Loading tasks…" className="skald-loading-indicator--tasks" />
+      ) : (
+        <ul className="flex flex-col gap-2 pb-10" aria-label="Tasks">
+          {filteredTasks.map((task) => (
             <TaskItem
               key={task._id}
               task={task}
@@ -267,7 +269,8 @@ const Tasks = () => {
               deleting={deleteTask.isPending}
             />
           ))}
-      </ul>
+        </ul>
+      )}
 
       {!loading && !error && filteredTasks.length === 0 && (
         <div className="skald-page-empty skald-task-empty border px-5 py-10 text-center">

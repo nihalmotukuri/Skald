@@ -3,9 +3,9 @@ import { Archive, ArrowRight, FileText, Plus, Search, StickyNote, X } from 'luci
 import { useAppStore } from '@/store/appStore'
 import { useNotes, useNoteMutations } from '@/queries/notes'
 import type { Note } from '@/types/note'
+import LoadingIndicator from '@/components/LoadingIndicator'
 import AddNoteDialog from '@/components/AddNoteDialog'
 import EditNoteDialog from '@/components/EditNoteDialog'
-import NoteSkeleton from '@/components/NoteSkeleton'
 import DisplayNote from '@/components/DisplayNote'
 import NoteItem from '@/components/NoteItem'
 
@@ -90,7 +90,8 @@ const Notes = () => {
           <label className="skald-page-search flex min-h-10 w-full items-center gap-2 border px-3 sm:w-64">
             <Search aria-hidden="true" size={16} className={mutedText} />
             <input
-              type="search"
+              type="text"
+              role="searchbox"
               placeholder="Find a thought"
               aria-label="Search notes"
               value={filterQuery}
@@ -153,7 +154,7 @@ const Notes = () => {
 
           <div className="skald-notes-list">
             {loading
-              ? Array.from({ length: 4 }, (_, index) => <NoteSkeleton key={index} />)
+              ? <LoadingIndicator label="Loading notes…" className="skald-loading-indicator--notes" />
               : filteredNotes.map((note) => (
                 <NoteItem
                   key={note._id}

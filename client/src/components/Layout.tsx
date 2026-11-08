@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { Link, Navigate, Outlet, useLocation } from 'react-router-dom'
 import { LineWobble } from 'ldrs/react'
 import 'ldrs/react/LineWobble.css'
@@ -6,6 +7,7 @@ import { useAppStore } from '@/store/appStore'
 import Sidebar from './Sidebar'
 import NoteReminderWatcher from './NoteReminderWatcher'
 import BrandMark from './BrandMark'
+import LoadingIndicator from './LoadingIndicator'
 
 const routeTitles: Record<string, string> = {
   '/app/today': 'Today',
@@ -28,6 +30,7 @@ const DashboardGrid = () => {
   const isTodayPage = location.pathname === '/app/today'
   const isNotesPage = location.pathname === '/app/notes'
   const isSettingsPage = location.pathname === '/app/settings'
+  const isAssistantPage = location.pathname === '/app/assistant'
 
   if (!user && !loading) {
     return <Navigate to="/signin" replace state={{ from: location }} />
@@ -89,7 +92,7 @@ const DashboardGrid = () => {
                 {!isTodayPage && <span className="skald-app-header__date">
                   {new Date().toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
                 </span>}
-                {!isTasksPage && !isTodayPage && !isNotesPage && !isSettingsPage && (
+                {!isTasksPage && !isTodayPage && !isNotesPage && !isSettingsPage && !isAssistantPage && (
                   <Link
                     to="/app/tasks?create=1"
                     className="skald-app-add-task skald-add-action"
@@ -113,7 +116,9 @@ const DashboardGrid = () => {
             </header>
 
             <div className="skald-app-view">
-              <Outlet />
+              <Suspense fallback={<LoadingIndicator label="Opening your page…" />}>
+                <Outlet />
+              </Suspense>
             </div>
           </section>
         </>

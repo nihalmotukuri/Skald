@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { ArrowRight, Check, Sparkles } from 'lucide-react'
 import { useAppStore } from '@/store/appStore'
 import { useTasks, useTaskMutations } from '@/queries/tasks'
+import LoadingIndicator from '@/components/LoadingIndicator'
 
 const Dashboard = () => {
   const user = useAppStore((state) => state.user)
@@ -45,12 +46,10 @@ const Dashboard = () => {
 
   if (isLoading) {
     return (
-      <div className="skald-today-page skald-today-skeleton" role="status" aria-label="Loading today's tasks" aria-busy="true">
-        <span />
-        <span />
-        <span />
-        <span />
-      </div>
+      <LoadingIndicator
+        label="Loading today…"
+        className="skald-today-page skald-loading-indicator--page"
+      />
     )
   }
 

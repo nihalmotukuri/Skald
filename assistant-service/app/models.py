@@ -1,3 +1,5 @@
+import base64
+import binascii
 from datetime import datetime
 from typing import Annotated, Literal
 from uuid import UUID, uuid4
@@ -73,9 +75,35 @@ ActionProposal = Annotated[
 ]
 
 
+class ChatAttachment(StrictModel):
+    name: str = Field(min_length=1, max_length=120)
+    mime_type: Literal[
+        "image/jpeg",
+        "image/png",
+        "image/webp",
+        "application/pdf",
+        "text/plain",
+        "text/markdown",
+        "text/csv",
+    ]
+    data: str = Field(min_length=1, max_length=7_000_000)
+
+    @field_validator("data")
+    @classmethod
+    def attachment_must_be_valid_and_within_size_limit(cls, value: str) -> str:
+        try:
+            decoded = base64.b64decode(value, validate=True)
+        except (binascii.Error, ValueError) as error:
+            raise ValueError("Attachment data must be valid base64.") from error
+        if not decoded or len(decoded) > 5 * 1024 * 1024:
+            raise ValueError("Attachments must be no larger than 5 MB.")
+        return value
+
+
 class ChatMessage(BaseModel):
     role: Literal["user", "assistant"]
     content: str = Field(min_length=1, max_length=4000)
+    attachments: list[ChatAttachment] = Field(default_factory=list, max_length=3)
 
     @field_validator("content")
     @classmethod
@@ -95,6 +123,13 @@ class ChatRequest(BaseModel):
             raise ValueError("The latest conversation message must be from the user.")
         if sum(len(message.content) for message in self.messages) > 20_000:
             raise ValueError("Conversation history cannot exceed 20,000 characters.")
+        encoded_attachment_size = sum(
+            len(attachment.data)
+            for message in self.messages
+            for attachment in message.attachments
+        )
+        if encoded_attachment_size > 14_000_000:
+            raise ValueError("Attachments in a request cannot exceed 10 MB in total.")
         return self
 
 
