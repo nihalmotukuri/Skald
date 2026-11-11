@@ -45,9 +45,11 @@ def test_chat_uses_authenticated_user_context(
         messages: list[ChatMessage],
         context: dict[str, list[dict[str, str]]],
         settings: object,
+        timezone: str,
     ) -> ChatResult:
         calls["messages"] = messages
         calls["context"] = context
+        calls["timezone"] = timezone
         return ChatResult(
             reply="Let's plan your day.",
             proposals=[ProposalEnvelope(action=CreateTaskProposal(
@@ -62,7 +64,10 @@ def test_chat_uses_authenticated_user_context(
 
     response = client.post(
         "/api/chat",
-        json={"messages": [{"role": "user", "content": "Help me plan my day."}]},
+        json={
+            "messages": [{"role": "user", "content": "Help me plan my day."}],
+            "timezone": "Asia/Kolkata",
+        },
     )
 
     assert response.status_code == 200
@@ -72,6 +77,7 @@ def test_chat_uses_authenticated_user_context(
     assert payload["proposals"][0]["action"]["title"] == "Plan the day"
     assert calls["user_id"] == USER_ID
     assert calls["access_token"] == "signed-user-token"
+    assert calls["timezone"] == "Asia/Kolkata"
 
 
 def test_stream_endpoint_emits_deltas_and_final_proposals(
@@ -81,7 +87,8 @@ def test_stream_endpoint_emits_deltas_and_final_proposals(
     async def fake_context(user_id: UUID, access_token: str, settings: object) -> dict[str, list[dict[str, str]]]:
         return {"tasks": [], "notes": [], "task_lists": []}
 
-    async def fake_stream(messages: list[ChatMessage], context: object, settings: object):
+    async def fake_stream(messages: list[ChatMessage], context: object, settings: object, timezone: str):
+        assert timezone == "UTC"
         yield "A streamed "
         yield "reply."
         yield ChatResult(
@@ -122,7 +129,7 @@ def test_stream_endpoint_reports_unexpected_errors_safely(
     async def fake_context(user_id: UUID, access_token: str, settings: object) -> dict[str, list[dict[str, str]]]:
         return {"tasks": [], "notes": [], "task_lists": []}
 
-    async def fake_stream(messages: list[ChatMessage], context: object, settings: object):
+    async def fake_stream(messages: list[ChatMessage], context: object, settings: object, timezone: str):
         raise RuntimeError("internal provider details")
         yield "unreachable"
 
@@ -187,4 +194,16 @@ def test_chat_rejects_invalid_conversation(
     messages: list[dict[str, str]],
 ) -> None:
     response = client.post("/api/chat", json={"messages": messages})
+    assert response.status_code == 422
+
+
+def test_chat_rejects_invalid_timezone(client: TestClient) -> None:
+    response = client.post(
+        "/api/chat/stream",
+        json={
+            "messages": [{"role": "user", "content": "Create a task at 12:10 PM."}],
+            "timezone": "Mars/Olympus",
+        },
+    )
+
     assert response.status_code == 422

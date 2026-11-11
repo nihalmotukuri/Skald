@@ -15,8 +15,16 @@ export const getSafeAuthDestination = (value: unknown): string => {
   return `${destination.pathname}${destination.search}${destination.hash}`
 }
 
-export const getAuthCallbackUrl = (destination: string): string => {
+export const getAuthCallbackPath = (destination: string, flow: 'signin' | 'signup' = 'signin'): string => {
+  const callback = new URL('/auth/callback', LOCAL_ORIGIN)
+  callback.searchParams.set('next', getSafeAuthDestination(destination))
+  callback.searchParams.set('flow', flow)
+  return `${callback.pathname}${callback.search}`
+}
+
+export const getAuthCallbackUrl = (destination: string, flow: 'signin' | 'signup' = 'signin'): string => {
   const callback = new URL('/auth/callback', window.location.origin)
   callback.searchParams.set('next', getSafeAuthDestination(destination))
+  callback.searchParams.set('flow', flow)
   return callback.toString()
 }

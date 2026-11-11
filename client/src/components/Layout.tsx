@@ -1,13 +1,11 @@
 import { Suspense } from 'react'
 import { Link, Navigate, Outlet, useLocation } from 'react-router-dom'
-import { LineWobble } from 'ldrs/react'
-import 'ldrs/react/LineWobble.css'
 import { Moon, PanelLeftClose, PanelLeftOpen, Plus, Sun } from 'lucide-react'
 import { useAppStore } from '@/store/appStore'
 import Sidebar from './Sidebar'
 import NoteReminderWatcher from './NoteReminderWatcher'
 import BrandMark from './BrandMark'
-import LoadingIndicator from './LoadingIndicator'
+import AppLoading from './AppLoading'
 
 const routeTitles: Record<string, string> = {
   '/app/today': 'Today',
@@ -39,16 +37,7 @@ const DashboardGrid = () => {
   return (
     <main className={`skald-app ${isDark ? 'skald-app--dark' : 'skald-app--light'}`}>
       {loading ? (
-        <div className="skald-app-loading" role="status" aria-label="Loading your workspace">
-          <BrandMark className="skald-app-loading__brand" />
-          <LineWobble
-            size="56"
-            stroke="4"
-            bgOpacity="0.1"
-            speed="1.75"
-            color={isDark ? '#a095ff' : '#6654e8'}
-          />
-        </div>
+        <AppLoading />
       ) : user ? (
         <>
           <NoteReminderWatcher />
@@ -116,7 +105,7 @@ const DashboardGrid = () => {
             </header>
 
             <div className="skald-app-view">
-              <Suspense fallback={<LoadingIndicator label="Opening your page…" />}>
+              <Suspense fallback={<AppLoading />}>
                 <Outlet />
               </Suspense>
             </div>

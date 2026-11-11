@@ -3,11 +3,19 @@ import binascii
 from datetime import datetime
 from typing import Annotated, Literal
 from uuid import UUID, uuid4
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 TaskPriority = Literal["low", "medium", "high"]
 TaskStatus = Literal["pending", "in_progress", "done", "cancelled"]
+TaskField = Literal["title", "description", "due_at", "priority", "status", "task_list_id"]
+
+
+def _require_timezone_aware_due_at(value: datetime | None) -> datetime | None:
+    if value is not None and value.utcoffset() is None:
+        raise ValueError("Due dates must include a timezone offset.")
+    return value
 
 
 class StrictModel(BaseModel):
@@ -24,6 +32,11 @@ class CreateTaskProposal(StrictModel):
     status: TaskStatus = "pending"
     task_list_id: UUID | None = None
 
+    @field_validator("due_at")
+    @classmethod
+    def due_at_must_include_timezone(cls, value: datetime | None) -> datetime | None:
+        return _require_timezone_aware_due_at(value)
+
 
 class UpdateTaskProposal(StrictModel):
     action: Literal["update_task"]
@@ -35,6 +48,12 @@ class UpdateTaskProposal(StrictModel):
     priority: TaskPriority
     status: TaskStatus
     task_list_id: UUID | None
+    changed_fields: list[TaskField]
+
+    @field_validator("due_at")
+    @classmethod
+    def due_at_must_include_timezone(cls, value: datetime | None) -> datetime | None:
+        return _require_timezone_aware_due_at(value)
 
 
 class DeleteTaskProposal(StrictModel):
@@ -116,6 +135,16 @@ class ChatMessage(BaseModel):
 
 class ChatRequest(BaseModel):
     messages: list[ChatMessage] = Field(min_length=1, max_length=20)
+    timezone: str = Field(default="UTC", min_length=1, max_length=64)
+
+    @field_validator("timezone")
+    @classmethod
+    def timezone_must_be_valid(cls, value: str) -> str:
+        try:
+            ZoneInfo(value)
+        except ZoneInfoNotFoundError as error:
+            raise ValueError("Timezone must be a valid IANA timezone.") from error
+        return value
 
     @model_validator(mode="after")
     def conversation_must_end_with_user(self) -> "ChatRequest":

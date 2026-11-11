@@ -104,6 +104,7 @@ async def load_user_context(
                 "due_at": _text(task.get("due_at"), 40),
                 "priority": _text(task.get("priority"), 20),
                 "status": _text(task.get("status"), 20),
+                "task_list_id": _text(task.get("task_list_id"), 36),
                 "task_list": list_names.get(task.get("task_list_id"), ""),
             }
             for task in tasks

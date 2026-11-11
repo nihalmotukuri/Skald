@@ -73,6 +73,7 @@ def test_context_queries_are_bound_to_verified_user(
     result = asyncio.run(context.load_user_context(USER_ID, "verified-access-token", settings))
 
     assert result["tasks"][0]["task_list"] == "Work"
+    assert result["tasks"][0]["task_list_id"] == "list-1"
     assert result["tasks"][0]["id"] == "task-1"
     assert result["notes"][0]["title"] == "Idea"
     assert result["notes"][0]["id"] == "note-1"

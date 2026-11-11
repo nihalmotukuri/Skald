@@ -1051,7 +1051,7 @@ body:has(.skald-app--light) {
   align-content: center;
   justify-items: center;
   gap: 16px;
-  background: var(--app-bg);
+  background: var(--app-loading-bg, var(--app-bg));
 }
 
 .skald-app-loading__brand {
@@ -3684,18 +3684,34 @@ body:has(.skald-app--light) {
 
 .skald-assistant-message-actions {
   display: flex;
-  gap: 10px;
+  align-items: center;
+  gap: 8px;
   margin-top: 5px;
   color: var(--app-muted);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 140ms ease;
+}
+
+.skald-assistant-message:hover .skald-assistant-message-actions,
+.skald-assistant-message:focus-within .skald-assistant-message-actions {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .skald-assistant-message-actions button {
   display: inline-flex;
+  width: 25px;
+  height: 24px;
   align-items: center;
-  gap: 4px;
+  justify-content: center;
   border-radius: 5px;
-  padding: 2px 3px;
-  font-size: 10px;
+  padding: 0;
+}
+
+.skald-assistant-message-actions time {
+  font-size: 11px;
+  line-height: 1;
 }
 
 .skald-assistant-message-actions button:hover:not(:disabled) {
@@ -3710,6 +3726,13 @@ body:has(.skald-app--light) {
 .skald-assistant-message-actions--user {
   justify-content: flex-end;
   margin-top: 3px;
+}
+
+@media (hover: none) {
+  .skald-assistant-message-actions {
+    opacity: 1;
+    pointer-events: auto;
+  }
 }
 
 .skald-assistant-attachment {
@@ -4903,6 +4926,52 @@ select:disabled {
   background: #f5f3ee;
 }
 
+.skald-auth-finish {
+  font-family: 'Montserrat', 'Noto Sans', ui-sans-serif, system-ui, sans-serif;
+}
+
+.skald-auth-finish__content {
+  max-width: 520px;
+  padding: 32px 16px;
+}
+
+.skald-auth-finish__brand {
+  display: inline-block;
+  margin-bottom: 16px;
+  font-size: 38px;
+  line-height: 1;
+}
+
+.skald-auth-finish__title {
+  margin: 0;
+  font-family: 'Montserrat', 'Noto Sans', ui-sans-serif, system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.5;
+
+}
+
+.skald-auth-finish__error {
+  margin: 17px 0 0;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.skald-auth-finish__link {
+  display: inline-block;
+  margin-top: 24px;
+  color: #7462f2;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.skald-auth-finish__link:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
 .skald-auth__shell {
   display: grid;
   grid-template-columns: 1.12fr 0.88fr;
@@ -5488,6 +5557,7 @@ select:disabled {
 
 .skald-app {
   --app-bg: #fff;
+  --app-loading-bg: #f5f3ee;
   --app-sidebar: #efedf7;
   --app-panel: #fff;
   background: var(--app-bg);
@@ -5496,9 +5566,23 @@ select:disabled {
 
 .skald-app--dark {
   --app-bg: #1a1923;
+  --app-loading-bg: #1a1923;
   --app-sidebar: #14141d;
   --app-panel: #22212e;
   background: var(--app-bg);
+}
+
+.skald-root {
+  --app-bg: #f5f3ee;
+  --app-ink: #191824;
+  position: relative;
+  min-height: 100vh;
+  background: var(--app-bg);
+}
+
+.skald-root--dark {
+  --app-bg: #1a1923;
+  --app-ink: #f3f1fa;
 }
 
 body:has(.skald-app--dark) {

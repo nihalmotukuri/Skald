@@ -39,7 +39,7 @@ def create_app() -> FastAPI:
             current_user.access_token,
             settings,
         )
-        return await generate_reply(request.messages, context, settings)
+        return await generate_reply(request.messages, context, settings, request.timezone)
 
     @application.post("/api/chat/stream")
     async def stream_chat(
@@ -55,7 +55,7 @@ def create_app() -> FastAPI:
 
         async def events():
             try:
-                async for item in stream_reply(request.messages, context, settings):
+                async for item in stream_reply(request.messages, context, settings, request.timezone):
                     if isinstance(item, str):
                         payload = {"type": "delta", "text": item}
                     else:

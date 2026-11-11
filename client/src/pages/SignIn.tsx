@@ -3,7 +3,7 @@ import { FcGoogle } from 'react-icons/fc'
 import { Moon, Sparkles, Sun } from 'lucide-react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
-import { getAuthCallbackUrl, getSafeAuthDestination } from '@/lib/authRedirect'
+import { getAuthCallbackPath, getAuthCallbackUrl, getSafeAuthDestination } from '@/lib/authRedirect'
 import { useAppStore } from '@/store/appStore'
 import BrandMark from '@/components/BrandMark'
 
@@ -72,7 +72,7 @@ const SignIn = () => {
     try {
       const { error: signInError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: getAuthCallbackUrl(destination) },
+        options: { redirectTo: getAuthCallbackUrl(destination, mode === 'signup' ? 'signup' : 'signin') },
       })
       if (signInError) throw signInError
     } catch (reason) {
@@ -111,13 +111,13 @@ const SignIn = () => {
           email: email.trim(),
           password,
           options: {
-            emailRedirectTo: getAuthCallbackUrl(destination),
+            emailRedirectTo: getAuthCallbackUrl(destination, 'signup'),
             data: { full_name: displayName.trim() },
           },
         })
         if (signUpError) throw signUpError
         if (data.session) {
-          navigate(destination, { replace: true })
+          navigate(getAuthCallbackPath(destination, 'signup'), { replace: true })
           return
         }
         setPassword('')
@@ -131,7 +131,7 @@ const SignIn = () => {
         password,
       })
       if (signInError) throw signInError
-      navigate(destination, { replace: true })
+      navigate(getAuthCallbackPath(destination, mode), { replace: true })
     } catch (reason) {
       showError(reason, 'Unable to complete that request. Please try again.')
     } finally {

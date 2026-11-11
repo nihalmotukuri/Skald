@@ -56,10 +56,11 @@ type AiChat = {
 
 type TaskPriority = 'low' | 'medium' | 'high'
 type TaskStatus = 'pending' | 'in_progress' | 'done' | 'cancelled'
+type TaskField = 'title' | 'description' | 'due_at' | 'priority' | 'status' | 'task_list_id'
 
 type ProposedAction =
   | { action: 'create_task'; summary: string; title: string; description: string; due_at: string | null; priority: TaskPriority; status: TaskStatus; task_list_id: string | null }
-  | { action: 'update_task'; summary: string; task_id: string; title: string; description: string; due_at: string | null; priority: TaskPriority; status: TaskStatus; task_list_id: string | null }
+  | { action: 'update_task'; summary: string; task_id: string; title: string; description: string; due_at: string | null; priority: TaskPriority; status: TaskStatus; task_list_id: string | null; changed_fields: TaskField[] }
   | { action: 'delete_task'; summary: string; task_id: string }
   | { action: 'create_note'; summary: string; title: string; body: string }
   | { action: 'update_note'; summary: string; note_id: string; title: string; body: string }
@@ -86,6 +87,14 @@ type FailedRequest = {
 type PendingAttachment = {
   file: File
   previewUrl?: string
+}
+
+const formatMessageTime = (value?: string) => {
+  if (!value) return ''
+  const date = new Date(value)
+  return Number.isNaN(date.getTime())
+    ? ''
+    : new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' }).format(date)
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -125,14 +134,20 @@ const parseProposals = (value: unknown): AssistantProposal[] => {
           || !(action.due_at === null || typeof action.due_at === 'string')
           || !(action.task_list_id === null || typeof action.task_list_id === 'string')) return []
         return [makeProposal(action as ProposedAction)]
-      case 'update_task':
+      case 'update_task': {
         if (typeof action.task_id !== 'string' || typeof action.title !== 'string'
           || typeof action.description !== 'string'
           || !['low', 'medium', 'high'].includes(String(action.priority))
           || !['pending', 'in_progress', 'done', 'cancelled'].includes(String(action.status))
           || !(action.due_at === null || typeof action.due_at === 'string')
           || !(action.task_list_id === null || typeof action.task_list_id === 'string')) return []
-        return [makeProposal(action as ProposedAction)]
+        const validTaskFields = ['title', 'description', 'due_at', 'priority', 'status', 'task_list_id']
+        const changedFields = Array.isArray(action.changed_fields)
+          && action.changed_fields.every((field) => validTaskFields.includes(String(field)))
+          ? action.changed_fields as TaskField[]
+          : validTaskFields as TaskField[]
+        return [makeProposal({ ...action, changed_fields: changedFields } as ProposedAction)]
+      }
       case 'delete_task':
         return typeof action.task_id === 'string'
           ? [makeProposal(action as ProposedAction)]
@@ -242,8 +257,7 @@ const Assistant = () => {
   const userId = user?.id
   const [conversations, setConversations] = useState<AssistantConversation[]>([])
   const [visibleConversations, setVisibleConversations] = useState<AssistantConversation[]>([])
-  const [activeConversationId, setActiveConversationId] = useState<string | null>(() =>
-    userId ? localStorage.getItem(`skald_active_chat:${userId}`) : null)
+  const [activeConversationId, setActiveConversationId] = useState<string | null>(null)
   const [convo, setConvo] = useState<AiChat[]>([])
   const [historySearch, setHistorySearch] = useState('')
   const [historyError, setHistoryError] = useState<string | null>(null)
@@ -298,11 +312,7 @@ const Assistant = () => {
   const contextError = tasksQuery.error ?? notesQuery.error ?? taskListsQuery.error
   const { addTask, editTask, deleteTask } = useTaskMutations(userId)
   const { addNote, editNote, deleteNote } = useNoteMutations(userId)
-  const persistedConversationId = userId
-    ? localStorage.getItem(`skald_active_chat:${userId}`)
-    : null
   const conversationIdForDisplay = activeConversationId
-    ?? (historyLoading ? persistedConversationId : null)
   const isEmptyConversation = userId && conversationIdForDisplay
     ? knownEmptyConversationsRef.current.has(conversationIdForDisplay)
       || localStorage.getItem(emptyConversationStorageKey(userId, conversationIdForDisplay)) === 'true'
@@ -348,6 +358,8 @@ const Assistant = () => {
     setMessagesLoading(false)
     setMessagesError(null)
     setConversations([])
+    setActiveConversationId(null)
+    activeConversationRef.current = null
     setConvo([])
     requestController.current?.abort()
     setRequestError(null)
@@ -359,40 +371,31 @@ const Assistant = () => {
         let items = await loadAssistantConversationsWithMessages(userId, allItems)
         if (!allItems.length) {
           const legacyMessages = loadLegacyConversation(userId)
-          const firstUserMessage = legacyMessages.find((message) => message.role === 'user')?.message
-          const title = firstUserMessage?.trim().replace(/\s+/g, ' ').slice(0, 72) || 'New chat'
-          const created = await createAssistantConversation(userId, title)
-          for (const message of legacyMessages.filter((entry) => entry.message.trim())) {
-            await saveAssistantMessage(userId, created.id, {
-              id: crypto.randomUUID(),
-              role: message.role,
-              content: message.message,
-            })
+          if (legacyMessages.length) {
+            const firstUserMessage = legacyMessages.find((message) => message.role === 'user')?.message
+            const title = firstUserMessage?.trim().replace(/\s+/g, ' ').slice(0, 72) || 'New chat'
+            const created = await createAssistantConversation(userId, title)
+            for (const message of legacyMessages.filter((entry) => entry.message.trim())) {
+              await saveAssistantMessage(userId, created.id, {
+                id: crypto.randomUUID(),
+                role: message.role,
+                content: message.message,
+              })
+            }
+            localStorage.removeItem(`skald_ai_chat:${userId}`)
+            allItems = await loadAssistantConversations(userId)
+            items = await loadAssistantConversationsWithMessages(userId, allItems)
           }
-          if (legacyMessages.length) localStorage.removeItem(`skald_ai_chat:${userId}`)
-          allItems = await loadAssistantConversations(userId)
-          items = await loadAssistantConversationsWithMessages(userId, allItems)
-          if (!allItems.length) allItems = [created]
         }
         if (cancelled) return
         setConversations(items)
         setVisibleConversations(items)
-        const savedId = localStorage.getItem(`skald_active_chat:${userId}`)
-        const activeId = allItems.some((item) => item.id === savedId)
-          ? savedId!
-          : (items[0] ?? allItems[0]).id
-        if (!items.some((item) => item.id === activeId)) {
-          knownEmptyConversationsRef.current.add(activeId)
-          localStorage.setItem(emptyConversationStorageKey(userId, activeId), 'true')
-        } else {
-          knownEmptyConversationsRef.current.delete(activeId)
-          localStorage.removeItem(emptyConversationStorageKey(userId, activeId))
-        }
-        activeConversationRef.current = activeId
-        setMessagesLoading(true)
-        setActiveConversationId(activeId)
+        activeConversationRef.current = null
+        setActiveConversationId(null)
+        setConvo([])
+        setMessagesReady(true)
+        setMessagesLoading(false)
         setHistoryLoadFailed(false)
-        localStorage.setItem(`skald_active_chat:${userId}`, activeId)
       } catch (error) {
         if (!cancelled) {
           console.error('Unable to load Mr Groff conversation history:', error)
@@ -575,7 +578,10 @@ const Assistant = () => {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${session.access_token}`
         },
-        body: JSON.stringify({ messages }),
+        body: JSON.stringify({
+          messages,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+        }),
         signal: controller.signal
       })
       if (!res.ok) {
@@ -808,7 +814,6 @@ const Assistant = () => {
     setEditingMessageId(null)
     setEditingAttachments([])
     setHistoryOpen(false)
-    localStorage.setItem(`skald_active_chat:${userId}`, conversationId)
   }
 
   const createConversation = useCallback(async () => {
@@ -835,7 +840,6 @@ const Assistant = () => {
       setPrompt('')
       setEditingMessageId(null)
       failedRequest.current = null
-      localStorage.setItem(`skald_active_chat:${userId}`, conversation.id)
       setHistoryOpen(false)
     } catch (error) {
       console.error('Unable to create a Mr Groff conversation:', error)
@@ -953,7 +957,7 @@ const Assistant = () => {
   }
 
   const sendMessage = async (message: string) => {
-    if (!userId || !activeConversationId || sending || responseLoading || !message.trim()) return
+    if (!userId || sending || responseLoading || !message.trim()) return
     const isEditing = editingMessageId !== null
     const editedIndex = isEditing ? convo.findIndex((entry) => entry.id === editingMessageId) : -1
     if (isEditing && (editedIndex < 0 || convo[editedIndex].role !== 'user')) {
@@ -963,7 +967,6 @@ const Assistant = () => {
       return
     }
 
-    const conversationId = activeConversationId
     const previousMessages = isEditing ? convo.slice(0, editedIndex) : convo
     const replacedMessageIds = isEditing ? convo.slice(editedIndex).map((entry) => entry.id) : []
     const reusedAttachments = isEditing ? editingAttachments : []
@@ -976,6 +979,26 @@ const Assistant = () => {
       return
     }
 
+    setSending(true)
+    let conversationId: string
+    try {
+      if (activeConversationId) {
+        conversationId = activeConversationId
+      } else {
+        const conversation = await createAssistantConversation(userId)
+        conversationId = conversation.id
+        knownEmptyConversationsRef.current.add(conversationId)
+        localStorage.setItem(emptyConversationStorageKey(userId, conversationId), 'true')
+        activeConversationRef.current = conversationId
+        setActiveConversationId(conversationId)
+      }
+    } catch (error) {
+      console.error('Unable to prepare a new Mr Groff conversation:', error)
+      setRequestError(error instanceof Error ? error.message : 'Unable to start a new chat.')
+      setSending(false)
+      return
+    }
+
     const userMessageId = crypto.randomUUID()
     const assistantMessageId = crypto.randomUUID()
     const userMessage: AiChat = {
@@ -983,8 +1006,14 @@ const Assistant = () => {
       role: 'user',
       message: message.trim(),
       attachments: reusedAttachments,
+      createdAt: new Date().toISOString(),
     }
-    const assistantMessage: AiChat = { id: assistantMessageId, role: 'assistant', message: '' }
+    const assistantMessage: AiChat = {
+      id: assistantMessageId,
+      role: 'assistant',
+      message: '',
+      createdAt: new Date().toISOString(),
+    }
     const visibleMessages = [...previousMessages, userMessage, assistantMessage].slice(-100)
     convoRef.current = visibleMessages
     setConvo(visibleMessages)
@@ -993,7 +1022,6 @@ const Assistant = () => {
     failedRequest.current = null
     setEditingMessageId(null)
     setEditingAttachments([])
-    setSending(true)
     setResponseLoading(false)
 
     try {
@@ -1362,7 +1390,7 @@ const Assistant = () => {
         )}
       </aside>
 
-      <main className="skald-assistant-main">
+      <div className="skald-assistant-main">
         <header className="skald-assistant-header">
           <div className="skald-assistant-chat-picker" ref={historyPickerRef}>
             <button
@@ -1490,19 +1518,21 @@ const Assistant = () => {
                         <button
                           type="button"
                           aria-label={copiedMessageId === c.id ? 'Copied' : 'Copy response'}
+                          title={copiedMessageId === c.id ? 'Copied' : 'Copy response'}
                           onClick={() => void copyMessage(c)}
                         >
-                          {copiedMessageId === c.id ? <Check size={14} /> : <Clipboard size={14} />}
-                          {copiedMessageId === c.id ? 'Copied' : 'Copy'}
+                          {copiedMessageId === c.id
+                            ? <Check size={15} aria-hidden="true" />
+                            : <Clipboard size={15} aria-hidden="true" />}
                         </button>
                         <button
                           type="button"
                           aria-label="Regenerate response"
+                          title="Regenerate response"
                           disabled={responseLoading || sending}
                           onClick={() => void regenerateResponse(c.id)}
                         >
-                          <RotateCcw size={14} />
-                          Regenerate
+                          <RotateCcw size={15} aria-hidden="true" />
                         </button>
                       </div>
                     )}
@@ -1581,14 +1611,27 @@ const Assistant = () => {
                       ) : null}
                     </div>
                     <div className="skald-assistant-message-actions skald-assistant-message-actions--user">
+                      {formatMessageTime(c.createdAt) && (
+                        <time dateTime={c.createdAt}>{formatMessageTime(c.createdAt)}</time>
+                      )}
+                      <button
+                        type="button"
+                        aria-label={copiedMessageId === c.id ? 'Copied' : 'Copy message'}
+                        title={copiedMessageId === c.id ? 'Copied' : 'Copy message'}
+                        onClick={() => void copyMessage(c)}
+                      >
+                        {copiedMessageId === c.id
+                          ? <Check size={15} aria-hidden="true" />
+                          : <Clipboard size={15} aria-hidden="true" />}
+                      </button>
                       <button
                         type="button"
                         aria-label="Edit message"
+                        title="Edit message"
                         disabled={responseLoading || sending}
                         onClick={() => editMessage(c)}
                       >
-                        <Pencil size={14} />
-                        Edit
+                        <Pencil size={15} aria-hidden="true" />
                       </button>
                     </div>
                   </div>
@@ -1597,13 +1640,13 @@ const Assistant = () => {
           ))}
 
           {responseLoading && (
-            <div className="ml-12 mt-1 flex min-h-8 items-center gap-2 sm:ml-[52px]">
+            <div className="mt-1 flex min-h-8 items-center gap-2">
               <Pulsar size="26" speed="2.4" color={isDark ? "white" : "#602bf8"} />
               <span className={`text-xs ${isDark ? 'text-white/45' : 'text-slate-500'}`}>Mr Groff is thinking…</span>
             </div>
           )}
           {sending && (
-            <div className="ml-12 mt-1 flex min-h-8 items-center gap-2 sm:ml-[52px]">
+            <div className="mt-1 flex min-h-8 items-center gap-2">
               <LoaderCircle size={16} className="animate-spin" aria-hidden="true" />
               <span className={`text-xs ${isDark ? 'text-white/45' : 'text-slate-500'}`}>Preparing your message…</span>
             </div>
@@ -1695,7 +1738,7 @@ const Assistant = () => {
           <button
             type="button"
             className="skald-assistant-icon-button skald-assistant-attach"
-            disabled={!userId || !activeConversationId || isLoadingConversation || historyLoadFailed || sending || responseLoading || pendingFiles.length + editingAttachments.length >= ASSISTANT_ATTACHMENT_MAX_COUNT}
+            disabled={!userId || isLoadingConversation || historyLoadFailed || sending || responseLoading || pendingFiles.length + editingAttachments.length >= ASSISTANT_ATTACHMENT_MAX_COUNT}
             aria-label="Attach files"
             title="Attach images, PDFs, or text files"
             onClick={() => fileInputRef.current?.click()}
@@ -1726,7 +1769,7 @@ const Assistant = () => {
             className={`skald-assistant-send ${responseLoading ? 'is-stop' : ''}`}
             type={responseLoading ? 'button' : 'submit'}
             onClick={responseLoading ? stopResponse : undefined}
-            disabled={!responseLoading && (isLoadingConversation || historyLoadFailed || sending || !prompt.trim() || !activeConversationId)}
+            disabled={!responseLoading && (isLoadingConversation || historyLoadFailed || sending || !prompt.trim())}
             aria-label={responseLoading ? 'Stop response' : 'Send message'}
             title={responseLoading ? 'Stop response' : 'Send message'}
           >
@@ -1737,7 +1780,7 @@ const Assistant = () => {
         </div>
       </form>
       </div>
-      </main>
+      </div>
       {deleteConversationId && (
         <div className="skald-assistant-dialog-backdrop" role="presentation">
           <div
