@@ -1,81 +1,199 @@
 # Skald
 
-Skald is a personal productivity workspace for tasks, notes, and focused planning. The refresh keeps its dark, atmospheric identity while improving the product's usability, accessibility, and performance.
+Skald is a personal productivity workspace for planning your day, organizing tasks and notes, and working with Mr Groff, an AI assistant. The web app is built with React and TypeScript; Supabase provides authentication, data, and storage.
 
-## Rejuvenation architecture
+## What’s included
 
-- **Supabase Auth, Postgres, and Storage** are the target for new accounts and application data.
-- **No legacy data migration is planned.** Existing Firebase and MongoDB data is out of scope and remains untouched.
-- **Zustand** holds client authentication and UI state; **TanStack Query** manages Supabase task, note, task-list, and activity data.
-- **FastAPI** powers Mr Groff, Skald's AI assistant. It verifies Supabase user tokens, keeps model credentials server-side, and never applies task or note changes.
-- Ordinary task and note operations will use Supabase's Data API with Row Level Security (RLS).
+- **Today and tasks:** Review upcoming work, create tasks, assign priorities and due dates, and organize tasks into lists.
+- **Notes:** Create and organize notes with formatting, images, pinning, colors, and reminders.
+- **Mr Groff:** Chat with an assistant that can propose task and note changes. Review each proposal and explicitly confirm it before it is applied.
+- **Accounts:** Sign in with Google or email and password, confirm email, and recover a password.
+- **Private data:** Supabase Row Level Security scopes app data and files to the signed-in user.
 
-## Supabase setup and migrations
+## Technology
 
-Create `client/.env` from the safe template in `client/.env.example` and fill in the Supabase project URL and publishable key. Never put a Supabase secret/service-role key or an AI provider key in a `VITE_` variable.
+- **Web:** React 19, TypeScript, Vite, Tailwind CSS, TanStack Query, and Zustand.
+- **Data and authentication:** Supabase Auth, Postgres, and Storage.
+- **Assistant API:** FastAPI and Gemini.
+- **Hosting:** The client includes a Vercel SPA rewrite in `client/vercel.json`. Deploy the assistant API separately.
 
-```sh
-cp client/.env.example client/.env
+## Repository layout
+
+```text
+client/
+  src/                    React application
+  supabase/
+    migrations/           Versioned database and storage migrations
+assistant-service/
+  app/                    FastAPI application
+  tests/                  Assistant API tests
+README.md
 ```
 
-The Supabase CLI configuration and versioned SQL migrations live in `supabase/`. The initial schema migration was applied from the Supabase Dashboard SQL Editor. The Dashboard does not register that execution in the CLI migration history, so link the project and mark that migration as applied before using `supabase db push` for future changes:
+## Requirements
+
+- Node.js `^20.19.0` or `>=22.12.0` and npm
+- Python 3.10 or later
+- A Supabase project
+- A Gemini API key to use Mr Groff
+- Supabase CLI only if you need to run or manage database migrations
+
+## Configure Supabase
+
+The client uses Supabase Auth with the PKCE flow and accesses Supabase tables and storage directly using the signed-in user's session.
+
+1. Create a Supabase project.
+2. For a new project, apply the migrations in `client/supabase/migrations/` in timestamp order, or use the Supabase CLI migration workflow below. If you are connecting an existing project, check its migration history first; do not blindly rerun migrations in the SQL Editor.
+3. Configure the authentication providers you want to offer under **Authentication → Providers**. Google sign-in requires a Google OAuth client configured with the callback URL provided by Supabase.
+4. Under **Authentication → URL Configuration**, set the Site URL and allow the callback URL(s) used by the app:
+
+   - `http://localhost:5173/auth/callback`
+   - `http://127.0.0.1:5173/auth/callback`
+   - `https://<your-frontend-domain>/auth/callback`
+
+   Add only the URLs that apply to your environments. Email confirmation and password recovery also return through the callback flow. Configure a production SMTP sender before enabling registration for production users.
+
+The migrations create user-scoped policies and private storage buckets for note images and assistant attachments. Do not expose a Supabase secret or service-role key in the client.
+
+### Applying migrations with the Supabase CLI
+
+The Supabase CLI project and migrations are under `client/supabase/`; run CLI commands from `client/`.
 
 ```sh
+cd client
 supabase login
 supabase link --project-ref <project-ref>
+supabase migration list --remote
+```
+
+Review the linked project and its migration history before making schema changes. The initial schema migration (`20261107100000`) was previously applied through the Supabase Dashboard SQL Editor, which does not automatically record it in the CLI migration history. If the remote history does not show it as applied, reconcile that migration before pushing:
+
+```sh
 supabase migration repair --status applied --remote 20261107100000
 supabase migration list --remote
 ```
 
-Review the linked project and migration list before pushing. Use a separate development project to validate future schema changes before applying them to production. New migrations can then be applied with:
+After confirming the intended project and reconciling its history, apply any remaining migrations:
 
 ```sh
 supabase db push
 ```
 
-The initial migration creates profiles, task lists, tasks, notes, a private note-image bucket, and user-scoped RLS policies. It does not migrate or modify the legacy MongoDB database.
+Use a separate development project to validate schema changes before applying them to production. Avoid editing the hosted schema outside the versioned migrations.
 
-Do not edit the hosted schema independently of the checked-in migrations; keeping schema changes versioned prevents drift between environments. The frontend uses Supabase Auth and Supabase tables/storage for profiles, task lists, tasks, and notes. Zustand holds authentication and UI state, while TanStack Query owns task, note, task-list, and activity data.
+To run a local Supabase stack, install Docker and the Supabase CLI, then run `supabase start` from `client/`. Use `supabase db reset` to recreate the local database and apply its migrations; this command resets local data.
 
-### Authentication configuration
+## Run locally
 
-The client uses Supabase Auth's PKCE flow for Google OAuth, email/password sign-in and sign-up, email confirmation, and password recovery. In Supabase Dashboard, set the production Site URL and allow the exact callback URLs used by your deployments under **Authentication → URL Configuration**:
-
-- Local development: `http://localhost:5173/auth/callback`
-- Local development (127.0.0.1): `http://127.0.0.1:5173/auth/callback`
-- Production: `https://<your-frontend-domain>/auth/callback`
-
-Enable the Google provider under **Authentication → Providers** and configure its Google OAuth client using the redirect URI shown by Supabase. Google OAuth has been tested through the local Google sign-in step. Email sign-up and password recovery use the same callback URL; enable email confirmation and configure a production SMTP sender before opening registration to users. New and reset passwords must be at least 12 characters. Only Google is currently offered as an OAuth provider. MFA is not enabled; enabling it should be a deliberate product/security decision, with the corresponding enrollment and challenge UX configured before requiring it.
-
-## Mr Groff assistant service
-
-The assistant API is in `assistant-service/`. It validates Supabase access tokens against the project's JWKS endpoint and issuer, then uses the verified user's own bearer token and the publishable key to fetch RLS-scoped tasks, notes, and task lists. Gemini credentials remain in the service environment. Chat replies stream to the client as they are generated. Mr Groff can return typed create/update/delete proposals, validated against records in that user's context. The API never executes writes: the UI shows the exact proposed changes, refreshes the relevant data, and only calls the existing user-scoped Supabase mutations after the user confirms each proposal.
-
-For local development, create the service environment from its template, add the Supabase project values and server-side Gemini API key, then start the service:
+### 1. Configure the web client
 
 ```sh
-cp assistant-service/.env.example assistant-service/.env
+cd client
+cp .env.example .env
+```
+
+Set the following values in `client/.env`:
+
+```dotenv
+VITE_SUPABASE_URL=https://<project-ref>.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=<supabase-publishable-key>
+VITE_ASSISTANT_API_URL=http://localhost:8000
+```
+
+Install dependencies and start Vite:
+
+```sh
+npm install
+npm run dev
+```
+
+The app is available at `http://localhost:5173`. If using local Supabase, start it from `client/` with `supabase start`, then use the API URL and publishable key reported by `supabase status` instead.
+
+### 2. Configure and run the assistant API
+
+In another terminal:
+
+```sh
 cd assistant-service
-python -m venv .venv
-. .venv/bin/activate
+cp .env.example .env
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
+```
+
+Set the service values in `assistant-service/.env`:
+
+```dotenv
+SUPABASE_URL=https://<project-ref>.supabase.co
+SUPABASE_PUBLISHABLE_KEY=<supabase-publishable-key>
+SUPABASE_JWKS_URL=https://<project-ref>.supabase.co/auth/v1/.well-known/jwks.json
+GEMINI_API_KEY=<server-side-gemini-api-key>
+GEMINI_MODEL=gemini-3.5-flash
+CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
+```
+
+Start the API:
+
+```sh
 uvicorn app.main:app --reload
 ```
 
-Set `VITE_ASSISTANT_API_URL` in `client/.env` to the service URL (the example uses `http://localhost:8000`). Remove any old `VITE_GEMINI_KEY` from the client environment; configure `GEMINI_API_KEY` only in the assistant service. If a Gemini key was previously shipped in a browser build, rotate it in Google AI Studio. Set `CORS_ORIGINS` to the exact deployed frontend origin(s) in production. Deploy the assistant service separately from the Vercel frontend, expose its `/health` endpoint to the host's health check, and set the service start command to `uvicorn app.main:app --host 0.0.0.0 --port <platform-port>`. Run service tests with `pip install -r requirements-dev.txt && pytest`.
+The service listens at `http://localhost:8000`; its health endpoint is `http://localhost:8000/health`. Keep `GEMINI_API_KEY` only in the assistant service environment—never in a `VITE_` variable. The client sends the user's IANA timezone so the assistant can interpret task times in local time.
 
-### Production release checklist
+## Checks
 
-1. In Vercel, configure `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, and `VITE_ASSISTANT_API_URL` for the intended deployment environments, then redeploy. The assistant API URL must be the public HTTPS URL of the deployed FastAPI service.
-2. On the assistant-service host, configure `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_JWKS_URL`, and `GEMINI_API_KEY`; set `CORS_ORIGINS` to the exact frontend origin (scheme and host, no path). Keep the Gemini key server-side.
-3. In Supabase Auth URL Configuration, use the production frontend origin as the Site URL and allow the production `/auth/callback` and `/auth/update-password` URLs. Confirm the Google OAuth client still lists the Supabase-provided `/auth/v1/callback` URI.
-4. Before applying any schema changes, authenticate and link the Supabase CLI to the intended project, inspect `supabase migration list --remote`, then reconcile initial migration `20261107100000` if the Dashboard-applied migration is not recorded. Do not run `db push` until the linked project and migration history are verified.
-5. After deployment, verify `/health`, sign in with Google, create and edit a task and note, and send a Mr Groff message. Confirm the API streams successfully and an action proposal only mutates data after explicit approval.
+Build and lint the client:
 
-The production domains and service host have not yet been provided/configured in this repository, so these steps are deployment prerequisites rather than a claim that the new app is already live.
+```sh
+cd client
+npm run build
+npm run lint
+```
 
-## Deployment and legacy data
+Run the assistant-service tests:
 
-The frontend is in `client/` (React, TypeScript, Vite), and Mr Groff is served by `assistant-service/` (FastAPI). The unused Express, MongoDB, and Firebase Admin API source has been removed because the client no longer calls it. This repository change does not decommission any separately hosted legacy services or delete legacy Firebase/MongoDB data; verify and disable those resources independently after confirming no other consumers remain. No legacy data migration is planned.
+```sh
+cd assistant-service
+source .venv/bin/activate
+pip install -r requirements-dev.txt
+PYTHONPATH=. pytest -q
+```
 
-The previous app deployment remains available at [skald-zeta.vercel.app](https://skald-zeta.vercel.app) until its hosting configuration is changed.
+## Deployment
+
+### Web client
+
+Deploy `client/` as the Vercel project root. Configure these environment variables for each deployment environment:
+
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_PUBLISHABLE_KEY`
+- `VITE_ASSISTANT_API_URL` — the public HTTPS base URL of the deployed assistant API
+
+The Vercel rewrite in `client/vercel.json` sends app routes to `index.html`.
+
+### Assistant API
+
+Deploy `assistant-service/` as a separate Python service. Configure:
+
+- `SUPABASE_URL`
+- `SUPABASE_PUBLISHABLE_KEY`
+- `SUPABASE_JWKS_URL`
+- `GEMINI_API_KEY`
+- `GEMINI_MODEL` (optional; defaults to `gemini-3.5-flash`)
+- `CORS_ORIGINS` — comma-separated frontend origins, with no paths
+
+Install `assistant-service/requirements.txt` and start the service with:
+
+```sh
+uvicorn app.main:app --host 0.0.0.0 --port <platform-port>
+```
+
+Configure the host's health check to call `/health`. In Supabase Auth URL Configuration, set the production Site URL and allow the production `/auth/callback` URL. Keep the Gemini key and any Supabase secret/service-role keys out of browser-exposed environment variables.
+
+## How assistant actions work
+
+The API verifies the Supabase access token, then loads task, note, and list context using that user's token and the Supabase publishable key. It sends the request to Gemini and returns structured proposals. The assistant API does not write task or note data: the client displays proposals, refreshes the current records, and performs a user-scoped Supabase mutation only after the user confirms.
+
+## Legacy services and data
+
+This app uses Supabase for its current authentication and application data. No Firebase or MongoDB data migration is included. Removing legacy code from this repository does not decommission separately hosted services or remove their data; verify there are no other consumers before disabling those resources.
