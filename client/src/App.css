@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Noto+Sans:ital,wght@0,100..900;1,100..900&family=Redaction+100&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Noto+Sans:ital,wght@0,100..900;1,100..900&family=Redaction+100&family=Sora:wght@400..800&display=swap');
 
 @font-face {
   font-family: 'DS-Digital';
@@ -211,9 +211,30 @@ html:has(.skald-home) {
   transition: color 160ms ease;
 }
 
+.skald-nav__links a {
+  position: relative;
+}
+
+.skald-nav__links a::after {
+  position: absolute;
+  right: 0;
+  bottom: -7px;
+  left: 0;
+  height: 1px;
+  background: var(--home-accent);
+  content: '';
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 180ms ease;
+}
+
 .skald-nav__links a:hover,
 .skald-nav__login:hover {
   color: var(--home-ink);
+}
+
+.skald-nav__links a:hover::after {
+  transform: scaleX(1);
 }
 
 .skald-icon-button {
@@ -333,6 +354,59 @@ html:has(.skald-home) {
   letter-spacing: -0.075em;
 }
 
+.skald-hero h1 .skald-hero__line {
+  display: block;
+  color: var(--home-ink);
+  font-style: normal;
+  letter-spacing: -0.07em;
+}
+
+.skald-hero h1 .skald-hero__word {
+  display: inline-block;
+  color: inherit;
+  font-style: inherit;
+  letter-spacing: inherit;
+}
+
+.skald-hero h1 .skald-hero__letter {
+  display: inline-block;
+  color: inherit;
+  font-style: inherit;
+  letter-spacing: inherit;
+}
+
+.skald-hero h1 .skald-hero__line--accent {
+  color: var(--home-accent);
+  font-style: italic;
+  letter-spacing: -0.075em;
+}
+
+.skald-hero h1 .skald-hero__rotating-word {
+  display: inline-grid;
+  vertical-align: baseline;
+  font-family: 'Sora', sans-serif;
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: -0.055em;
+  line-height: 1;
+}
+
+.skald-hero h1 .skald-hero__rotating-measure,
+.skald-hero h1 .skald-hero__rotating-current {
+  display: inline-block;
+  grid-area: 1 / 1;
+  white-space: nowrap;
+}
+
+.skald-hero h1 .skald-hero__rotating-current > span {
+  display: inline-block;
+  white-space: pre;
+}
+
+.skald-hero h1 .skald-hero__rotating-measure {
+  visibility: hidden;
+}
+
 .skald-hero__description {
   max-width: 470px;
   color: var(--home-muted);
@@ -373,7 +447,7 @@ html:has(.skald-home) {
   width: 100%;
   max-width: 680px;
   justify-self: end;
-  perspective: 1300px;
+  perspective: 1050px;
 }
 
 .skald-preview__window {
@@ -690,8 +764,27 @@ html:has(.skald-home) {
 }
 
 .skald-value {
+  position: relative;
   padding-top: 15px;
   border-top: 1px solid var(--home-line);
+  transition: border-color 180ms ease;
+}
+
+.skald-value::before {
+  position: absolute;
+  top: -1px;
+  left: 0;
+  width: 36px;
+  height: 1px;
+  background: var(--home-accent);
+  content: '';
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 220ms ease;
+}
+
+.skald-value:hover::before {
+  transform: scaleX(1);
 }
 
 .skald-value__number {
@@ -778,19 +871,6 @@ html:has(.skald-home) {
 .skald-footer > span {
   color: var(--home-muted);
   font-size: 9px;
-}
-
-.skald-enter {
-  animation: skald-enter 420ms ease-out both;
-}
-
-@keyframes skald-enter {
-  from {
-    opacity: 0.7;
-  }
-  to {
-    opacity: 1;
-  }
 }
 
 @media (max-width: 980px) {
@@ -976,12 +1056,16 @@ html:has(.skald-home) {
     scroll-behavior: auto;
   }
 
-  .skald-enter,
   .skald-button,
   .skald-icon-button,
   .skald-nav__links a,
   .skald-nav__login {
     animation: none;
+    transition: none;
+  }
+
+  .skald-nav__links a::after,
+  .skald-value::before {
     transition: none;
   }
 }
@@ -1507,9 +1591,113 @@ body:has(.skald-app--light) {
   font-weight: 600;
 }
 
-.skald-today-list__heading > span {
+.skald-today-list__heading > span,
+.skald-today-list__progress-summary {
   color: var(--app-muted);
   font-size: 10px;
+}
+
+.skald-today-list__progress-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: color 180ms ease;
+}
+
+.skald-today-list__progress-summary.is-complete {
+  color: var(--app-accent);
+}
+
+.skald-today-progress {
+  display: inline-grid;
+  width: 26px;
+  height: 26px;
+  flex: 0 0 26px;
+  place-items: center;
+}
+
+.skald-today-progress svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.skald-today-progress circle {
+  fill: none;
+  stroke-width: 2.5;
+}
+
+.skald-today-progress__track {
+  stroke: color-mix(in srgb, var(--app-muted) 24%, transparent);
+}
+
+.skald-today-progress__value {
+  stroke: var(--app-accent);
+  stroke-linecap: round;
+  transition: stroke-dashoffset 360ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.skald-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 10px 0;
+}
+
+.skald-pagination__button {
+  display: grid;
+  min-width: 26px;
+  height: 26px;
+  place-items: center;
+  padding: 0 5px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--app-muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 10px;
+  transition: color 150ms ease, background 150ms ease, border-color 150ms ease, transform 120ms ease;
+}
+
+.skald-pagination__button:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--app-accent) 24%, var(--app-line));
+  background: color-mix(in srgb, var(--app-accent) 7%, transparent);
+  color: var(--app-ink);
+}
+
+.skald-pagination__button.is-current {
+  border-color: color-mix(in srgb, var(--app-accent) 20%, transparent);
+  background: color-mix(in srgb, var(--app-accent) 12%, var(--app-panel));
+  color: var(--app-accent);
+}
+
+.skald-pagination__button:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--app-accent) 70%, transparent);
+  outline-offset: 2px;
+}
+
+.skald-pagination__button:active:not(:disabled) {
+  transform: scale(0.94);
+}
+
+.skald-pagination__button:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+
+.skald-pagination__ellipsis {
+  display: grid;
+  width: 14px;
+  place-items: center;
+  color: var(--app-muted);
+  font-size: 10px;
+}
+
+.skald-notes-rail .skald-pagination {
+  flex: 0 0 auto;
+  padding: 7px 4px 10px;
 }
 
 .skald-today-list ul {
@@ -1523,6 +1711,7 @@ body:has(.skald-app--light) {
   min-height: 62px;
   align-items: center;
   gap: 11px;
+  padding-inline: 12px;
   border-bottom: 1px solid var(--app-line);
 }
 
@@ -4930,6 +5119,16 @@ select:disabled {
   font-family: 'Montserrat', 'Noto Sans', ui-sans-serif, system-ui, sans-serif;
 }
 
+.skald-auth-finish--light {
+  background: #f5f3ee;
+  color: #191824;
+}
+
+.skald-auth-finish--dark {
+  background: #0f111a;
+  color: #f3f1fa;
+}
+
 .skald-auth-finish__content {
   max-width: 520px;
   padding: 32px 16px;
@@ -4942,6 +5141,35 @@ select:disabled {
   line-height: 1;
 }
 
+.skald-auth-finish--light .skald-auth-finish__brand {
+  color: #6654e8;
+}
+
+.skald-auth-finish--dark .skald-auth-finish__brand {
+  color: #c9c0ff;
+}
+
+.skald-auth-finish__spinner {
+  display: block;
+  width: 20px;
+  height: 20px;
+  margin: 0 auto 12px;
+  border: 2px solid color-mix(in srgb, currentColor 14%, transparent);
+  border-top-color: var(--app-accent, #6654e8);
+  border-radius: 50%;
+  animation: skald-auth-finish-spin 850ms linear infinite;
+}
+
+.skald-auth-finish--dark .skald-auth-finish__spinner {
+  border-top-color: #a995ff;
+}
+
+@keyframes skald-auth-finish-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .skald-auth-finish__title {
   margin: 0;
   font-family: 'Montserrat', 'Noto Sans', ui-sans-serif, system-ui, sans-serif;
@@ -4949,7 +5177,14 @@ select:disabled {
   font-weight: 500;
   letter-spacing: -0.02em;
   line-height: 1.5;
+}
 
+.skald-auth-finish--light .skald-auth-finish__title {
+  color: #5e5a6c;
+}
+
+.skald-auth-finish--dark .skald-auth-finish__title {
+  color: rgb(241 239 255 / 76%);
 }
 
 .skald-auth-finish__error {
@@ -5232,6 +5467,11 @@ select:disabled {
   margin-top: 6px;
   border-radius: 8px;
   font: inherit;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.skald-auth__field input:focus {
+  box-shadow: 0 0 0 3px rgb(102 84 232 / 12%);
 }
 
 .skald-auth__hint {
@@ -5542,19 +5782,6 @@ select:disabled {
   background: color-mix(in srgb, var(--home-accent) 5%, var(--home-bg));
 }
 
-.skald-enter {
-  animation: skald-enter 220ms ease-out both;
-}
-
-@keyframes skald-enter {
-  from {
-    opacity: 0.85;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
 .skald-app {
   --app-bg: #fff;
   --app-loading-bg: #f5f3ee;
@@ -5760,6 +5987,86 @@ body:has(.skald-app--light) {
   font-size: 13px;
 }
 
+.skald-sidebar-link,
+.skald-mobile-nav-link,
+.skald-app-icon-button,
+.skald-app-add-task,
+.skald-page-button,
+.skald-settings-primary {
+  transition-property: transform, color, background-color, border-color, filter;
+  transition-duration: 160ms;
+  transition-timing-function: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.skald-sidebar-link:active,
+.skald-mobile-nav-link:active,
+.skald-app-icon-button:active,
+.skald-app-add-task:active,
+.skald-page-button:active:not(:disabled),
+.skald-settings-primary:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.skald-sidebar-link svg,
+.skald-mobile-nav-link svg {
+  transition: transform 160ms ease;
+}
+
+.skald-sidebar-link:hover svg,
+.skald-sidebar-link.is-active svg,
+.skald-mobile-nav-link:hover svg,
+.skald-mobile-nav-link.is-active svg {
+  transform: scale(1.06);
+}
+
+.skald-today-nudge__icon,
+.skald-today-nudge__arrow,
+.skald-today-assistant > svg:last-child {
+  transition: transform 180ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.skald-today-nudge:hover .skald-today-nudge__icon {
+  transform: rotate(4deg) scale(1.04);
+}
+
+.skald-today-nudge:hover .skald-today-nudge__arrow,
+.skald-today-assistant:hover > svg:last-child {
+  transform: translateX(3px);
+}
+
+.skald-today-task__check {
+  transition: transform 140ms ease, border-color 160ms ease, background-color 160ms ease;
+}
+
+.skald-today-task__check:hover:not(:disabled) {
+  transform: scale(1.08);
+  border-color: var(--app-accent);
+}
+
+.skald-today-task__check:active:not(:disabled) {
+  transform: scale(0.92);
+}
+
+.skald-today-task__check svg {
+  animation: skald-check-pop 180ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.skald-today-task__title {
+  transition: color 180ms ease;
+}
+
+@keyframes skald-check-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 .skald-notes-workspace {
   border-color: color-mix(in srgb, var(--app-accent) 15%, var(--app-line));
   border-radius: 13px;
@@ -5867,11 +6174,17 @@ body:has(.skald-app--light) {
 @media (prefers-reduced-motion: reduce) {
   .skald-home *,
   .skald-app *,
-  .skald-mobile-nav * {
+  .skald-mobile-nav *,
+  .skald-auth *,
+  .skald-auth-finish * {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
+  }
+
+  .skald-auth-finish__spinner {
+    animation: none !important;
   }
 }
 

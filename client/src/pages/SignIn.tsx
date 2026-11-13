@@ -1,7 +1,8 @@
 import { useEffect, useState, type FormEvent } from 'react'
+import { motion, useReducedMotion, type Variants } from 'framer-motion'
 import { FcGoogle } from 'react-icons/fc'
 import { Moon, Sparkles, Sun } from 'lucide-react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { getAuthCallbackPath, getAuthCallbackUrl, getSafeAuthDestination } from '@/lib/authRedirect'
 import { useAppStore } from '@/store/appStore'
@@ -14,6 +15,36 @@ type AuthLocationState = {
     search?: string
     hash?: string
   }
+}
+
+const authStoryVariants: Variants = {
+  hidden: {},
+  visible: {
+    transition: { delayChildren: 0.08, staggerChildren: 0.12 },
+  },
+}
+
+const authStoryItemVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { duration: 0.38, ease: 'easeOut' } },
+}
+
+const authStoryMarkVariants: Variants = {
+  hidden: { opacity: 0, rotate: -12, scale: 0.9 },
+  visible: {
+    opacity: 1,
+    rotate: 0,
+    scale: 1,
+    transition: { duration: 0.48, ease: 'easeOut' },
+  },
+}
+
+const authStoryHeadlineVariants: Variants = {
+  hidden: { clipPath: 'inset(0 100% 0 0)' },
+  visible: {
+    clipPath: 'inset(0 0% 0 0)',
+    transition: { duration: 0.62, ease: [0.22, 1, 0.36, 1] },
+  },
 }
 
 const SignIn = () => {
@@ -31,6 +62,7 @@ const SignIn = () => {
   const authLoading = useAppStore((state) => state.authLoading)
   const isDark = useAppStore((state) => state.isDark)
   const setTheme = useAppStore((state) => state.setTheme)
+  const reducedMotion = useReducedMotion()
   const isSignup = location.pathname === '/signup'
   const mode: AuthMode = isSignup ? 'signup' : isRecovery ? 'recovery' : 'signin'
 
@@ -152,20 +184,35 @@ const SignIn = () => {
         {isDark ? <Sun size={17} /> : <Moon size={17} />}
       </button>
       <div className="skald-auth__shell">
-        <aside className="skald-auth__story">
-          <Link to="/" className="skald-auth__brand" aria-label="Skald home">
-            <BrandMark />
-          </Link>
-          <div className="skald-auth__story-copy">
-            <span className="skald-auth__story-mark"><Sparkles size={18} aria-hidden="true" /></span>
-            <p className="skald-auth__eyebrow">A quieter way to get things done</p>
-            <h2>Make room for <em>what matters.</em></h2>
-            <p className="skald-auth__story-description">
+        <motion.aside
+          className="skald-auth__story"
+          initial={reducedMotion ? 'visible' : 'hidden'}
+          animate="visible"
+          variants={authStoryVariants}
+        >
+          <motion.div variants={authStoryItemVariants}>
+            <Link to="/" className="skald-auth__brand" aria-label="Skald home">
+              <BrandMark />
+            </Link>
+          </motion.div>
+          <motion.div className="skald-auth__story-copy" variants={authStoryVariants}>
+            <motion.span className="skald-auth__story-mark" variants={authStoryMarkVariants}>
+              <Sparkles size={18} aria-hidden="true" />
+            </motion.span>
+            <motion.p className="skald-auth__eyebrow" variants={authStoryItemVariants}>
+              A quieter way to get things done
+            </motion.p>
+            <motion.h2 variants={authStoryHeadlineVariants}>
+              Make room for <em>what matters.</em>
+            </motion.h2>
+            <motion.p className="skald-auth__story-description" variants={authStoryItemVariants}>
               Your tasks, notes, and next good idea—together in a space that helps you find your way back to focus.
-            </p>
-          </div>
-          <p className="skald-auth__story-footer">Start where you are. The rest can wait.</p>
-        </aside>
+            </motion.p>
+          </motion.div>
+          <motion.p className="skald-auth__story-footer" variants={authStoryItemVariants}>
+            Start where you are. The rest can wait.
+          </motion.p>
+        </motion.aside>
 
         <section className="skald-auth__card">
           <header className="skald-auth__header">
@@ -305,6 +352,7 @@ const SignIn = () => {
         </div>
         </section>
       </div>
+      <Outlet />
     </main>
   )
 }

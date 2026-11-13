@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
+import { motion, useReducedMotion } from 'framer-motion'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import BrandMark from '@/components/BrandMark'
@@ -12,6 +13,7 @@ const UpdatePassword = () => {
   const [error, setError] = useState<string | null>(null)
   const [complete, setComplete] = useState(false)
   const navigate = useNavigate()
+  const reducedMotion = useReducedMotion()
 
   useEffect(() => {
     let active = true
@@ -63,7 +65,12 @@ const UpdatePassword = () => {
 
   return (
     <main className="min-h-screen bg-[#0f111a] px-5 py-10 text-white flex items-center justify-center">
-      <section className="w-full max-w-md rounded-3xl border border-white/15 bg-white/[0.04] p-7 shadow-2xl shadow-black/30 sm:p-9">
+      <motion.section
+        className="w-full max-w-md rounded-3xl border border-white/15 bg-white/[0.04] p-7 shadow-2xl shadow-black/30 sm:p-9"
+        initial={reducedMotion ? false : { opacity: 0, scale: 0.99 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: reducedMotion ? 0 : 0.4, ease: 'easeOut' }}
+      >
         <BrandMark className="mx-auto mb-4 size-11" />
         <h1 className="text-center text-2xl font-semibold">Choose a new password</h1>
         {checkingSession ? (
@@ -116,7 +123,7 @@ const UpdatePassword = () => {
             </button>
           </form>
         )}
-      </section>
+      </motion.section>
     </main>
   )
 }

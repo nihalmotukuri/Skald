@@ -8,6 +8,7 @@ import AddNoteDialog from '@/components/AddNoteDialog'
 import EditNoteDialog from '@/components/EditNoteDialog'
 import DisplayNote from '@/components/DisplayNote'
 import NoteItem from '@/components/NoteItem'
+import Pagination, { PAGE_SIZE } from '@/components/Pagination'
 
 const Notes = () => {
   const userId = useAppStore((state) => state.user?.id)
@@ -21,6 +22,7 @@ const Notes = () => {
   const [displayAddNote, setDisplayAddNote] = useState(false)
   const [displayEditNote, setDisplayEditNote] = useState(false)
   const [editNoteId, setEditNoteId] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
   const [fullscreen, setFullscreen] = useState(false)
   const [showArchived, setShowArchived] = useState(false)
 
@@ -44,6 +46,21 @@ const Notes = () => {
     .sort((first, second) => Number(Boolean(second.pinned)) - Number(Boolean(first.pinned))
       || (second.updatedAt ?? second.createdAt ?? '').localeCompare(first.updatedAt ?? first.createdAt ?? '')),
   [notes, normalizedQuery, showArchived])
+  const pageCount = Math.ceil(filteredNotes.length / PAGE_SIZE)
+  const displayedPage = Math.min(currentPage, Math.max(pageCount, 1))
+  const pageNotes = filteredNotes.slice(
+    (displayedPage - 1) * PAGE_SIZE,
+    displayedPage * PAGE_SIZE,
+  )
+
+  useEffect(() => {
+    if (currentPage !== displayedPage) setCurrentPage(displayedPage)
+  }, [currentPage, displayedPage])
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [notes.length])
+
   const activeNote = notes.find((note) => note._id === activeNoteId)
   const pageText = isDark ? 'text-white' : 'text-slate-900'
   const mutedText = isDark ? 'text-white/55' : 'text-slate-500'
@@ -95,11 +112,21 @@ const Notes = () => {
               placeholder="Find a thought"
               aria-label="Search notes"
               value={filterQuery}
-              onChange={(event) => setFilterQuery(event.target.value)}
+              onChange={(event) => {
+                setFilterQuery(event.target.value)
+                setCurrentPage(1)
+              }}
               className="min-w-0 flex-1 bg-transparent text-sm outline-none"
             />
             {filterQuery && (
-              <button type="button" aria-label="Clear search" onClick={() => setFilterQuery('')}>
+              <button
+                type="button"
+                aria-label="Clear search"
+                onClick={() => {
+                  setFilterQuery('')
+                  setCurrentPage(1)
+                }}
+              >
                 <X size={15} className={mutedText} />
               </button>
             )}
@@ -138,6 +165,7 @@ const Notes = () => {
               className={showArchived ? 'is-active' : ''}
               onClick={() => {
                 setShowArchived((value) => !value)
+                setCurrentPage(1)
                 setActiveNoteId(null)
                 setFullscreen(false)
               }}
@@ -155,7 +183,7 @@ const Notes = () => {
           <div className="skald-notes-list">
             {loading
               ? <LoadingIndicator label="Loading notes…" className="skald-loading-indicator--notes" />
-              : filteredNotes.map((note) => (
+              : pageNotes.map((note) => (
                 <NoteItem
                   key={note._id}
                   note={note}
@@ -182,6 +210,14 @@ const Notes = () => {
               </div>
             )}
           </div>
+          {!loading && !error && (
+            <Pagination
+              page={displayedPage}
+              pageCount={pageCount}
+              label="Note pages"
+              onPageChange={setCurrentPage}
+            />
+          )}
         </aside>
 
         <section className={`skald-note-reader ${fullscreen ? 'is-fullscreen' : ''}`} aria-label="Selected note">

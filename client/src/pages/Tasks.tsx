@@ -12,6 +12,7 @@ import TaskListDropdown from '@/components/TaskListDropdown.tsx'
 import AddTaskList from '@/components/AddTaskList.tsx'
 import TaskDropdown from '@/components/TaskDropdown'
 import TaskDetailDialog from '@/components/TaskDetailDialog'
+import Pagination, { PAGE_SIZE } from '@/components/Pagination'
 import { getWorkspacePreferences } from '@/lib/workspacePreferences'
 
 type TaskView = 'all' | 'active' | 'today' | 'upcoming' | 'overdue' | 'completed'
@@ -48,6 +49,7 @@ const Tasks = () => {
   const [displayEditTask, setDisplayEditTask] = useState(false)
   const [editTaskId, setEditTaskId] = useState('')
   const [taskDetailId, setTaskDetailId] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
   const [selectedTaskList, setSelectedTaskList] = useState('')
   const [filterQuery, setFilterQuery] = useState('')
   const [activeView, setActiveView] = useState<TaskView>(() =>
@@ -114,10 +116,25 @@ const Tasks = () => {
       const secondDue = dueDateFor(second)?.getTime() ?? Number.MAX_SAFE_INTEGER
       return firstDue - secondDue
     })
+  const pageCount = Math.ceil(filteredTasks.length / PAGE_SIZE)
+  const displayedPage = Math.min(currentPage, Math.max(pageCount, 1))
+  const visibleTasks = filteredTasks.slice(
+    (displayedPage - 1) * PAGE_SIZE,
+    displayedPage * PAGE_SIZE,
+  )
+
+  useEffect(() => {
+    if (currentPage !== displayedPage) setCurrentPage(displayedPage)
+  }, [currentPage, displayedPage])
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [tasks.length])
 
   useEffect(() => {
     const requestedView = getTaskView(searchParams.get('view') ?? getWorkspacePreferences().defaultTaskView)
     setActiveView(requestedView)
+    setCurrentPage(1)
     if (searchParams.has('create')) {
       setDisplayAddTask(true)
       const nextParams = new URLSearchParams(searchParams)
@@ -134,6 +151,7 @@ const Tasks = () => {
 
   const changeView = (view: TaskView) => {
     setActiveView(view)
+    setCurrentPage(1)
     const nextParams = new URLSearchParams(searchParams)
     nextParams.set('view', view)
     nextParams.delete('create')
@@ -202,9 +220,18 @@ const Tasks = () => {
           <div className="skald-task-list-controls">
             <TaskListDropdown
               selectedTaskList={selectedTaskList}
-              setSelectedTaskList={setSelectedTaskList}
+              setSelectedTaskList={(value) => {
+                setSelectedTaskList(value)
+                setCurrentPage(1)
+              }}
             />
-            <AddTaskList selectedTaskList={selectedTaskList} setSelectedTaskList={setSelectedTaskList} />
+            <AddTaskList
+              selectedTaskList={selectedTaskList}
+              setSelectedTaskList={(value) => {
+                setSelectedTaskList(value)
+                setCurrentPage(1)
+              }}
+            />
           </div>
           <button
             type="button"
@@ -235,7 +262,10 @@ const Tasks = () => {
               placeholder="Search title or description"
               aria-label="Search tasks"
               value={filterQuery}
-              onChange={(event) => setFilterQuery(event.target.value)}
+              onChange={(event) => {
+                setFilterQuery(event.target.value)
+                setCurrentPage(1)
+              }}
               className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-white/35"
             />
             {filterQuery && (
@@ -257,7 +287,7 @@ const Tasks = () => {
         <LoadingIndicator label="Loading tasks…" className="skald-loading-indicator--tasks" />
       ) : (
         <ul className="flex flex-col gap-2 pb-10" aria-label="Tasks">
-          {filteredTasks.map((task) => (
+          {visibleTasks.map((task) => (
             <TaskItem
               key={task._id}
               task={task}
@@ -270,6 +300,15 @@ const Tasks = () => {
             />
           ))}
         </ul>
+      )}
+
+      {!loading && !error && (
+        <Pagination
+          page={displayedPage}
+          pageCount={pageCount}
+          label="Task pages"
+          onPageChange={setCurrentPage}
+        />
       )}
 
       {!loading && !error && filteredTasks.length === 0 && (
@@ -306,6 +345,7 @@ const Tasks = () => {
               onClick={() => {
                 setFilterQuery('')
                 setSelectedTaskList('')
+                setCurrentPage(1)
                 changeView('all')
               }}
               className="skald-task-clear-filters mt-4 text-sm"

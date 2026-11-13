@@ -20,6 +20,11 @@ const Dashboard = () => {
   const todayTasks = tasks
     .filter((task) => task.date?.slice(0, 10) === today && task.status !== 'Cancelled')
     .sort((first, second) => (first.time ?? '').localeCompare(second.time ?? ''))
+  const completedTodayTasks = todayTasks.filter((task) => task.completed).length
+  const progressCircumference = 2 * Math.PI * 12
+  const progressOffset = progressCircumference * (
+    1 - (todayTasks.length ? completedTodayTasks / todayTasks.length : 0)
+  )
   const firstName = user?.displayName.trim().split(/\s+/)[0] || 'there'
   const hour = now.getHours()
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening'
@@ -81,7 +86,41 @@ const Dashboard = () => {
         <section className="skald-today-list" aria-labelledby="skald-today-list-title">
           <div className="skald-today-list__heading">
             <h2 id="skald-today-list-title">In your orbit</h2>
-            <span>{todayTasks.length} {todayTasks.length === 1 ? 'thing' : 'things'}</span>
+            <div className={`skald-today-list__progress-summary${
+              todayTasks.length > 0 && completedTodayTasks === todayTasks.length ? ' is-complete' : ''
+            }`}>
+              {todayTasks.length > 0 && (
+                <span
+                  className="skald-today-progress"
+                  role="progressbar"
+                  aria-label="Today's task progress"
+                  aria-valuemin={0}
+                  aria-valuemax={todayTasks.length}
+                  aria-valuenow={completedTodayTasks}
+                  aria-valuetext={`${completedTodayTasks} of ${todayTasks.length} tasks complete`}
+                >
+                  <svg viewBox="0 0 28 28" aria-hidden="true">
+                    <circle className="skald-today-progress__track" cx="14" cy="14" r="12" />
+                    <circle
+                      className="skald-today-progress__value"
+                      cx="14"
+                      cy="14"
+                      r="12"
+                      transform="rotate(-90 14 14)"
+                      strokeDasharray={progressCircumference}
+                      strokeDashoffset={progressOffset}
+                    />
+                  </svg>
+                </span>
+              )}
+              <span>
+                {todayTasks.length === 0
+                  ? '0 things'
+                  : completedTodayTasks === todayTasks.length
+                    ? 'All clear'
+                    : `${completedTodayTasks}/${todayTasks.length} done`}
+              </span>
+            </div>
           </div>
 
           {todayTasks.length > 0 ? (

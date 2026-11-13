@@ -28,8 +28,10 @@ function App() {
         <Suspense fallback={<AppLoading />}>
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/signin" element={<SignIn key="signin" />} />
-            <Route path="/signup" element={<SignIn key="signup" />} />
+            <Route element={<SignIn />}>
+              <Route path="signin" element={<></>} />
+              <Route path="signup" element={<></>} />
+            </Route>
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/auth/update-password" element={<UpdatePassword />} />
 

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { motion, useReducedMotion } from 'framer-motion'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { getSafeAuthDestination } from '@/lib/authRedirect'
 import { supabase } from '@/lib/supabase'
@@ -36,6 +37,7 @@ const AuthCallback = () => {
   const authLoading = useAppStore((state) => state.authLoading)
   const user = useAppStore((state) => state.user)
   const isDark = useAppStore((state) => state.isDark)
+  const reducedMotion = useReducedMotion()
   const params = new URLSearchParams(location.search)
   const destination = getSafeAuthDestination(params.get('next'))
   const flow = params.get('flow') === 'signup' ? 'signup' : 'signin'
@@ -94,10 +96,17 @@ const AuthCallback = () => {
 
   return (
     <main className={`skald-auth-finish min-h-screen px-5 py-10 flex items-center justify-center ${
-      isDark ? 'bg-[#0f111a] text-white' : 'bg-[#f5f3ee] text-slate-900'
+      isDark ? 'skald-auth-finish--dark' : 'skald-auth-finish--light'
     }`}>
-      <section className="skald-auth-finish__content w-full text-center" aria-live="polite">
+      <motion.section
+        className="skald-auth-finish__content w-full text-center"
+        aria-live="polite"
+        initial={reducedMotion ? false : { opacity: 0, scale: 0.99 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: reducedMotion ? 0 : 0.4, ease: 'easeOut' }}
+      >
         <BrandMark className="skald-auth-finish__brand" />
+        {!error && <span className="skald-auth-finish__spinner" aria-hidden="true" />}
         <h1 className="skald-auth-finish__title">
           {error
             ? `We couldn’t finish your ${flow === 'signup' ? 'sign-up' : 'sign-in'}`
@@ -111,7 +120,7 @@ const AuthCallback = () => {
         {error && (
           <Link className="skald-auth-finish__link" to="/signin">Return to sign in</Link>
         )}
-      </section>
+      </motion.section>
     </main>
   )
 }
